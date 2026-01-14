@@ -21,14 +21,23 @@ st.markdown("""
     <style>
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
-    .tabla-ui { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; background-color: white; color: black; font-size: 12px; table-layout: fixed; }
+    
+    /* Estilo de Celdas que te gusta */
+    .tabla-ui { 
+        width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; 
+        background-color: white; color: black; font-size: 13px; table-layout: fixed;
+    }
     .tabla-ui th { background-color: #333; color: white; padding: 10px; border: 1px solid #000; text-align: center; }
-    .tabla-ui td { border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle; }
+    .tabla-ui td { border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle; height: 40px; }
+    
     .col-detalle { background-color: #f0f0f0; font-weight: bold; width: 95px; }
     .border-rojo { border-left: 8px solid #d32f2f !important; }
     .border-verde { border-right: 8px solid #388e3c !important; }
     .casilla { width: 18px; height: 18px; border: 1px solid #000; margin: auto; background: white; }
     .titulo-ronda { background-color: #ddd; padding: 8px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; }
+    
+    /* Ajuste para que los botones entren bien en la celda */
+    .stButton > button { width: 100%; padding: 2px !important; height: 30px !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -80,10 +89,10 @@ with tab1:
     
     if "edit_index" not in st.session_state: st.session_state.edit_index = None
     
-    col1, col2 = st.columns([1, 2.2])
+    col_input, col_tabla = st.columns([1, 2.5])
     
-    with col1:
-        st.write("### DATOS DEL PARTIDO")
+    with col_input:
+        st.write("### REGISTRO")
         default_name = ""
         default_weights = [1.800] * tipo_derby
         
@@ -94,12 +103,12 @@ with tab1:
                 default_name = p_edit["PARTIDO"]
                 for i in range(tipo_derby): 
                     default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.warning(f"Editando: {default_name}")
+            st.warning(f"Modificando: {default_name}")
 
         with st.form("registro_form", clear_on_submit=True):
             n = st.text_input("NOMBRE DEL PARTIDO:", value=default_name).upper()
-            pesos_input = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
-            if st.form_submit_button("💾 GUARDAR"):
+            pesos_input = [st.number_input(f"Peso Gallo {i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
+            if st.form_submit_button("💾 GUARDAR PARTIDO"):
                 if n:
                     nuevo_p = {"PARTIDO": n}
                     for idx_p, val in enumerate(pesos_input): nuevo_p[f"Peso {idx_p+1}"] = val
@@ -110,48 +119,53 @@ with tab1:
                     guardar_todos(partidos); st.rerun()
         
         if st.session_state.edit_index is not None:
-            if st.button("❌ CANCELAR"): st.session_state.edit_index = None; st.rerun()
+            if st.button("❌ CANCELAR EDICIÓN"): st.session_state.edit_index = None; st.rerun()
 
-    with col2:
+    with col_tabla:
         if partidos:
             st.write("### LISTA DE PARTIDOS")
-            # Encabezados de la tabla
-            cols_header = st.columns([0.5, 2, 1, 1, 1, 1, 1.5]) # Ajustado para hasta 4 pesos + botones
-            cols_header[0].write("*#*")
-            cols_header[1].write("*PARTIDO*")
-            for i in range(tipo_derby):
-                cols_header[i+2].write(f"*P{i+1}*")
-            cols_header[6].write("*ACCIONES*")
             
-            st.write("---")
-            
+            # Construcción manual de la tabla con celdas para incluir botones
+            header_html = f"""<table class="tabla-ui"><tr><th style="width:30px">#</th><th>PARTIDO</th>"""
+            for i in range(tipo_derby): header_html += f"<th>PESO {i+1}</th>"
+            header_html += """<th style="width:100px">ACCIONES</th></tr>"""
+            st.markdown(header_html, unsafe_allow_html=True)
+
             for i, p in enumerate(partidos):
-                c = st.columns([0.5, 2, 1, 1, 1, 1, 1.5])
-                c[0].write(f"{i+1}")
-                c[1].write(f"*{p['PARTIDO']}*")
-                for j in range(tipo_derby):
-                    c[j+2].write(f"{p.get(f'Peso {j+1}', 0.0):.3f}")
+                # Usamos columnas de Streamlit dentro de la lógica para que los botones funcionen
+                c = st.columns([0.3, 2, 1, 1, 1, 1, 0.7, 0.7]) # Ajuste dinámico de columnas
                 
-                # Botones de Editar y Eliminar
-                btn_edit = c[6].button("✏️", key=f"edit_{i}", help="Editar")
-                btn_del = c[6].button("🗑️", key=f"del_{i}", help="Eliminar")
-                
-                if btn_edit:
-                    st.session_state.edit_index = i
-                    st.rerun()
-                if btn_del:
-                    partidos.pop(i)
-                    guardar_todos(partidos)
-                    st.rerun()
+                # Visualización de datos en formato tabla limpia
+                with st.container():
+                    col_idx, col_nom, p1, p2, p3, p4, btn1, btn2 = st.columns([0.4, 2, 1, 1, 1, 1, 0.8, 0.8])
+                    col_idx.markdown(f"<div style='border:1px solid black; padding:8px; text-align:center;'>{i+1}</div>", unsafe_allow_html=True)
+                    col_nom.markdown(f"<div style='border:1px solid black; padding:8px; font-weight:bold;'>{p['PARTIDO']}</div>", unsafe_allow_html=True)
+                    
+                    # Mostrar solo los pesos activos
+                    pesos_lista = [p1, p2, p3, p4]
+                    for j in range(4):
+                        if j < tipo_derby:
+                            pesos_lista[j].markdown(f"<div style='border:1px solid black; padding:8px; text-align:center;'>{p.get(f'Peso {j+1}', 0.0):.3f}</div>", unsafe_allow_html=True)
+                        else:
+                            pesos_lista[j].write("") # Vacío si no aplica
+
+                    # Botones de acción
+                    if btn1.button("✏️", key=f"ed_{i}"):
+                        st.session_state.edit_index = i
+                        st.rerun()
+                    if btn2.button("🗑️", key=f"del_{i}"):
+                        partidos.pop(i)
+                        guardar_todos(partidos)
+                        st.rerun()
             
-            st.write("---")
-            if st.button("🧨 BORRAR TODO"): 
+            st.write("")
+            if st.button("🧨 VACIAR TODA LA LISTA"): 
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
                 st.session_state.edit_index = None
                 st.rerun()
 
 with tab2:
-    # El cotejo se mantiene igual para respetar tu diseño de impresión
+    # Cotejo se mantiene con el diseño de impresión de alta calidad
     partidos = cargar_datos(tipo_derby)
     col_a, col_b = st.columns(2)
     nombre_t = col_a.text_input("Torneo:", "DERBY DE GALLOS")
