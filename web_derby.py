@@ -1,4 +1,4 @@
-}import streamlit as st
+import streamlit as st
 import pandas as pd
 import os
 
@@ -192,3 +192,4 @@ with tab2:
             st.markdown(html_tabla, unsafe_allow_html=True)
             
     st.markdown('<p class="footer-hommer">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
+
