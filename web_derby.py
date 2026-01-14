@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
+import json
 
 # --- 1. SEGURIDAD ---
 if "autenticado" not in st.session_state:
@@ -18,53 +19,23 @@ st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
 
 st.markdown("""
     <style>
-    /* Estilos generales */
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
-    /* Encabezado que solo se ve al imprimir */
-    .encabezado-impresion { display: none; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; }
-    .torneo-titulo { font-size: 22px; font-weight: bold; margin: 0; color: black; }
-    .torneo-fecha { font-size: 14px; color: black; margin-bottom: 10px; }
-
-    /* Tabla Estilo Profesional */
+    /* Estilos para la tabla en pantalla */
     .tabla-juez { 
-        width: 100%; 
-        border-collapse: collapse; 
-        font-family: Arial, sans-serif; 
-        background-color: white; 
-        color: black;
-        font-size: 10px;
-        table-layout: fixed;
+        width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; 
+        background-color: white; color: black; font-size: 11px; table-layout: fixed;
     }
-    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 5px; border: 1px solid #000; }
+    .tabla-juez th { background-color: #333; color: white; padding: 5px; border: 1px solid #000; }
     .tabla-juez td { border: 1px solid #000; padding: 6px 2px; text-align: center; vertical-align: middle; }
-    
     .col-gan { width: 25px; }
     .col-an { width: 35px; }
-    .col-detalle { width: 65px; background-color: #f0f0f0; }
-    .col-partido { width: auto; }
-
+    .col-detalle { width: 65px; background-color: #f0f0f0; font-weight: bold; }
     .border-rojo { border-left: 6px solid #d32f2f !important; }
     .border-verde { border-right: 6px solid #388e3c !important; }
-    
     .casilla { width: 16px; height: 16px; border: 1px solid #000; margin: auto; background: white; }
-    .nombre-partido { font-weight: bold; font-size: 11px; }
-    .titulo-ronda { background-color: #ddd; padding: 8px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 14px; }
-
-    /* FUERZA LA IMPRESIÓN - ESTO CORRIGE LA HOJA EN BLANCO */
-    @media print {
-        header, footer, .stTabs, [data-testid="stSidebar"], .no-print, .stButton, .stForm { 
-            display: none !important; 
-        }
-        .encabezado-impresion { display: block !important; }
-        .main .block-container { padding: 0 !important; margin: 0 !important; }
-        .tabla-juez { display: table !important; width: 100% !important; border: 1px solid #000 !important; }
-        .titulo-ronda { display: block !important; background-color: #ddd !important; -webkit-print-color-adjust: exact; }
-        td, th { border: 1px solid #000 !important; -webkit-print-color-adjust: exact; }
-        .border-rojo { border-left: 6px solid #d32f2f !important; -webkit-print-color-adjust: exact; }
-        .border-verde { border-right: 6px solid #388e3c !important; -webkit-print-color-adjust: exact; }
-    }
+    .titulo-ronda { background-color: #ddd; padding: 8px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -103,7 +74,6 @@ def generar_cotejo_justo(lista_original):
 
 # --- INTERFAZ ---
 st.markdown('<p class="software-brand">DerbySystem PRUEBAS</p>', unsafe_allow_html=True)
-
 tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
 with tab1:
@@ -114,11 +84,12 @@ with tab1:
         tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
         default_name = ""
         default_weights = [1.800] * tipo_derby
-        if st.session_state.edit_index is not None and st.session_state.edit_index < len(partidos):
-            p_edit = partidos[st.session_state.edit_index]; default_name = p_edit["PARTIDO"]
+        if st.session_state.edit_index is not None:
+            p_edit = partidos[st.session_state.edit_index]
+            default_name = p_edit["PARTIDO"]
             for i in range(tipo_derby): default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
 
-        with st.form("registro_form", clear_on_submit=(st.session_state.edit_index is None)):
+        with st.form("registro_form", clear_on_submit=True):
             n = st.text_input("PARTIDO:", value=default_name).upper()
             pesos_input = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
             if st.form_submit_button("💾 GUARDAR"):
@@ -134,68 +105,86 @@ with tab1:
     with col2:
         if partidos:
             df = pd.DataFrame(partidos)
-            df.index = df.index + 1
-            config_columnas = {f"Peso {i+1}": st.column_config.NumberColumn(format="%.3f") for i in range(4)}
-            st.dataframe(df, use_container_width=True, column_config=config_columnas)
-            idx_to_edit = st.selectbox("Editar:", range(1, len(partidos) + 1), format_func=lambda x: f"{partidos[x-1]['PARTIDO']}")
-            if st.button("✏️ EDITAR"): st.session_state.edit_index = idx_to_edit - 1; st.rerun()
-            if st.button("🗑️ LIMPIAR"): 
+            st.dataframe(df, use_container_width=True)
+            if st.button("🗑️ LIMPIAR TODO"): 
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
-                st.session_state.edit_index = None; st.rerun()
+                st.rerun()
 
 with tab2:
     partidos = cargar_datos()
-    st.markdown('<div class="no-print">', unsafe_allow_html=True)
     col_a, col_b = st.columns(2)
-    nombre_torneo = col_a.text_input("Nombre del Torneo:", "DERBY DE GALLOS")
-    fecha_torneo = col_b.date_input("Fecha del Evento:", datetime.now())
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Encabezado que SÍ aparecerá en la impresión
-    st.markdown(f"""
-        <div class="encabezado-impresion">
-            <h1 class="torneo-titulo">{nombre_torneo}</h1>
-            <p class="torneo-fecha">Fecha: {fecha_torneo.strftime('%d/%m/%Y')}</p>
-        </div>
-    """, unsafe_allow_html=True)
+    nombre_t = col_a.text_input("Nombre del Torneo:", "DERBY DE GALLOS")
+    fecha_t = col_b.date_input("Fecha:", datetime.now())
 
     if len(partidos) >= 2:
-        st.markdown('<div class="no-print">', unsafe_allow_html=True)
-        opciones_print = ["TODOS"] + [p["PARTIDO"] for p in partidos]
-        seleccion_print = st.selectbox("Filtrar por Partido:", opciones_print)
-        # Botón de impresión corregido
-        if st.button("📄 IMPRIMIR"): 
-            st.components.v1.html("<script>window.print();</script>", height=0)
-        st.markdown('</div>', unsafe_allow_html=True)
-
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [c for c in partidos[0].keys() if "Peso" in c]
-        contador_anillos = 1
+        
+        # PREPARAR HTML PARA LA NUEVA VENTANA
+        html_impresion = f"""
+        <html><head><title>Imprimir Cotejo</title>
+        <style>
+            body {{ font-family: Arial; padding: 20px; }}
+            .t-titulo {{ text-align: center; font-size: 24px; font-weight: bold; margin: 0; }}
+            .t-fecha {{ text-align: center; font-size: 14px; margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }}
+            th {{ background: #333; color: white; border: 1px solid #000; padding: 5px; font-size: 12px; }}
+            td {{ border: 1px solid #000; text-align: center; padding: 8px 2px; font-size: 12px; }}
+            .ronda-header {{ background: #eee; font-weight: bold; padding: 10px; border: 1px solid #000; text-align: center; font-size: 16px; }}
+            .rojo {{ border-left: 8px solid #d32f2f !important; font-weight: bold; }}
+            .verde {{ border-right: 8px solid #388e3c !important; font-weight: bold; }}
+            .detalle {{ background: #f9f9f9; font-size: 11px; font-weight: bold; }}
+            .casilla {{ width: 18px; height: 18px; border: 1px solid #000; margin: auto; }}
+        </style></head><body>
+        <div class='t-titulo'>{nombre_t}</div>
+        <div class='t-fecha'>Fecha: {fecha_t.strftime('%d/%m/%Y')}</div>
+        """
 
+        contador_anillos = 1
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
-            html_tabla = """<table class="tabla-juez">
-                <tr><th class="col-gan">G</th><th class="col-partido">ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th class="col-partido">VERDE</th><th class="col-gan">G</th></tr>"""
+            html_impresion += f"<div class='ronda-header'>RONDA {r_idx+1}</div>"
+            html_impresion += "<table><tr><th>G</th><th>ROJO</th><th>An.</th><th>DETALLE</th><th>An.</th><th>VERDE</th><th>G</th></tr>"
+            
+            # Tabla para visualización en web
+            html_web = '<table class="tabla-juez"><tr><th class="col-gan">G</th><th>ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th>VERDE</th><th class="col-gan">G</th></tr>'
             
             for i, (roj, ver) in enumerate(peleas):
-                if seleccion_print != "TODOS" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
-                    continue
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
-                diferencia = abs(p_rojo - p_verde)
-                an_rojo, an_verde = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
+                dif = abs(p_rojo - p_verde)
+                an1, an2 = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
-                html_tabla += f"""
+                fila = f"""
                 <tr>
                     <td class="col-gan"><div class="casilla"></div></td>
-                    <td class="col-partido border-rojo"><span class="nombre-partido">{roj["PARTIDO"]}</span><br>{p_rojo:.3f}</td>
-                    <td class="col-an"><b>{an_rojo}</b></td>
-                    <td class="col-detalle"><b>P{i+1}</b><br>DIF: {diferencia:.3f}<br>E [ ]</td>
-                    <td class="col-an"><b>{an_verde}</b></td>
-                    <td class="col-partido border-verde"><span class="nombre-partido">{ver["PARTIDO"]}</span><br>{p_verde:.3f}</td>
+                    <td class="border-rojo"><b>{roj['PARTIDO']}</b><br>{p_rojo:.3f}</td>
+                    <td><b>{an1}</b></td>
+                    <td class="col-detalle">P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td>
+                    <td><b>{an2}</b></td>
+                    <td class="border-verde"><b>{ver['PARTIDO']}</b><br>{p_verde:.3f}</td>
                     <td class="col-gan"><div class="casilla"></div></td>
                 </tr>"""
-            html_tabla += "</table>"
-            st.markdown(html_tabla, unsafe_allow_html=True)
+                html_web += fila
+                html_impresion += fila.replace('border-rojo', 'rojo').replace('border-verde', 'verde').replace('col-detalle', 'detalle')
             
+            html_web += "</table>"
+            html_impresion += "</table>"
+            st.markdown(html_web, unsafe_allow_html=True)
+
+        html_impresion += "<p style='text-align:center; font-size:10px;'>Creado por HommerDesigns’s</p></body></html>"
+
+        # BOTÓN MAGICO QUE ABRE VENTANA NUEVA
+        if st.button("📄 GENERAR HOJA DE IMPRESIÓN"):
+            js = f"""
+            <script>
+                var win = window.open('', '_blank');
+                win.document.write({json.dumps(html_impresion)});
+                win.document.close();
+                win.focus();
+                setTimeout(function(){{ win.print(); }}, 500);
+            </script>
+            """
+            st.components.v1.html(js, height=0)
+
     st.markdown('<p style="text-align:center; font-size:10px; margin-top:20px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
