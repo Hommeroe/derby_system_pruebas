@@ -22,6 +22,7 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
+    /* Estilos Web */
     .tabla-juez { 
         width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; 
         background-color: white; color: black; font-size: 11px; table-layout: fixed;
@@ -77,67 +78,37 @@ tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
 with tab1:
     partidos = cargar_datos()
-    # Inicializar el índice de edición si no existe
-    if "edit_index" not in st.session_state: 
-        st.session_state.edit_index = None
-
-    col1, col2 = st.columns([1, 1.8])
-    
+    if "edit_index" not in st.session_state: st.session_state.edit_index = None
+    col1, col2 = st.columns([1, 1.5])
     with col1:
         tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
-        
-        # Lógica para precargar datos si se está editando
         default_name = ""
         default_weights = [1.800] * tipo_derby
-        
         if st.session_state.edit_index is not None:
-            idx_e = st.session_state.edit_index
-            if idx_e < len(partidos):
-                p_edit = partidos[idx_e]
-                default_name = p_edit["PARTIDO"]
-                for i in range(tipo_derby):
-                    default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.info(f"Editando: {default_name}")
+            p_edit = partidos[st.session_state.edit_index]
+            default_name = p_edit["PARTIDO"]
+            for i in range(tipo_derby): default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
 
         with st.form("registro_form", clear_on_submit=True):
             n = st.text_input("PARTIDO:", value=default_name).upper()
             pesos_input = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
-            
-            btn_label = "💾 ACTUALIZAR" if st.session_state.edit_index is not None else "💾 GUARDAR"
-            if st.form_submit_button(btn_label):
+            if st.form_submit_button("💾 GUARDAR"):
                 if n:
                     nuevo_p = {"PARTIDO": n}
                     for idx, val in enumerate(pesos_input): nuevo_p[f"Peso {idx+1}"] = val
-                    
                     if st.session_state.edit_index is not None:
                         partidos[st.session_state.edit_index] = nuevo_p
                         st.session_state.edit_index = None
-                    else:
-                        partidos.append(nuevo_p)
-                    
-                    guardar_todos(partidos)
-                    st.rerun()
-        
-        if st.session_state.edit_index is not None:
-            if st.button("❌ CANCELAR EDICIÓN"):
-                st.session_state.edit_index = None
-                st.rerun()
+                    else: partidos.append(nuevo_p)
+                    guardar_todos(partidos); st.rerun()
 
     with col2:
         if partidos:
-            st.write("### LISTA DE PARTIDOS")
-            # Mostrar tabla con botones de acción
-            for i, p in enumerate(partidos):
-                c_p, c_btn = st.columns([3, 1])
-                pesos_str = " | ".join([f"{v:.3f}" for k, v in p.items() if "Peso" in k])
-                c_p.markdown(f"*{i+1}. {p['PARTIDO']}* ({pesos_str})")
-                if c_btn.button("✏️", key=f"edit_{i}"):
-                    st.session_state.edit_index = i
-                    st.rerun()
-            
+            df = pd.DataFrame(partidos)
+            df.index = range(1, len(df) + 1)
+            st.dataframe(df, use_container_width=True)
             if st.button("🗑️ LIMPIAR TODO"): 
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
-                st.session_state.edit_index = None
                 st.rerun()
 
 with tab2:
@@ -150,6 +121,7 @@ with tab2:
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [c for c in partidos[0].keys() if "Peso" in c]
         
+        # HTML PARA IMPRESIÓN - ESTRUCTURA RÍGIDA PARA QUE NO SE MUEVA
         html_impresion = f"""
         <html><head><title>Imprimir Cotejo</title>
         <style>
@@ -159,7 +131,7 @@ with tab2:
             .t-fecha {{ text-align: center; font-size: 14px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 5px; }}
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }}
             th {{ background: #222 !important; color: white !important; border: 1px solid #000; padding: 8px; font-size: 12px; }}
-            td {{ border: 1px solid #000; text-align: center; padding: 8px 2px; font-size: 12px; vertical-align: middle; }}
+            td {{ border: 1px solid #000; text-align: center; padding: 8px 2px; font-size: 12px; vertical-align: middle; overflow: hidden; }}
             .ronda-header {{ background: #ddd !important; font-weight: bold; padding: 10px; border: 1px solid #000; text-align: center; font-size: 16px; margin-top: 5px; }}
             .rojo-celda {{ border-left: 10px solid #d32f2f !important; font-weight: bold; }}
             .verde-celda {{ border-right: 10px solid #388e3c !important; font-weight: bold; }}
@@ -172,6 +144,7 @@ with tab2:
 
         contador_anillos = 1
         for r_idx, r_col in enumerate(pesos_keys):
+            # Títulos de columnas con anchos fijos en % para que no se desacomoden
             html_impresion += f"<div class='ronda-header'>RONDA {r_idx+1}</div>"
             html_impresion += """<table>
                 <tr>
