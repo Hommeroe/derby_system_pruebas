@@ -15,34 +15,39 @@ if "autenticado" not in st.session_state:
 # --- 2. CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
 
+# CSS Ajustado para Celulares y PC
 st.markdown("""
     <style>
-    .software-brand { color: #555; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; letter-spacing: 5px; text-align: center; text-transform: uppercase; margin-top: -10px; margin-bottom: 10px; }
-    .footer-hommer { text-align: center; color: #666; font-size: 11px; font-family: 'Courier New', Courier, monospace; margin-top: 50px; padding-top: 20px; border-top: 1px solid #333; letter-spacing: 2px; }
+    /* Estilo General */
+    .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
+    .footer-hommer { text-align: center; color: #666; font-size: 10px; margin-top: 30px; border-top: 1px solid #333; }
     
-    /* Estilos para impresión */
-    @media print {
-        .no-print, header, footer, .stTabs, .stSelectbox, .stButton, [data-testid="stSidebar"] { 
-            display: none !important; 
-        }
-        .report-container { background-color: white !important; color: black !important; }
-        body { background-color: white !important; }
-        .main { padding: 0 !important; }
-    }
+    /* Ajuste de márgenes en móviles */
+    .main .block-container { padding: 10px 5px !important; }
 
+    /* Estilos de la Tabla adaptable */
     .tabla-juez { 
         width: 100%; 
         border-collapse: collapse; 
         font-family: Arial, sans-serif; 
         background: white; 
         color: black;
-        font-size: 12px;
+        font-size: 10px; /* Letra más chica para que quepa todo */
     }
-    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 6px; text-align: center; border: 1px solid #000; }
-    .tabla-juez td { border: 1px solid #000; padding: 8px; text-align: center; }
-    .casilla { width: 18px; height: 18px; border: 2px solid #000; margin: auto; }
-    .nombre-partido { font-weight: bold; font-size: 13px; }
-    .titulo-ronda { background: #eee; padding: 10px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 16px; }
+    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 3px; text-align: center; border: 1px solid #000; }
+    .tabla-juez td { border: 1px solid #000; padding: 4px 2px; text-align: center; }
+    
+    /* Casilla de Ganador pequeña para celular */
+    .casilla { width: 14px; height: 14px; border: 1px solid #000; margin: auto; background: #fff; }
+    
+    .nombre-partido { font-weight: bold; font-size: 11px; word-break: break-all; }
+    .titulo-ronda { background: #eee; padding: 5px; margin-top: 10px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 12px; }
+
+    /* Estilo para que no se vea el botón al imprimir */
+    @media print {
+        .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
+        .tabla-juez { font-size: 12px; } /* Al imprimir vuelve a tamaño normal */
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -83,17 +88,17 @@ def generar_cotejo_justo(lista_original):
 # --- 3. INTERFAZ ---
 st.markdown('<p class="software-brand">DerbySystem PRUEBAS</p>', unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO E IMPRESIÓN"])
+tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
 with tab1:
-    st.subheader("Panel de Registro")
-    tipo_derby = st.radio("Gallo por Partido:", [2, 3, 4], horizontal=True)
+    st.subheader("Registro")
+    tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
     partidos = cargar_datos()
     
     if "edit_index" not in st.session_state:
         st.session_state.edit_index = None
 
-    col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1, 1.5])
     with col1:
         default_name = ""
         default_weights = [1.800] * tipo_derby
@@ -105,12 +110,11 @@ with tab1:
                 default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
 
         with st.form("registro_form", clear_on_submit=(st.session_state.edit_index is None)):
-            label_modo = "🟠 EDITANDO" if st.session_state.edit_index is not None else "🟢 NUEVO"
-            st.markdown(f"*{label_modo}*")
-            n = st.text_input("NOMBRE DEL PARTIDO:", value=default_name).upper()
+            st.markdown("### Datos")
+            n = st.text_input("PARTIDO:", value=default_name).upper()
             pesos_input = []
             for i in range(1, tipo_derby + 1):
-                p = st.number_input(f"Peso Gallo {i}", 1.800, 2.680, default_weights[i-1], 0.001, format="%.3f")
+                p = st.number_input(f"Peso G{i}", 1.800, 2.680, default_weights[i-1], 0.001, format="%.3f")
                 pesos_input.append(p)
             
             if st.form_submit_button("💾 GUARDAR"):
@@ -128,13 +132,12 @@ with tab1:
     with col2:
         if partidos:
             df = pd.DataFrame(partidos)
-            df.index = df.index + 1
             st.dataframe(df, use_container_width=True)
-            idx_to_edit = st.selectbox("Seleccionar para editar:", range(1, len(partidos) + 1), format_func=lambda x: f"Partido: {partidos[x-1]['PARTIDO']}")
-            if st.button("✏️ EDITAR SELECCIONADO", use_container_width=True):
+            idx_to_edit = st.selectbox("Editar:", range(1, len(partidos) + 1), format_func=lambda x: f"{partidos[x-1]['PARTIDO']}")
+            if st.button("✏️ EDITAR"):
                 st.session_state.edit_index = idx_to_edit - 1
                 st.rerun()
-            if st.button("🗑️ LIMPIAR TODO", use_container_width=True):
+            if st.button("🗑️ LIMPIAR"):
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
                 st.session_state.edit_index = None
                 st.rerun()
@@ -143,19 +146,11 @@ with tab2:
     partidos = cargar_datos()
     if len(partidos) >= 2:
         st.markdown('<div class="no-print">', unsafe_allow_html=True)
-        opciones_print = ["VER TODO EL EVENTO"] + [p["PARTIDO"] for p in partidos]
-        seleccion_print = st.selectbox("🖨️ Filtrar Hoja para Partido:", opciones_print)
+        opciones_print = ["TODOS"] + [p["PARTIDO"] for p in partidos]
+        seleccion_print = st.selectbox("Filtrar:", opciones_print)
         
-        # Botón con comando universal para PC y Celular
-        if st.button("📄 ACTIVAR IMPRESIÓN"):
-            st.components.v1.html(
-                """
-                <script>
-                window.parent.print();
-                </script>
-                """,
-                height=0,
-            )
+        if st.button("📄 IMPRIMIR"):
+            st.components.v1.html("<script>window.parent.print();</script>", height=0)
         st.markdown('</div>', unsafe_allow_html=True)
 
         peleas = generar_cotejo_justo(partidos)
@@ -163,33 +158,33 @@ with tab2:
 
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
+            
+            # Tabla diseñada para pantallas angostas
             html_tabla = """<table class="tabla-juez">
-                <tr><th colspan="3">LADO ROJO</th><th colspan="3">DETALLES DEL COTEJO</th><th colspan="3">LADO VERDE</th></tr>
-                <tr><th>Gan.</th><th>Partido</th><th>Peso</th><th>Anillo</th><th>VS</th><th>Anillo</th><th>Peso</th><th>Partido</th><th>Gan.</th></tr>"""
+                <tr><th>G</th><th>Partido</th><th>Peso</th><th>An.</th><th>VS</th><th>An.</th><th>Peso</th><th>Partido</th><th>G</th></tr>"""
             
             for i, (roj, ver) in enumerate(peleas):
-                if seleccion_print != "VER TODO EL EVENTO" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
+                if seleccion_print != "TODOS" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
                     continue
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
                 
-                # Anillos generados automáticamente
+                # Anillos automáticos
                 anillo_rojo = f"{(i*2)+1:03}"
                 anillo_verde = f"{(i*2)+2:03}"
                 
                 html_tabla += f"""
                 <tr>
                     <td><div class="casilla"></div></td>
-                    <td class="nombre-partido">{roj["PARTIDO"]}</td>
+                    <td class="nombre-partido">{roj["PARTIDO"][:6]}</td>
                     <td>{p_rojo:.3f}</td>
                     <td><b>{anillo_rojo}</b></td>
-                    <td><b>Pelea {i+1}</b><br><small>Empate [ ]</small></td>
+                    <td><b>P{i+1}</b></td>
                     <td><b>{anillo_verde}</b></td>
                     <td>{p_verde:.3f}</td>
-                    <td class="nombre-partido">{ver["PARTIDO"]}</td>
+                    <td class="nombre-partido">{ver["PARTIDO"][:6]}</td>
                     <td><div class="casilla"></div></td>
                 </tr>"""
             html_tabla += "</table>"
             st.markdown(html_tabla, unsafe_allow_html=True)
             
     st.markdown('<p class="footer-hommer">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
-
