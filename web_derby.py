@@ -21,42 +21,51 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
-    /* Estilo de Impresión Profesional */
-    .encabezado-impresion { display: none; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-    .torneo-titulo { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; }
-    .torneo-fecha { font-size: 14px; color: #333; }
+    /* ENCABEZADO DE IMPRESIÓN */
+    .encabezado-impresion { display: none; text-align: center; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 5px; }
+    .torneo-titulo { font-size: 20px; font-weight: bold; text-transform: uppercase; margin: 0; color: black; }
+    .torneo-fecha { font-size: 12px; color: black; margin: 5px 0; }
 
+    /* TABLA PROFESIONAL */
     .tabla-juez { 
-        width: 100%; 
-        border-collapse: collapse; 
-        font-family: Arial, sans-serif; 
-        background: white; 
-        color: black;
-        font-size: 9px;
+        width: 100% !important; 
+        border-collapse: collapse !important; 
+        font-family: Arial, sans-serif !important; 
+        background-color: white !important; 
+        color: black !important;
+        font-size: 10px;
         table-layout: fixed;
     }
-    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 4px; text-align: center; border: 1px solid #000; }
-    .tabla-juez td { border: 1px solid #000; padding: 4px 1px; text-align: center; overflow-wrap: break-word; }
+    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 5px; text-align: center; border: 1px solid #000 !important; }
+    .tabla-juez td { border: 1px solid #000 !important; padding: 6px 2px; text-align: center; vertical-align: middle; color: black !important; }
     
-    .col-gan { width: 22px; }
-    .col-an { width: 30px; }
-    .col-detalle { width: 55px; background-color: #fcfcfc; font-size: 8px; }
+    /* COLUMNAS */
+    .col-gan { width: 25px; }
+    .col-an { width: 35px; }
+    .col-detalle { width: 65px; background-color: #f9f9f9 !important; font-size: 9px; font-weight: bold; }
     .col-partido { width: auto; }
 
+    /* BORDES DE COLOR */
     .border-rojo { border-left: 6px solid #d32f2f !important; }
     .border-verde { border-right: 6px solid #388e3c !important; }
     
-    .casilla { width: 15px; height: 15px; border: 1px solid #000; margin: auto; background: #fff; }
-    .nombre-partido { font-weight: bold; font-size: 10px; }
-    .titulo-ronda { background: #eee; padding: 6px; margin-top: 15px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 14px; }
+    .casilla { width: 16px; height: 16px; border: 1px solid #000 !important; margin: auto; background-color: white !important; }
+    .nombre-partido { font-weight: bold; font-size: 11px; display: block; }
+    .peso-texto { font-weight: normal; font-size: 10px; color: black !important; }
+    .titulo-ronda { background-color: #eee !important; padding: 8px; margin-top: 20px; border: 1px solid #000 !important; font-weight: bold; text-align: center; color: black !important; font-size: 14px; }
 
+    /* CORRECCIÓN DE IMPRESIÓN */
     @media print {
-        .no-print, header, footer, .stTabs, .stSelectbox, .stButton, .stRadio { display: none !important; }
-        .encabezado-impresion { display: block !important; }
-        .tabla-juez { font-size: 12px; } /* Más grande en papel */
-        .col-detalle { background-color: white !important; font-size: 10px; }
-        .nombre-partido { font-size: 12px; }
+        @page { size: auto; margin: 10mm; }
+        body { background: white !important; }
+        .no-print, header, footer, .stTabs, [data-testid="stSidebar"], .stSelectbox, .stButton, [data-testid="stForm"] { 
+            display: none !important; 
+        }
+        .encabezado-impresion { display: block !important; visibility: visible !important; }
+        .tabla-juez { visibility: visible !important; display: table !important; width: 100% !important; }
+        .titulo-ronda { visibility: visible !important; display: block !important; }
         .main .block-container { padding: 0 !important; margin: 0 !important; }
+        .stMarkdown { display: block !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -138,14 +147,12 @@ with tab1:
 
 with tab2:
     partidos = cargar_datos()
-    # Entradas para la hoja de impresión
     st.markdown('<div class="no-print">', unsafe_allow_html=True)
     col_a, col_b = st.columns(2)
     nombre_torneo = col_a.text_input("Nombre del Torneo:", "DERBY DE GALLOS")
     fecha_torneo = col_b.date_input("Fecha del Evento:", datetime.now())
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Encabezado oculto que solo sale al imprimir
     st.markdown(f"""
         <div class="encabezado-impresion">
             <p class="torneo-titulo">{nombre_torneo}</p>
@@ -157,7 +164,8 @@ with tab2:
         st.markdown('<div class="no-print">', unsafe_allow_html=True)
         opciones_print = ["TODOS"] + [p["PARTIDO"] for p in partidos]
         seleccion_print = st.selectbox("Filtrar por Partido:", opciones_print)
-        if st.button("📄 IMPRIMIR HOJA"): st.components.v1.html("<script>window.parent.print();</script>", height=0)
+        if st.button("📄 IMPRIMIR HOJA"): 
+            st.components.v1.html("<script>window.parent.print();</script>", height=0)
         st.markdown('</div>', unsafe_allow_html=True)
 
         peleas = generar_cotejo_justo(partidos)
