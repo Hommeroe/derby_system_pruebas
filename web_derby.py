@@ -22,22 +22,15 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
-    /* Estilo de Celdas que te gusta */
+    /* EL DISEÑO BONITO QUE TE GUSTÓ */
     .tabla-ui { 
         width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; 
-        background-color: white; color: black; font-size: 13px; table-layout: fixed;
+        background-color: white; color: black; font-size: 14px;
     }
-    .tabla-ui th { background-color: #333; color: white; padding: 10px; border: 1px solid #000; text-align: center; }
-    .tabla-ui td { border: 1px solid #000; padding: 6px; text-align: center; vertical-align: middle; height: 40px; }
+    .tabla-ui th { background-color: #f8f9fa; color: #333; padding: 12px; border: 1px solid #dee2e6; text-align: center; }
+    .tabla-ui td { border: 1px solid #dee2e6; padding: 10px; text-align: center; vertical-align: middle; }
     
-    .col-detalle { background-color: #f0f0f0; font-weight: bold; width: 95px; }
-    .border-rojo { border-left: 8px solid #d32f2f !important; }
-    .border-verde { border-right: 8px solid #388e3c !important; }
-    .casilla { width: 18px; height: 18px; border: 1px solid #000; margin: auto; background: white; }
     .titulo-ronda { background-color: #ddd; padding: 8px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; }
-    
-    /* Ajuste para que los botones entren bien en la celda */
-    .stButton > button { width: 100%; padding: 2px !important; height: 30px !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -89,10 +82,10 @@ with tab1:
     
     if "edit_index" not in st.session_state: st.session_state.edit_index = None
     
-    col_input, col_tabla = st.columns([1, 2.5])
+    col_input, col_tabla = st.columns([1.2, 2.5])
     
     with col_input:
-        st.write("### REGISTRO")
+        st.write("### DATOS")
         default_name = ""
         default_weights = [1.800] * tipo_derby
         
@@ -103,12 +96,12 @@ with tab1:
                 default_name = p_edit["PARTIDO"]
                 for i in range(tipo_derby): 
                     default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.warning(f"Modificando: {default_name}")
+            st.info(f"Editando: {default_name}")
 
         with st.form("registro_form", clear_on_submit=True):
             n = st.text_input("NOMBRE DEL PARTIDO:", value=default_name).upper()
-            pesos_input = [st.number_input(f"Peso Gallo {i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
-            if st.form_submit_button("💾 GUARDAR PARTIDO"):
+            pesos_input = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
+            if st.form_submit_button("💾 GUARDAR"):
                 if n:
                     nuevo_p = {"PARTIDO": n}
                     for idx_p, val in enumerate(pesos_input): nuevo_p[f"Peso {idx_p+1}"] = val
@@ -119,53 +112,43 @@ with tab1:
                     guardar_todos(partidos); st.rerun()
         
         if st.session_state.edit_index is not None:
-            if st.button("❌ CANCELAR EDICIÓN"): st.session_state.edit_index = None; st.rerun()
+            if st.button("❌ CANCELAR"): st.session_state.edit_index = None; st.rerun()
 
     with col_tabla:
         if partidos:
             st.write("### LISTA DE PARTIDOS")
             
-            # Construcción manual de la tabla con celdas para incluir botones
-            header_html = f"""<table class="tabla-ui"><tr><th style="width:30px">#</th><th>PARTIDO</th>"""
-            for i in range(tipo_derby): header_html += f"<th>PESO {i+1}</th>"
-            header_html += """<th style="width:100px">ACCIONES</th></tr>"""
-            st.markdown(header_html, unsafe_allow_html=True)
+            # Formatear el DataFrame para que se vea como la tabla sencilla
+            df = pd.DataFrame(partidos)
+            df.index = range(1, len(df) + 1)
+            for col in df.columns:
+                if "Peso" in col: df[col] = df[col].map('{:,.3f}'.format)
+            
+            # Mostramos la tabla bonita de Streamlit
+            st.table(df)
 
-            for i, p in enumerate(partidos):
-                # Usamos columnas de Streamlit dentro de la lógica para que los botones funcionen
-                c = st.columns([0.3, 2, 1, 1, 1, 1, 0.7, 0.7]) # Ajuste dinámico de columnas
-                
-                # Visualización de datos en formato tabla limpia
-                with st.container():
-                    col_idx, col_nom, p1, p2, p3, p4, btn1, btn2 = st.columns([0.4, 2, 1, 1, 1, 1, 0.8, 0.8])
-                    col_idx.markdown(f"<div style='border:1px solid black; padding:8px; text-align:center;'>{i+1}</div>", unsafe_allow_html=True)
-                    col_nom.markdown(f"<div style='border:1px solid black; padding:8px; font-weight:bold;'>{p['PARTIDO']}</div>", unsafe_allow_html=True)
-                    
-                    # Mostrar solo los pesos activos
-                    pesos_lista = [p1, p2, p3, p4]
-                    for j in range(4):
-                        if j < tipo_derby:
-                            pesos_lista[j].markdown(f"<div style='border:1px solid black; padding:8px; text-align:center;'>{p.get(f'Peso {j+1}', 0.0):.3f}</div>", unsafe_allow_html=True)
-                        else:
-                            pesos_lista[j].write("") # Vacío si no aplica
-
-                    # Botones de acción
-                    if btn1.button("✏️", key=f"ed_{i}"):
+            # Botones de Acción debajo de la tabla para no romper la estética
+            st.write("*ACCIONES:*")
+            cols_accion = st.columns(😎
+            for i in range(len(partidos)):
+                with cols_accion[i % 8]:
+                    # Botón doble: Editar y luego Eliminar
+                    if st.button(f"✏️{i+1}", key=f"e_{i}"):
                         st.session_state.edit_index = i
                         st.rerun()
-                    if btn2.button("🗑️", key=f"del_{i}"):
+                    if st.button(f"🗑️{i+1}", key=f"d_{i}"):
                         partidos.pop(i)
                         guardar_todos(partidos)
                         st.rerun()
             
-            st.write("")
-            if st.button("🧨 VACIAR TODA LA LISTA"): 
+            st.write("---")
+            if st.button("🧨 LIMPIAR TODO"): 
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
                 st.session_state.edit_index = None
                 st.rerun()
 
 with tab2:
-    # Cotejo se mantiene con el diseño de impresión de alta calidad
+    # El cotejo usa el anillo automático [2026-01-14]
     partidos = cargar_datos(tipo_derby)
     col_a, col_b = st.columns(2)
     nombre_t = col_a.text_input("Torneo:", "DERBY DE GALLOS")
@@ -175,7 +158,8 @@ with tab2:
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [f"Peso {i+1}" for i in range(tipo_derby)]
         
-        html_impresion = f"<html><head><style>@page {{ size: letter; margin: 10mm; }} body {{ font-family: Arial; }} .t-titulo {{ text-align: center; font-size: 22px; font-weight: bold; }} .t-fecha {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; }} table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }} th {{ background: #222; color: white; border: 1px solid #000; padding: 8px; font-size: 12px; }} td {{ border: 1px solid #000; text-align: center; padding: 6px 2px; font-size: 12px; }} .ronda-header {{ background: #eee; font-weight: bold; padding: 8px; border: 1px solid #000; text-align: center; }} .rojo-celda {{ border-left: 10px solid #d32f2f; font-weight: bold; }} .verde-celda {{ border-right: 10px solid #388e3c; font-weight: bold; }} .detalle-celda {{ background: #f2f2f2; font-size: 10px; font-weight: bold; }} .casilla {{ width: 18px; height: 18px; border: 2px solid #000; margin: auto; }}</style></head><body><div class='t-titulo'>{nombre_t}</div><div class='t-fecha'>FECHA: {fecha_t.strftime('%d/%m/%Y')}</div>"
+        # HTML de Impresión (Mismo diseño de tus fotos)
+        html_impresion = f"<html><head><style>@page {{ size: letter; margin: 10mm; }} body {{ font-family: Arial; }} .t-titulo {{ text-align: center; font-size: 22px; font-weight: bold; }} .t-fecha {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; }} table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }} th {{ background: #222; color: white; border: 1px solid #000; padding: 8px; font-size: 12px; }} td {{ border: 1px solid #000; text-align: center; padding: 6px 2px; font-size: 12px; }} .ronda-header {{ background: #eee; font-weight: bold; padding: 8px; border: 1px solid #000; text-align: center; }} .rojo-celda {{ border-left: 10px solid #d32f2f; font-weight: bold; }} .verde-celda {{ border-right: 10px solid #388e3c; font-weight: bold; }} .detalle-celda {{ background: #f2f2f2; font-size: 10px; font-weight: bold; }}</style></head><body><div class='t-titulo'>{nombre_t}</div><div class='t-fecha'>FECHA: {fecha_t.strftime('%d/%m/%Y')}</div>"
 
         contador_anillos = 1
         for r_idx, r_col in enumerate(pesos_keys):
@@ -184,7 +168,6 @@ with tab2:
             html_impresion += header
             
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
-            html_web = f'<table class="tabla-ui"><tr><th style="width:35px">G</th><th>ROJO</th><th style="width:45px">An.</th><th class="col-detalle">DETALLE</th><th style="width:45px">An.</th><th>VERDE</th><th style="width:35px">G</th></tr>'
             
             for i, (roj, ver) in enumerate(peleas):
                 p_rojo, p_verde = roj.get(r_col, 0.0), ver.get(r_col, 0.0)
@@ -192,13 +175,13 @@ with tab2:
                 an1, an2 = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
-                fila = f"<tr><td><div class='casilla'></div></td><td class='CLASS_ROJO'><b>{roj['PARTIDO']}</b><br>{p_rojo:.3f}</td><td><b>{an1}</b></td><td class='CLASS_DETALLE'>P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td><td><b>{an2}</b></td><td class='CLASS_VERDE'><b>{ver['PARTIDO']}</b><br>{p_verde:.3f}</td><td><div class='casilla'></div></td></tr>"
-                html_web += fila.replace("CLASS_ROJO", "border-rojo").replace("CLASS_VERDE", "border-verde").replace("CLASS_DETALLE", "col-detalle")
-                html_impresion += fila.replace("CLASS_ROJO", "rojo-celda").replace("CLASS_VERDE", "verde-celda").replace("CLASS_DETALLE", "detalle-celda")
+                fila = f"<tr><td>[ ]</td><td class='rojo-celda'><b>{roj['PARTIDO']}</b><br>{p_rojo:.3f}</td><td><b>{an1}</b></td><td class='detalle-celda'>P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td><td><b>{an2}</b></td><td class='verde-celda'><b>{ver['PARTIDO']}</b><br>{p_verde:.3f}</td><td>[ ]</td></tr>"
+                html_impresion += fila
+                
+                # Vista previa en web sencilla
+                st.write(f"Pelea {i+1}: {roj['PARTIDO']} ({p_rojo:.3f}) vs {ver['PARTIDO']} ({p_verde:.3f}) | Anillos: {an1}-{an2}")
             
-            html_web += "</table>"
             html_impresion += "</table>"
-            st.markdown(html_web, unsafe_allow_html=True)
 
         html_impresion += "</body></html>"
         if st.button("📄 GENERAR HOJA DE IMPRESIÓN"):
