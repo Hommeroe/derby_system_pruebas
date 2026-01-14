@@ -20,6 +20,7 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
+    /* Tabla optimizada para nombres largos */
     .tabla-juez { 
         width: 100%; 
         border-collapse: collapse; 
@@ -27,21 +28,28 @@ st.markdown("""
         background: white; 
         color: black;
         font-size: 10px;
+        table-layout: fixed; /* Fuerza el control del ancho de columnas */
     }
     .tabla-juez th { background-color: #333 !important; color: white !important; padding: 4px; text-align: center; border: 1px solid #000; }
-    .tabla-juez td { border: 1px solid #000; padding: 5px 2px; text-align: center; }
+    .tabla-juez td { border: 1px solid #000; padding: 4px 2px; text-align: center; overflow-wrap: break-word; }
     
-    /* Barras laterales de color discretas */
-    .border-rojo { border-left: 4px solid #d32f2f !important; }
-    .border-verde { border-right: 4px solid #388e3c !important; }
+    /* Ajuste de anchos para dar prioridad al nombre */
+    .col-gan { width: 25px; }
+    .col-an { width: 32px; }
+    .col-vs { width: 30px; }
+    .col-partido { width: auto; } /* El nombre ocupa el resto del espacio */
+
+    .border-rojo { border-left: 5px solid #d32f2f !important; }
+    .border-verde { border-right: 5px solid #388e3c !important; }
     
-    .casilla { width: 15px; height: 15px; border: 1px solid #000; margin: auto; background: #fff; }
-    .nombre-partido { font-weight: bold; font-size: 11px; }
+    .casilla { width: 16px; height: 16px; border: 1px solid #000; margin: auto; background: #fff; }
+    .nombre-partido { font-weight: bold; font-size: 10px; line-height: 1.1; }
+    .peso-texto { font-weight: normal; font-size: 9px; color: #444; }
     .titulo-ronda { background: #eee; padding: 6px; margin-top: 10px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 13px; }
 
     @media print {
         .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
-        .tabla-juez { font-size: 12px; }
+        .tabla-juez { font-size: 11px; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -138,7 +146,7 @@ with tab2:
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
             html_tabla = """<table class="tabla-juez">
-                <tr><th>G</th><th>ROJO</th><th>An.</th><th>VS</th><th>An.</th><th>VERDE</th><th>G</th></tr>"""
+                <tr><th class="col-gan">G</th><th class="col-partido">ROJO</th><th class="col-an">An.</th><th class="col-vs">VS</th><th class="col-an">An.</th><th class="col-partido">VERDE</th><th class="col-gan">G</th></tr>"""
             
             for i, (roj, ver) in enumerate(peleas):
                 if seleccion_print != "TODOS" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
@@ -149,13 +157,13 @@ with tab2:
                 
                 html_tabla += f"""
                 <tr>
-                    <td><div class="casilla"></div></td>
-                    <td class="nombre-partido border-rojo">{roj["PARTIDO"][:8]}<br>{p_rojo:.3f}</td>
-                    <td><b>{an_rojo}</b></td>
-                    <td><b>P{i+1}</b></td>
-                    <td><b>{an_verde}</b></td>
-                    <td class="nombre-partido border-verde">{ver["PARTIDO"][:8]}<br>{p_verde:.3f}</td>
-                    <td><div class="casilla"></div></td>
+                    <td class="col-gan"><div class="casilla"></div></td>
+                    <td class="col-partido border-rojo"><span class="nombre-partido">{roj["PARTIDO"]}</span><br><span class="peso-texto">{p_rojo:.3f}</span></td>
+                    <td class="col-an"><b>{an_rojo}</b></td>
+                    <td class="col-vs"><b>P{i+1}</b></td>
+                    <td class="col-an"><b>{an_verde}</b></td>
+                    <td class="col-partido border-verde"><span class="nombre-partido">{ver["PARTIDO"]}</span><br><span class="peso-texto">{p_verde:.3f}</span></td>
+                    <td class="col-gan"><div class="casilla"></div></td>
                 </tr>"""
             html_tabla += "</table>"
             st.markdown(html_tabla, unsafe_allow_html=True)
