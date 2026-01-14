@@ -20,7 +20,6 @@ st.markdown("""
     .software-brand { color: #555; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; letter-spacing: 5px; text-align: center; text-transform: uppercase; margin-top: -10px; margin-bottom: 10px; }
     .footer-hommer { text-align: center; color: #666; font-size: 11px; font-family: 'Courier New', Courier, monospace; margin-top: 50px; padding-top: 20px; border-top: 1px solid #333; letter-spacing: 2px; }
     
-    /* Estilos para la tabla de jueceo (Impresión) */
     @media print {
         .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
         .report-container { background-color: white !important; color: black !important; }
@@ -159,14 +158,18 @@ with tab2:
                 if seleccion_print != "VER TODO EL EVENTO" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
                     continue
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
+                # Generación automática de anillos (Ej: 001, 002...)
+                anillo_rojo = f"{(i*2)+1:03}"
+                anillo_verde = f"{(i*2)+2:03}"
+                
                 html_tabla += f"""
                 <tr>
                     <td><div class="casilla"></div></td>
                     <td class="nombre-partido">{roj["PARTIDO"]}</td>
                     <td>{p_rojo:.3f}</td>
-                    <td>_______</td>
+                    <td><b>{anillo_rojo}</b></td>
                     <td><b>Cot. {i+1}</b><br><small>Empate [ ]</small></td>
-                    <td>_______</td>
+                    <td><b>{anillo_verde}</b></td>
                     <td>{p_verde:.3f}</td>
                     <td class="nombre-partido">{ver["PARTIDO"]}</td>
                     <td><div class="casilla"></div></td>
