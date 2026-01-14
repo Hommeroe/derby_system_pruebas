@@ -30,13 +30,12 @@ st.markdown("""
         table-layout: fixed;
     }
     .tabla-juez th { background-color: #333 !important; color: white !important; padding: 4px; text-align: center; border: 1px solid #000; }
-    .tabla-juez td { border: 1px solid #000; padding: 4px 1px; text-align: center; overflow-wrap: break-word; }
+    .tabla-juez td { border: 1px solid #000; padding: 3px 1px; text-align: center; overflow-wrap: break-word; vertical-align: middle; }
     
-    /* Ajuste de columnas incluyendo la nueva de Diferencia */
-    .col-gan { width: 22px; }
-    .col-an { width: 30px; }
-    .col-vs { width: 35px; }
-    .col-dif { width: 35px; background-color: #f9f9f9; font-weight: bold; }
+    /* Columnas ajustadas para incluir Empate y Pelea */
+    .col-gan { width: 20px; }
+    .col-an { width: 28px; }
+    .col-centro { width: 45px; background-color: #f0f0f0; font-size: 8px; }
     .col-partido { width: auto; }
 
     .border-rojo { border-left: 5px solid #d32f2f !important; }
@@ -50,7 +49,7 @@ st.markdown("""
     @media print {
         .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
         .tabla-juez { font-size: 10px; }
-        .col-dif { background-color: white !important; }
+        .col-centro { background-color: white !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -91,7 +90,6 @@ def generar_cotejo_justo(lista_original):
 
 # --- INTERFAZ ---
 st.markdown('<p class="software-brand">DerbySystem PRUEBAS</p>', unsafe_allow_html=True)
-
 tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
 with tab1:
@@ -102,10 +100,9 @@ with tab1:
         tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
         default_name = ""
         default_weights = [1.800] * tipo_derby
-        if st.session_state.edit_index is not None and st.session_state.edit_index < len(partidos):
+        if st.session_state.edit_index is not None:
             p_edit = partidos[st.session_state.edit_index]; default_name = p_edit["PARTIDO"]
             for i in range(tipo_derby): default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
-
         with st.form("registro_form", clear_on_submit=(st.session_state.edit_index is None)):
             n = st.text_input("PARTIDO:", value=default_name).upper()
             pesos_input = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
@@ -118,13 +115,11 @@ with tab1:
                         st.session_state.edit_index = None
                     else: partidos.append(nuevo_p)
                     guardar_todos(partidos); st.rerun()
-
     with col2:
         if partidos:
             df = pd.DataFrame(partidos)
             df.index = df.index + 1
-            config_columnas = {f"Peso {i+1}": st.column_config.NumberColumn(format="%.3f") for i in range(4)}
-            st.dataframe(df, use_container_width=True, column_config=config_columnas)
+            st.dataframe(df, use_container_width=True, column_config={f"Peso {i+1}": st.column_config.NumberColumn(format="%.3f") for i in range(4)})
             idx_to_edit = st.selectbox("Editar:", range(1, len(partidos) + 1), format_func=lambda x: f"{partidos[x-1]['PARTIDO']}")
             if st.button("✏️ EDITAR"): st.session_state.edit_index = idx_to_edit - 1; st.rerun()
             if st.button("🗑️ LIMPIAR"): 
@@ -146,18 +141,13 @@ with tab2:
 
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
-            # Agregada columna DIF
             html_tabla = """<table class="tabla-juez">
-                <tr><th class="col-gan">G</th><th class="col-partido">ROJO</th><th class="col-an">An.</th><th class="col-dif">DIF.</th><th class="col-an">An.</th><th class="col-partido">VERDE</th><th class="col-gan">G</th></tr>"""
+                <tr><th class="col-gan">G</th><th class="col-partido">ROJO</th><th class="col-an">An.</th><th class="col-centro">DETALLE</th><th class="col-an">An.</th><th class="col-partido">VERDE</th><th class="col-gan">G</th></tr>"""
             
             for i, (roj, ver) in enumerate(peleas):
-                if seleccion_print != "TODOS" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
-                    continue
+                if seleccion_print != "TODOS" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print: continue
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
-                
-                # Cálculo de la diferencia (siempre positivo)
-                diferencia = abs(p_rojo - p_verde)
-                
+                dif = abs(p_rojo - p_verde)
                 an_rojo, an_verde = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
@@ -166,12 +156,11 @@ with tab2:
                     <td class="col-gan"><div class="casilla"></div></td>
                     <td class="col-partido border-rojo"><span class="nombre-partido">{roj["PARTIDO"]}</span><br><span class="peso-texto">{p_rojo:.3f}</span></td>
                     <td class="col-an"><b>{an_rojo}</b></td>
-                    <td class="col-dif">{diferencia:.3f}</td>
+                    <td class="col-centro"><b>P{i+1}</b><br>D:{dif:.3f}<br>E [ ]</td>
                     <td class="col-an"><b>{an_verde}</b></td>
                     <td class="col-partido border-verde"><span class="nombre-partido">{ver["PARTIDO"]}</span><br><span class="peso-texto">{p_verde:.3f}</span></td>
                     <td class="col-gan"><div class="casilla"></div></td>
                 </tr>"""
             html_tabla += "</table>"
             st.markdown(html_tabla, unsafe_allow_html=True)
-            
     st.markdown('<p style="text-align:center; font-size:10px; margin-top:20px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
