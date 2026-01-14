@@ -27,14 +27,14 @@ st.markdown("""
         width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; 
         background-color: white; color: black; font-size: 11px; table-layout: fixed;
     }
-    .tabla-juez th { background-color: #333; color: white; padding: 5px; border: 1px solid #000; }
+    .tabla-juez th { background-color: #333; color: white; padding: 8px; border: 1px solid #000; text-align: center; }
     .tabla-juez td { border: 1px solid #000; padding: 6px 2px; text-align: center; vertical-align: middle; }
-    .col-gan { width: 25px; }
-    .col-an { width: 35px; }
-    .col-detalle { width: 75px; background-color: #f0f0f0; font-weight: bold; font-size: 10px; }
-    .border-rojo { border-left: 6px solid #d32f2f !important; }
-    .border-verde { border-right: 6px solid #388e3c !important; }
-    .casilla { width: 16px; height: 16px; border: 1px solid #000; margin: auto; background: white; }
+    .col-gan { width: 30px; }
+    .col-an { width: 40px; }
+    .col-detalle { width: 85px; background-color: #f0f0f0; font-weight: bold; }
+    .border-rojo { border-left: 8px solid #d32f2f !important; }
+    .border-verde { border-right: 8px solid #388e3c !important; }
+    .casilla { width: 18px; height: 18px; border: 1px solid #000; margin: auto; background: white; }
     .titulo-ronda { background-color: #ddd; padding: 8px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; }
     </style>
     """, unsafe_allow_html=True)
@@ -120,21 +120,22 @@ with tab2:
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [c for c in partidos[0].keys() if "Peso" in c]
         
-        # PREPARAR HTML PARA IMPRESIÓN (Ajustado para decir DETALLE y DIF)
+        # HTML PARA IMPRESIÓN CON UBICACIÓN CORREGIDA
         html_impresion = f"""
         <html><head><title>Imprimir Cotejo</title>
         <style>
-            body {{ font-family: Arial; padding: 20px; }}
-            .t-titulo {{ text-align: center; font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase; }}
-            .t-fecha {{ text-align: center; font-size: 14px; margin-bottom: 20px; }}
-            table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }}
-            th {{ background: #333; color: white; border: 1px solid #000; padding: 6px; font-size: 12px; }}
-            td {{ border: 1px solid #000; text-align: center; padding: 8px 2px; font-size: 12px; }}
-            .ronda-header {{ background: #eee; font-weight: bold; padding: 10px; border: 1px solid #000; text-align: center; font-size: 16px; margin-top: 10px; }}
-            .rojo {{ border-left: 10px solid #d32f2f !important; font-weight: bold; }}
-            .verde {{ border-right: 10px solid #388e3c !important; font-weight: bold; }}
-            .detalle {{ background: #f9f9f9; font-size: 10px; font-weight: bold; line-height: 1.4; }}
-            .casilla {{ width: 20px; height: 20px; border: 1px solid #000; margin: auto; }}
+            body {{ font-family: Arial, sans-serif; padding: 20px; color: black; }}
+            .t-titulo {{ text-align: center; font-size: 26px; font-weight: bold; margin: 0; text-transform: uppercase; }}
+            .t-fecha {{ text-align: center; font-size: 16px; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 10px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-bottom: 30px; table-layout: fixed; }}
+            th {{ background: #222 !important; color: white !important; border: 1px solid #000; padding: 10px; font-size: 13px; text-transform: uppercase; }}
+            td {{ border: 1px solid #000; text-align: center; padding: 10px 2px; font-size: 13px; vertical-align: middle; }}
+            .ronda-header {{ background: #eee !important; font-weight: bold; padding: 12px; border: 1px solid #000; text-align: center; font-size: 18px; }}
+            .rojo-celda {{ border-left: 12px solid #d32f2f !important; font-weight: bold; }}
+            .verde-celda {{ border-right: 12px solid #388e3c !important; font-weight: bold; }}
+            .detalle-celda {{ background: #f2f2f2 !important; font-size: 11px; font-weight: bold; line-height: 1.5; }}
+            .casilla {{ width: 22px; height: 22px; border: 2px solid #000; margin: auto; }}
+            b {{ font-size: 14px; }}
         </style></head><body>
         <div class='t-titulo'>{nombre_t}</div>
         <div class='t-fecha'>Fecha: {fecha_t.strftime('%d/%m/%Y')}</div>
@@ -142,12 +143,22 @@ with tab2:
 
         contador_anillos = 1
         for r_idx, r_col in enumerate(pesos_keys):
-            st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
+            # Títulos de columnas fijos para que nada se mueva
             html_impresion += f"<div class='ronda-header'>RONDA {r_idx+1}</div>"
-            html_impresion += "<table><tr><th>G</th><th>ROJO</th><th>An.</th><th>DETALLE</th><th>An.</th><th>VERDE</th><th>G</th></tr>"
+            html_impresion += """<table>
+                <tr>
+                    <th style='width:35px;'>G</th>
+                    <th>LADO ROJO</th>
+                    <th style='width:45px;'>An.</th>
+                    <th style='width:90px;'>DETALLE</th>
+                    <th style='width:45px;'>An.</th>
+                    <th>LADO VERDE</th>
+                    <th style='width:35px;'>G</th>
+                </tr>"""
             
-            # Tabla para visualización en web
-            html_web = '<table class="tabla-juez"><tr><th class="col-gan">G</th><th>ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th>VERDE</th><th class="col-gan">G</th></tr>'
+            # Tabla visual para la web
+            st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
+            html_web = f'<table class="tabla-juez"><tr><th class="col-gan">G</th><th>LADO ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th>LADO VERDE</th><th class="col-gan">G</th></tr>'
             
             for i, (roj, ver) in enumerate(peleas):
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
@@ -155,18 +166,19 @@ with tab2:
                 an1, an2 = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
-                fila = f"""
+                fila_base = f"""
                 <tr>
-                    <td class="col-gan"><div class="casilla"></div></td>
-                    <td class="border-rojo"><b>{roj['PARTIDO']}</b><br>{p_rojo:.3f}</td>
+                    <td><div class="casilla"></div></td>
+                    <td class="CLASS_ROJO"><b>{roj['PARTIDO']}</b><br>{p_rojo:.3f}</td>
                     <td><b>{an1}</b></td>
-                    <td class="col-detalle">P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td>
+                    <td class="CLASS_DETALLE">P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td>
                     <td><b>{an2}</b></td>
-                    <td class="border-verde"><b>{ver['PARTIDO']}</b><br>{p_verde:.3f}</td>
-                    <td class="col-gan"><div class="casilla"></div></td>
+                    <td class="CLASS_VERDE"><b>{ver['PARTIDO']}</b><br>{p_verde:.3f}</td>
+                    <td><div class="casilla"></div></td>
                 </tr>"""
-                html_web += fila
-                html_impresion += fila.replace('border-rojo', 'rojo').replace('border-verde', 'verde').replace('col-detalle', 'detalle')
+                
+                html_web += fila_base.replace("CLASS_ROJO", "border-rojo").replace("CLASS_VERDE", "border-verde").replace("CLASS_DETALLE", "col-detalle")
+                html_impresion += fila_base.replace("CLASS_ROJO", "rojo-celda").replace("CLASS_VERDE", "verde-celda").replace("CLASS_DETALLE", "detalle-celda")
             
             html_web += "</table>"
             html_impresion += "</table>"
