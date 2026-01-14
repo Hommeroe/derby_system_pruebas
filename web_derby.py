@@ -15,38 +15,20 @@ if "autenticado" not in st.session_state:
 # --- 2. CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
 
-# CSS Ajustado para Celulares y PC
 st.markdown("""
     <style>
-    /* Estilo General */
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .footer-hommer { text-align: center; color: #666; font-size: 10px; margin-top: 30px; border-top: 1px solid #333; }
-    
-    /* Ajuste de márgenes en móviles */
     .main .block-container { padding: 10px 5px !important; }
-
-    /* Estilos de la Tabla adaptable */
-    .tabla-juez { 
-        width: 100%; 
-        border-collapse: collapse; 
-        font-family: Arial, sans-serif; 
-        background: white; 
-        color: black;
-        font-size: 10px; /* Letra más chica para que quepa todo */
-    }
+    .tabla-juez { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; background: white; color: black; font-size: 10px; }
     .tabla-juez th { background-color: #333 !important; color: white !important; padding: 3px; text-align: center; border: 1px solid #000; }
     .tabla-juez td { border: 1px solid #000; padding: 4px 2px; text-align: center; }
-    
-    /* Casilla de Ganador pequeña para celular */
     .casilla { width: 14px; height: 14px; border: 1px solid #000; margin: auto; background: #fff; }
-    
     .nombre-partido { font-weight: bold; font-size: 11px; word-break: break-all; }
     .titulo-ronda { background: #eee; padding: 5px; margin-top: 10px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 12px; }
-
-    /* Estilo para que no se vea el botón al imprimir */
     @media print {
         .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
-        .tabla-juez { font-size: 12px; } /* Al imprimir vuelve a tamaño normal */
+        .tabla-juez { font-size: 12px; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -102,7 +84,6 @@ with tab1:
     with col1:
         default_name = ""
         default_weights = [1.800] * tipo_derby
-        
         if st.session_state.edit_index is not None and st.session_state.edit_index < len(partidos):
             p_edit = partidos[st.session_state.edit_index]
             default_name = p_edit["PARTIDO"]
@@ -132,7 +113,12 @@ with tab1:
     with col2:
         if partidos:
             df = pd.DataFrame(partidos)
-            st.dataframe(df, use_container_width=True)
+            # 1. Ajuste para que el índice empiece en 1
+            df.index = df.index + 1
+            # 2. Configuración para que los pesos siempre muestren 3 decimales
+            config_columnas = {f"Peso {i+1}": st.column_config.NumberColumn(format="%.3f") for i in range(tipo_derby)}
+            st.dataframe(df, use_container_width=True, column_config=config_columnas)
+            
             idx_to_edit = st.selectbox("Editar:", range(1, len(partidos) + 1), format_func=lambda x: f"{partidos[x-1]['PARTIDO']}")
             if st.button("✏️ EDITAR"):
                 st.session_state.edit_index = idx_to_edit - 1
@@ -148,7 +134,6 @@ with tab2:
         st.markdown('<div class="no-print">', unsafe_allow_html=True)
         opciones_print = ["TODOS"] + [p["PARTIDO"] for p in partidos]
         seleccion_print = st.selectbox("Filtrar:", opciones_print)
-        
         if st.button("📄 IMPRIMIR"):
             st.components.v1.html("<script>window.parent.print();</script>", height=0)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -158,17 +143,13 @@ with tab2:
 
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
-            
-            # Tabla diseñada para pantallas angostas
             html_tabla = """<table class="tabla-juez">
                 <tr><th>G</th><th>Partido</th><th>Peso</th><th>An.</th><th>VS</th><th>An.</th><th>Peso</th><th>Partido</th><th>G</th></tr>"""
-            
             for i, (roj, ver) in enumerate(peleas):
                 if seleccion_print != "TODOS" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
                     continue
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
-                
-                # Anillos automáticos
+                # Anillos automáticos basados en la posición
                 anillo_rojo = f"{(i*2)+1:03}"
                 anillo_verde = f"{(i*2)+2:03}"
                 
