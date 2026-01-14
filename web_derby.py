@@ -1,4 +1,4 @@
-import streamlit as st
+}import streamlit as st
 import pandas as pd
 import os
 
@@ -12,7 +12,7 @@ if "autenticado" not in st.session_state:
             st.rerun()
     st.stop()
 
-# --- 2. CONFIGURACION ---
+# --- 2. CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
 
 st.markdown("""
@@ -20,11 +20,16 @@ st.markdown("""
     .software-brand { color: #555; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; letter-spacing: 5px; text-align: center; text-transform: uppercase; margin-top: -10px; margin-bottom: 10px; }
     .footer-hommer { text-align: center; color: #666; font-size: 11px; font-family: 'Courier New', Courier, monospace; margin-top: 50px; padding-top: 20px; border-top: 1px solid #333; letter-spacing: 2px; }
     
+    /* Estilos para impresión */
     @media print {
-        .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
+        .no-print, header, footer, .stTabs, .stSelectbox, .stButton, [data-testid="stSidebar"] { 
+            display: none !important; 
+        }
         .report-container { background-color: white !important; color: black !important; }
         body { background-color: white !important; }
+        .main { padding: 0 !important; }
     }
+
     .tabla-juez { 
         width: 100%; 
         border-collapse: collapse; 
@@ -33,11 +38,11 @@ st.markdown("""
         color: black;
         font-size: 12px;
     }
-    .tabla-juez th { background-color: #333; color: white; padding: 4px; text-align: center; border: 1px solid #000; }
-    .tabla-juez td { border: 1px solid #000; padding: 5px; text-align: center; }
-    .casilla { width: 16px; height: 16px; border: 2px solid #000; margin: auto; }
+    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 6px; text-align: center; border: 1px solid #000; }
+    .tabla-juez td { border: 1px solid #000; padding: 8px; text-align: center; }
+    .casilla { width: 18px; height: 18px; border: 2px solid #000; margin: auto; }
     .nombre-partido { font-weight: bold; font-size: 13px; }
-    .titulo-ronda { background: #eee; padding: 8px; margin-top: 15px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; }
+    .titulo-ronda { background: #eee; padding: 10px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 16px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -139,10 +144,18 @@ with tab2:
     if len(partidos) >= 2:
         st.markdown('<div class="no-print">', unsafe_allow_html=True)
         opciones_print = ["VER TODO EL EVENTO"] + [p["PARTIDO"] for p in partidos]
-        seleccion_print = st.selectbox("🖨️ Filtrar Hoja de Partido:", opciones_print)
+        seleccion_print = st.selectbox("🖨️ Filtrar Hoja para Partido:", opciones_print)
         
+        # Botón con comando universal para PC y Celular
         if st.button("📄 ACTIVAR IMPRESIÓN"):
-            st.markdown('<script>window.print();</script>', unsafe_allow_html=True)
+            st.components.v1.html(
+                """
+                <script>
+                window.parent.print();
+                </script>
+                """,
+                height=0,
+            )
         st.markdown('</div>', unsafe_allow_html=True)
 
         peleas = generar_cotejo_justo(partidos)
@@ -158,7 +171,8 @@ with tab2:
                 if seleccion_print != "VER TODO EL EVENTO" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
                     continue
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
-                # Generación automática de anillos (Ej: 001, 002...)
+                
+                # Anillos generados automáticamente
                 anillo_rojo = f"{(i*2)+1:03}"
                 anillo_verde = f"{(i*2)+2:03}"
                 
@@ -168,7 +182,7 @@ with tab2:
                     <td class="nombre-partido">{roj["PARTIDO"]}</td>
                     <td>{p_rojo:.3f}</td>
                     <td><b>{anillo_rojo}</b></td>
-                    <td><b>Cot. {i+1}</b><br><small>Empate [ ]</small></td>
+                    <td><b>Pelea {i+1}</b><br><small>Empate [ ]</small></td>
                     <td><b>{anillo_verde}</b></td>
                     <td>{p_verde:.3f}</td>
                     <td class="nombre-partido">{ver["PARTIDO"]}</td>
