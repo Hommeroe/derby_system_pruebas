@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+from datetime import datetime
 
 # --- 1. SEGURIDAD ---
 if "autenticado" not in st.session_state:
@@ -20,6 +21,11 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
+    /* Estilo de Impresión Profesional */
+    .encabezado-impresion { display: none; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+    .torneo-titulo { font-size: 24px; font-weight: bold; text-transform: uppercase; margin: 0; }
+    .torneo-fecha { font-size: 14px; color: #333; }
+
     .tabla-juez { 
         width: 100%; 
         border-collapse: collapse; 
@@ -32,24 +38,25 @@ st.markdown("""
     .tabla-juez th { background-color: #333 !important; color: white !important; padding: 4px; text-align: center; border: 1px solid #000; }
     .tabla-juez td { border: 1px solid #000; padding: 4px 1px; text-align: center; overflow-wrap: break-word; }
     
-    /* Columnas ajustadas */
     .col-gan { width: 22px; }
     .col-an { width: 30px; }
-    .col-detalle { width: 55px; background-color: #fcfcfc; font-size: 8px; line-height: 1.2; }
+    .col-detalle { width: 55px; background-color: #fcfcfc; font-size: 8px; }
     .col-partido { width: auto; }
 
-    .border-rojo { border-left: 5px solid #d32f2f !important; }
-    .border-verde { border-right: 5px solid #388e3c !important; }
+    .border-rojo { border-left: 6px solid #d32f2f !important; }
+    .border-verde { border-right: 6px solid #388e3c !important; }
     
-    .casilla { width: 14px; height: 14px; border: 1px solid #000; margin: auto; background: #fff; }
-    .nombre-partido { font-weight: bold; font-size: 10px; line-height: 1.1; }
-    .peso-texto { font-weight: normal; font-size: 9px; color: #444; }
-    .titulo-ronda { background: #eee; padding: 6px; margin-top: 10px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 13px; }
+    .casilla { width: 15px; height: 15px; border: 1px solid #000; margin: auto; background: #fff; }
+    .nombre-partido { font-weight: bold; font-size: 10px; }
+    .titulo-ronda { background: #eee; padding: 6px; margin-top: 15px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 14px; }
 
     @media print {
-        .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
-        .tabla-juez { font-size: 10px; }
-        .col-detalle { background-color: white !important; }
+        .no-print, header, footer, .stTabs, .stSelectbox, .stButton, .stRadio { display: none !important; }
+        .encabezado-impresion { display: block !important; }
+        .tabla-juez { font-size: 12px; } /* Más grande en papel */
+        .col-detalle { background-color: white !important; font-size: 10px; }
+        .nombre-partido { font-size: 12px; }
+        .main .block-container { padding: 0 !important; margin: 0 !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -64,8 +71,7 @@ def cargar_datos():
                 p = linea.strip().split("|")
                 if len(p) >= 2:
                     d = {"PARTIDO": p[0]}
-                    for i in range(1, len(p)):
-                        d[f"Peso {i}"] = float(p[i])
+                    for i in range(1, len(p)): d[f"Peso {i}"] = float(p[i])
                     partidos.append(d)
     return partidos
 
@@ -132,11 +138,26 @@ with tab1:
 
 with tab2:
     partidos = cargar_datos()
+    # Entradas para la hoja de impresión
+    st.markdown('<div class="no-print">', unsafe_allow_html=True)
+    col_a, col_b = st.columns(2)
+    nombre_torneo = col_a.text_input("Nombre del Torneo:", "DERBY DE GALLOS")
+    fecha_torneo = col_b.date_input("Fecha del Evento:", datetime.now())
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Encabezado oculto que solo sale al imprimir
+    st.markdown(f"""
+        <div class="encabezado-impresion">
+            <p class="torneo-titulo">{nombre_torneo}</p>
+            <p class="torneo-fecha">Fecha: {fecha_torneo.strftime('%d/%m/%Y')}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
     if len(partidos) >= 2:
         st.markdown('<div class="no-print">', unsafe_allow_html=True)
         opciones_print = ["TODOS"] + [p["PARTIDO"] for p in partidos]
-        seleccion_print = st.selectbox("Filtrar:", opciones_print)
-        if st.button("📄 IMPRIMIR"): st.components.v1.html("<script>window.parent.print();</script>", height=0)
+        seleccion_print = st.selectbox("Filtrar por Partido:", opciones_print)
+        if st.button("📄 IMPRIMIR HOJA"): st.components.v1.html("<script>window.parent.print();</script>", height=0)
         st.markdown('</div>', unsafe_allow_html=True)
 
         peleas = generar_cotejo_justo(partidos)
@@ -145,7 +166,6 @@ with tab2:
 
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
-            # Columna "DETALLE" completa
             html_tabla = """<table class="tabla-juez">
                 <tr><th class="col-gan">G</th><th class="col-partido">ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th class="col-partido">VERDE</th><th class="col-gan">G</th></tr>"""
             
@@ -157,13 +177,12 @@ with tab2:
                 an_rojo, an_verde = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
-                # Formato de detalle con "DIF:" y "E []"
                 html_tabla += f"""
                 <tr>
                     <td class="col-gan"><div class="casilla"></div></td>
                     <td class="col-partido border-rojo"><span class="nombre-partido">{roj["PARTIDO"]}</span><br><span class="peso-texto">{p_rojo:.3f}</span></td>
                     <td class="col-an"><b>{an_rojo}</b></td>
-                    <td class="col-detalle">P{i+1}<br>DIF: {diferencia:.3f}<br>E [ ]</td>
+                    <td class="col-detalle"><b>P{i+1}</b><br>DIF: {diferencia:.3f}<br>E [ ]</td>
                     <td class="col-an"><b>{an_verde}</b></td>
                     <td class="col-partido border-verde"><span class="nombre-partido">{ver["PARTIDO"]}</span><br><span class="peso-texto">{p_verde:.3f}</span></td>
                     <td class="col-gan"><div class="casilla"></div></td>
