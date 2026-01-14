@@ -22,6 +22,7 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
+    /* Diseño original de la tabla */
     .tabla-juez { 
         width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; 
         background-color: white; color: black; font-size: 11px; table-layout: fixed;
@@ -77,61 +78,45 @@ tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
 with tab1:
     partidos = cargar_datos()
-    # Inicializar el índice de edición si no existe
-    if "edit_index" not in st.session_state: 
-        st.session_state.edit_index = None
-
-    col1, col2 = st.columns([1, 1.8])
+    if "edit_index" not in st.session_state: st.session_state.edit_index = None
     
+    col1, col2 = st.columns([1, 1.5])
     with col1:
         tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
-        
-        # Lógica para precargar datos si se está editando
         default_name = ""
         default_weights = [1.800] * tipo_derby
         
         if st.session_state.edit_index is not None:
-            idx_e = st.session_state.edit_index
-            if idx_e < len(partidos):
-                p_edit = partidos[idx_e]
+            idx = st.session_state.edit_index
+            if idx < len(partidos):
+                p_edit = partidos[idx]
                 default_name = p_edit["PARTIDO"]
-                for i in range(tipo_derby):
-                    default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.info(f"Editando: {default_name}")
+                for i in range(tipo_derby): default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
 
         with st.form("registro_form", clear_on_submit=True):
             n = st.text_input("PARTIDO:", value=default_name).upper()
             pesos_input = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
-            
-            btn_label = "💾 ACTUALIZAR" if st.session_state.edit_index is not None else "💾 GUARDAR"
-            if st.form_submit_button(btn_label):
+            if st.form_submit_button("💾 GUARDAR"):
                 if n:
                     nuevo_p = {"PARTIDO": n}
-                    for idx, val in enumerate(pesos_input): nuevo_p[f"Peso {idx+1}"] = val
-                    
+                    for idx_p, val in enumerate(pesos_input): nuevo_p[f"Peso {idx_p+1}"] = val
                     if st.session_state.edit_index is not None:
                         partidos[st.session_state.edit_index] = nuevo_p
                         st.session_state.edit_index = None
-                    else:
-                        partidos.append(nuevo_p)
-                    
-                    guardar_todos(partidos)
-                    st.rerun()
+                    else: partidos.append(nuevo_p)
+                    guardar_todos(partidos); st.rerun()
         
         if st.session_state.edit_index is not None:
-            if st.button("❌ CANCELAR EDICIÓN"):
-                st.session_state.edit_index = None
-                st.rerun()
+            if st.button("❌ CANCELAR"): st.session_state.edit_index = None; st.rerun()
 
     with col2:
         if partidos:
             st.write("### LISTA DE PARTIDOS")
-            # Mostrar tabla con botones de acción
+            # Usamos una tabla limpia con opción de edición
             for i, p in enumerate(partidos):
-                c_p, c_btn = st.columns([3, 1])
-                pesos_str = " | ".join([f"{v:.3f}" for k, v in p.items() if "Peso" in k])
-                c_p.markdown(f"*{i+1}. {p['PARTIDO']}* ({pesos_str})")
-                if c_btn.button("✏️", key=f"edit_{i}"):
+                c1, c2 = st.columns([4, 1])
+                c1.write(f"{i+1}. *{p['PARTIDO']}*")
+                if c2.button("✏️", key=f"edit_{i}"):
                     st.session_state.edit_index = i
                     st.rerun()
             
@@ -176,16 +161,16 @@ with tab2:
             html_impresion += """<table>
                 <tr>
                     <th style='width:7%;'>G</th>
-                    <th style='width:30%;'>LADO ROJO</th>
+                    <th style='width:30%;'>ROJO</th>
                     <th style='width:8%;'>An.</th>
                     <th style='width:10%;'>DETALLE</th>
                     <th style='width:8%;'>An.</th>
-                    <th style='width:30%;'>LADO VERDE</th>
+                    <th style='width:30%;'>VERDE</th>
                     <th style='width:7%;'>G</th>
                 </tr>"""
             
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
-            html_web = f'<table class="tabla-juez"><tr><th class="col-gan">G</th><th>LADO ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th>LADO VERDE</th><th class="col-gan">G</th></tr>'
+            html_web = f'<table class="tabla-juez"><tr><th class="col-gan">G</th><th>ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th>VERDE</th><th class="col-gan">G</th></tr>'
             
             for i, (roj, ver) in enumerate(peleas):
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
@@ -193,14 +178,12 @@ with tab2:
                 an1, an2 = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
-                num_pelea = i + 1
-                
                 fila_base = f"""
                 <tr>
                     <td><div class="casilla"></div></td>
                     <td class="CLASS_ROJO"><b>{roj['PARTIDO']}</b><br>{p_rojo:.3f}</td>
                     <td><b>{an1}</b></td>
-                    <td class="CLASS_DETALLE">P{num_pelea}<br>DIF: {dif:.3f}<br>E [ ]</td>
+                    <td class="CLASS_DETALLE">P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td>
                     <td><b>{an2}</b></td>
                     <td class="CLASS_VERDE"><b>{ver['PARTIDO']}</b><br>{p_verde:.3f}</td>
                     <td><div class="casilla"></div></td>
