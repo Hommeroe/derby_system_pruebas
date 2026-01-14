@@ -22,16 +22,15 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
-    /* Diseño original de la tabla */
-    .tabla-juez { 
+    /* Estilos para las Tablas (Web y Registro) */
+    .tabla-ui { 
         width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; 
-        background-color: white; color: black; font-size: 11px; table-layout: fixed;
+        background-color: white; color: black; font-size: 12px; table-layout: fixed;
     }
-    .tabla-juez th { background-color: #333; color: white; padding: 8px; border: 1px solid #000; text-align: center; }
-    .tabla-juez td { border: 1px solid #000; padding: 6px 2px; text-align: center; vertical-align: middle; }
-    .col-gan { width: 30px; }
-    .col-an { width: 45px; }
-    .col-detalle { width: 95px; background-color: #f0f0f0; font-weight: bold; }
+    .tabla-ui th { background-color: #333; color: white; padding: 10px; border: 1px solid #000; text-align: center; }
+    .tabla-ui td { border: 1px solid #000; padding: 8px; text-align: center; vertical-align: middle; }
+    
+    .col-detalle { background-color: #f0f0f0; font-weight: bold; width: 95px; }
     .border-rojo { border-left: 8px solid #d32f2f !important; }
     .border-verde { border-right: 8px solid #388e3c !important; }
     .casilla { width: 18px; height: 18px; border: 1px solid #000; margin: auto; background: white; }
@@ -80,7 +79,7 @@ with tab1:
     partidos = cargar_datos()
     if "edit_index" not in st.session_state: st.session_state.edit_index = None
     
-    col1, col2 = st.columns([1, 1.5])
+    col1, col2 = st.columns([1, 2])
     with col1:
         tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
         default_name = ""
@@ -92,11 +91,12 @@ with tab1:
                 p_edit = partidos[idx]
                 default_name = p_edit["PARTIDO"]
                 for i in range(tipo_derby): default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
+            st.info(f"Modificando: {default_name}")
 
         with st.form("registro_form", clear_on_submit=True):
-            n = st.text_input("PARTIDO:", value=default_name).upper()
-            pesos_input = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
-            if st.form_submit_button("💾 GUARDAR"):
+            n = st.text_input("NOMBRE DEL PARTIDO:", value=default_name).upper()
+            pesos_input = [st.number_input(f"Peso Gallo {i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
+            if st.form_submit_button("💾 GUARDAR DATOS"):
                 if n:
                     nuevo_p = {"PARTIDO": n}
                     for idx_p, val in enumerate(pesos_input): nuevo_p[f"Peso {idx_p+1}"] = val
@@ -107,20 +107,36 @@ with tab1:
                     guardar_todos(partidos); st.rerun()
         
         if st.session_state.edit_index is not None:
-            if st.button("❌ CANCELAR"): st.session_state.edit_index = None; st.rerun()
+            if st.button("❌ CANCELAR EDICIÓN"): st.session_state.edit_index = None; st.rerun()
 
     with col2:
         if partidos:
-            st.write("### LISTA DE PARTIDOS")
-            # Usamos una tabla limpia con opción de edición
+            st.write("### PARTIDOS REGISTRADOS")
+            # DISEÑO DE TABLA CON CELDAS PARA REGISTRO
+            encabezado = "<tr><th>#</th><th>PARTIDO</th>" + "".join([f"<th>P{i+1}</th>" for i in range(tipo_derby)]) + "<th>EDITAR</th></tr>"
+            filas_html = ""
             for i, p in enumerate(partidos):
-                c1, c2 = st.columns([4, 1])
-                c1.write(f"{i+1}. *{p['PARTIDO']}*")
-                if c2.button("✏️", key=f"edit_{i}"):
-                    st.session_state.edit_index = i
-                    st.rerun()
+                pesos_td = "".join([f"<td>{p.get(f'Peso {j+1}', 0):.3f}</td>" for j in range(tipo_derby)])
+                filas_html += f"<tr><td>{i+1}</td><td><b>{p['PARTIDO']}</b></td>{pesos_td}<td>"
+                filas_html += "</td></tr>"
+
+            # Nota: Para el botón de editar en Streamlit dentro de una tabla HTML, 
+            # usamos columnas de Streamlit para que los botones funcionen bien.
+            df_display = pd.DataFrame(partidos)
+            df_display.index = range(1, len(df_display) + 1)
             
-            if st.button("🗑️ LIMPIAR TODO"): 
+            # Mostramos la tabla nativa que tiene las celdas claras que te gustan
+            st.dataframe(df_display, use_container_width=True)
+            
+            # Botones de edición alineados abajo o a un lado
+            edit_cols = st.columns(len(partidos) if len(partidos) < 8 else 😎
+            for i in range(len(partidos)):
+                with edit_cols[i % 8]:
+                    if st.button(f"✏️{i+1}"):
+                        st.session_state.edit_index = i
+                        st.rerun()
+            
+            if st.button("🗑️ BORRAR TODA LA LISTA"): 
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
                 st.session_state.edit_index = None
                 st.rerun()
@@ -128,49 +144,40 @@ with tab1:
 with tab2:
     partidos = cargar_datos()
     col_a, col_b = st.columns(2)
-    nombre_t = col_a.text_input("Nombre del Torneo:", "DERBY DE GALLOS")
-    fecha_t = col_b.date_input("Fecha:", datetime.now())
+    nombre_t = col_a.text_input("Torneo:", "DERBY DE GALLOS")
+    fecha_t = col_b.date_input("Fecha del Evento:", datetime.now())
 
     if len(partidos) >= 2:
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [c for c in partidos[0].keys() if "Peso" in c]
         
         html_impresion = f"""
-        <html><head><title>Imprimir Cotejo</title>
-        <style>
+        <html><head><style>
             @page {{ size: letter; margin: 10mm; }}
-            body {{ font-family: Arial, sans-serif; padding: 0; color: black; }}
-            .t-titulo {{ text-align: center; font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase; }}
-            .t-fecha {{ text-align: center; font-size: 14px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 5px; }}
-            table {{ width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }}
+            body {{ font-family: Arial, sans-serif; }}
+            .t-titulo {{ text-align: center; font-size: 22px; font-weight: bold; text-transform: uppercase; }}
+            .t-fecha {{ text-align: center; font-size: 14px; margin-bottom: 20px; border-bottom: 2px solid #000; }}
+            table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }}
             th {{ background: #222 !important; color: white !important; border: 1px solid #000; padding: 8px; font-size: 12px; }}
-            td {{ border: 1px solid #000; text-align: center; padding: 8px 2px; font-size: 12px; vertical-align: middle; }}
-            .ronda-header {{ background: #ddd !important; font-weight: bold; padding: 10px; border: 1px solid #000; text-align: center; font-size: 16px; margin-top: 5px; }}
+            td {{ border: 1px solid #000; text-align: center; padding: 6px 2px; font-size: 12px; }}
+            .ronda-header {{ background: #eee !important; font-weight: bold; padding: 8px; border: 1px solid #000; text-align: center; }}
             .rojo-celda {{ border-left: 10px solid #d32f2f !important; font-weight: bold; }}
             .verde-celda {{ border-right: 10px solid #388e3c !important; font-weight: bold; }}
-            .detalle-celda {{ background: #f2f2f2 !important; font-size: 10px; font-weight: bold; line-height: 1.3; }}
-            .casilla {{ width: 20px; height: 20px; border: 2px solid #000; margin: auto; }}
+            .detalle-celda {{ background: #f2f2f2 !important; font-size: 10px; font-weight: bold; }}
+            .casilla {{ width: 18px; height: 18px; border: 2px solid #000; margin: auto; }}
         </style></head><body>
         <div class='t-titulo'>{nombre_t}</div>
-        <div class='t-fecha'>Fecha: {fecha_t.strftime('%d/%m/%Y')}</div>
+        <div class='t-fecha'>FECHA: {fecha_t.strftime('%d/%m/%Y')}</div>
         """
 
         contador_anillos = 1
         for r_idx, r_col in enumerate(pesos_keys):
             html_impresion += f"<div class='ronda-header'>RONDA {r_idx+1}</div>"
-            html_impresion += """<table>
-                <tr>
-                    <th style='width:7%;'>G</th>
-                    <th style='width:30%;'>ROJO</th>
-                    <th style='width:8%;'>An.</th>
-                    <th style='width:10%;'>DETALLE</th>
-                    <th style='width:8%;'>An.</th>
-                    <th style='width:30%;'>VERDE</th>
-                    <th style='width:7%;'>G</th>
-                </tr>"""
+            header_html = """<table><tr><th style='width:7%;'>G</th><th style='width:30%;'>ROJO</th><th style='width:8%;'>An.</th><th style='width:10%;'>DETALLE</th><th style='width:8%;'>An.</th><th style='width:30%;'>VERDE</th><th style='width:7%;'>G</th></tr>"""
+            html_impresion += header_html
             
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
-            html_web = f'<table class="tabla-juez"><tr><th class="col-gan">G</th><th>ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th>VERDE</th><th class="col-gan">G</th></tr>'
+            html_web = f'<table class="tabla-ui"><tr><th style="width:35px">G</th><th>ROJO</th><th style="width:45px">An.</th><th class="col-detalle">DETALLE</th><th style="width:45px">An.</th><th>VERDE</th><th style="width:35px">G</th></tr>'
             
             for i, (roj, ver) in enumerate(peleas):
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
@@ -178,7 +185,7 @@ with tab2:
                 an1, an2 = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
-                fila_base = f"""
+                fila = f"""
                 <tr>
                     <td><div class="casilla"></div></td>
                     <td class="CLASS_ROJO"><b>{roj['PARTIDO']}</b><br>{p_rojo:.3f}</td>
@@ -188,26 +195,16 @@ with tab2:
                     <td class="CLASS_VERDE"><b>{ver['PARTIDO']}</b><br>{p_verde:.3f}</td>
                     <td><div class="casilla"></div></td>
                 </tr>"""
-                
-                html_web += fila_base.replace("CLASS_ROJO", "border-rojo").replace("CLASS_VERDE", "border-verde").replace("CLASS_DETALLE", "col-detalle")
-                html_impresion += fila_base.replace("CLASS_ROJO", "rojo-celda").replace("CLASS_VERDE", "verde-celda").replace("CLASS_DETALLE", "detalle-celda")
+                html_web += fila.replace("CLASS_ROJO", "border-rojo").replace("CLASS_VERDE", "border-verde").replace("CLASS_DETALLE", "col-detalle")
+                html_impresion += fila.replace("CLASS_ROJO", "rojo-celda").replace("CLASS_VERDE", "verde-celda").replace("CLASS_DETALLE", "detalle-celda")
             
             html_web += "</table>"
             html_impresion += "</table>"
             st.markdown(html_web, unsafe_allow_html=True)
 
-        html_impresion += "<p style='text-align:center; font-size:10px;'>Creado por HommerDesigns’s</p></body></html>"
-
+        html_impresion += "</body></html>"
         if st.button("📄 GENERAR HOJA DE IMPRESIÓN"):
-            js = f"""
-            <script>
-                var win = window.open('', '_blank');
-                win.document.write({json.dumps(html_impresion)});
-                win.document.close();
-                win.focus();
-                setTimeout(function(){{ win.print(); }}, 500);
-            </script>
-            """
+            js = f"<script>var win = window.open('', '_blank'); win.document.write({json.dumps(html_impresion)}); win.document.close(); win.focus(); setTimeout(function(){{ win.print(); }}, 500);</script>"
             st.components.v1.html(js, height=0)
 
     st.markdown('<p style="text-align:center; font-size:10px; margin-top:20px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
