@@ -20,36 +20,37 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
-    /* Tabla optimizada para nombres largos */
     .tabla-juez { 
         width: 100%; 
         border-collapse: collapse; 
         font-family: Arial, sans-serif; 
         background: white; 
         color: black;
-        font-size: 10px;
-        table-layout: fixed; /* Fuerza el control del ancho de columnas */
+        font-size: 9px;
+        table-layout: fixed;
     }
     .tabla-juez th { background-color: #333 !important; color: white !important; padding: 4px; text-align: center; border: 1px solid #000; }
-    .tabla-juez td { border: 1px solid #000; padding: 4px 2px; text-align: center; overflow-wrap: break-word; }
+    .tabla-juez td { border: 1px solid #000; padding: 4px 1px; text-align: center; overflow-wrap: break-word; }
     
-    /* Ajuste de anchos para dar prioridad al nombre */
-    .col-gan { width: 25px; }
-    .col-an { width: 32px; }
-    .col-vs { width: 30px; }
-    .col-partido { width: auto; } /* El nombre ocupa el resto del espacio */
+    /* Ajuste de columnas incluyendo la nueva de Diferencia */
+    .col-gan { width: 22px; }
+    .col-an { width: 30px; }
+    .col-vs { width: 35px; }
+    .col-dif { width: 35px; background-color: #f9f9f9; font-weight: bold; }
+    .col-partido { width: auto; }
 
     .border-rojo { border-left: 5px solid #d32f2f !important; }
     .border-verde { border-right: 5px solid #388e3c !important; }
     
-    .casilla { width: 16px; height: 16px; border: 1px solid #000; margin: auto; background: #fff; }
+    .casilla { width: 14px; height: 14px; border: 1px solid #000; margin: auto; background: #fff; }
     .nombre-partido { font-weight: bold; font-size: 10px; line-height: 1.1; }
     .peso-texto { font-weight: normal; font-size: 9px; color: #444; }
     .titulo-ronda { background: #eee; padding: 6px; margin-top: 10px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 13px; }
 
     @media print {
         .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
-        .tabla-juez { font-size: 11px; }
+        .tabla-juez { font-size: 10px; }
+        .col-dif { background-color: white !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -88,7 +89,7 @@ def generar_cotejo_justo(lista_original):
             verde = lista.pop(0); cotejo.append((rojo, verde))
     return cotejo
 
-# --- 3. INTERFAZ ---
+# --- INTERFAZ ---
 st.markdown('<p class="software-brand">DerbySystem PRUEBAS</p>', unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
@@ -145,13 +146,18 @@ with tab2:
 
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
+            # Agregada columna DIF
             html_tabla = """<table class="tabla-juez">
-                <tr><th class="col-gan">G</th><th class="col-partido">ROJO</th><th class="col-an">An.</th><th class="col-vs">VS</th><th class="col-an">An.</th><th class="col-partido">VERDE</th><th class="col-gan">G</th></tr>"""
+                <tr><th class="col-gan">G</th><th class="col-partido">ROJO</th><th class="col-an">An.</th><th class="col-dif">DIF.</th><th class="col-an">An.</th><th class="col-partido">VERDE</th><th class="col-gan">G</th></tr>"""
             
             for i, (roj, ver) in enumerate(peleas):
                 if seleccion_print != "TODOS" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
                     continue
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
+                
+                # Cálculo de la diferencia (siempre positivo)
+                diferencia = abs(p_rojo - p_verde)
+                
                 an_rojo, an_verde = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
@@ -160,7 +166,7 @@ with tab2:
                     <td class="col-gan"><div class="casilla"></div></td>
                     <td class="col-partido border-rojo"><span class="nombre-partido">{roj["PARTIDO"]}</span><br><span class="peso-texto">{p_rojo:.3f}</span></td>
                     <td class="col-an"><b>{an_rojo}</b></td>
-                    <td class="col-vs"><b>P{i+1}</b></td>
+                    <td class="col-dif">{diferencia:.3f}</td>
                     <td class="col-an"><b>{an_verde}</b></td>
                     <td class="col-partido border-verde"><span class="nombre-partido">{ver["PARTIDO"]}</span><br><span class="peso-texto">{p_verde:.3f}</span></td>
                     <td class="col-gan"><div class="casilla"></div></td>
