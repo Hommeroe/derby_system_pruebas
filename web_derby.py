@@ -31,7 +31,7 @@ st.markdown("""
     .tabla-juez td { border: 1px solid #000; padding: 6px 2px; text-align: center; vertical-align: middle; }
     .col-gan { width: 25px; }
     .col-an { width: 35px; }
-    .col-detalle { width: 65px; background-color: #f0f0f0; font-weight: bold; }
+    .col-detalle { width: 75px; background-color: #f0f0f0; font-weight: bold; font-size: 10px; }
     .border-rojo { border-left: 6px solid #d32f2f !important; }
     .border-verde { border-right: 6px solid #388e3c !important; }
     .casilla { width: 16px; height: 16px; border: 1px solid #000; margin: auto; background: white; }
@@ -120,21 +120,21 @@ with tab2:
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [c for c in partidos[0].keys() if "Peso" in c]
         
-        # PREPARAR HTML PARA LA NUEVA VENTANA
+        # PREPARAR HTML PARA IMPRESIÓN (Ajustado para decir DETALLE y DIF)
         html_impresion = f"""
         <html><head><title>Imprimir Cotejo</title>
         <style>
             body {{ font-family: Arial; padding: 20px; }}
-            .t-titulo {{ text-align: center; font-size: 24px; font-weight: bold; margin: 0; }}
+            .t-titulo {{ text-align: center; font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase; }}
             .t-fecha {{ text-align: center; font-size: 14px; margin-bottom: 20px; }}
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }}
-            th {{ background: #333; color: white; border: 1px solid #000; padding: 5px; font-size: 12px; }}
+            th {{ background: #333; color: white; border: 1px solid #000; padding: 6px; font-size: 12px; }}
             td {{ border: 1px solid #000; text-align: center; padding: 8px 2px; font-size: 12px; }}
-            .ronda-header {{ background: #eee; font-weight: bold; padding: 10px; border: 1px solid #000; text-align: center; font-size: 16px; }}
-            .rojo {{ border-left: 8px solid #d32f2f !important; font-weight: bold; }}
-            .verde {{ border-right: 8px solid #388e3c !important; font-weight: bold; }}
-            .detalle {{ background: #f9f9f9; font-size: 11px; font-weight: bold; }}
-            .casilla {{ width: 18px; height: 18px; border: 1px solid #000; margin: auto; }}
+            .ronda-header {{ background: #eee; font-weight: bold; padding: 10px; border: 1px solid #000; text-align: center; font-size: 16px; margin-top: 10px; }}
+            .rojo {{ border-left: 10px solid #d32f2f !important; font-weight: bold; }}
+            .verde {{ border-right: 10px solid #388e3c !important; font-weight: bold; }}
+            .detalle {{ background: #f9f9f9; font-size: 10px; font-weight: bold; line-height: 1.4; }}
+            .casilla {{ width: 20px; height: 20px; border: 1px solid #000; margin: auto; }}
         </style></head><body>
         <div class='t-titulo'>{nombre_t}</div>
         <div class='t-fecha'>Fecha: {fecha_t.strftime('%d/%m/%Y')}</div>
@@ -174,7 +174,6 @@ with tab2:
 
         html_impresion += "<p style='text-align:center; font-size:10px;'>Creado por HommerDesigns’s</p></body></html>"
 
-        # BOTÓN MAGICO QUE ABRE VENTANA NUEVA
         if st.button("📄 GENERAR HOJA DE IMPRESIÓN"):
             js = f"""
             <script>
