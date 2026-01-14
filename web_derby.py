@@ -42,10 +42,8 @@ def cargar_datos(num_gallos_actual):
                 p = linea.strip().split("|")
                 if len(p) >= 2:
                     d = {"PARTIDO": p[0]}
-                    # Solo cargar hasta el número de gallos seleccionado actualmente
                     for i in range(1, num_gallos_actual + 1):
                         try:
-                            # Si la línea tiene el peso lo ponemos, si no, 0.0
                             val = float(p[i]) if i < len(p) else 0.0
                             d[f"Peso {i}"] = val
                         except:
@@ -78,12 +76,14 @@ tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
 with tab1:
     tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
-    partidos = cargar_datos(tipo_derby) # Pasamos el tipo de derby para limpiar la carga
+    partidos = cargar_datos(tipo_derby)
     
     if "edit_index" not in st.session_state: st.session_state.edit_index = None
     
-    col1, col2 = st.columns([1, 2])
+    col1, col2 = st.columns([1, 2.2])
+    
     with col1:
+        st.write("### DATOS DEL PARTIDO")
         default_name = ""
         default_weights = [1.800] * tipo_derby
         
@@ -94,12 +94,12 @@ with tab1:
                 default_name = p_edit["PARTIDO"]
                 for i in range(tipo_derby): 
                     default_weights[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.info(f"Modificando: {default_name}")
+            st.warning(f"Editando: {default_name}")
 
         with st.form("registro_form", clear_on_submit=True):
             n = st.text_input("NOMBRE DEL PARTIDO:", value=default_name).upper()
-            pesos_input = [st.number_input(f"Peso Gallo {i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
-            if st.form_submit_button("💾 GUARDAR DATOS"):
+            pesos_input = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, default_weights[i], 0.001, format="%.3f") for i in range(tipo_derby)]
+            if st.form_submit_button("💾 GUARDAR"):
                 if n:
                     nuevo_p = {"PARTIDO": n}
                     for idx_p, val in enumerate(pesos_input): nuevo_p[f"Peso {idx_p+1}"] = val
@@ -110,47 +110,57 @@ with tab1:
                     guardar_todos(partidos); st.rerun()
         
         if st.session_state.edit_index is not None:
-            if st.button("❌ CANCELAR EDICIÓN"): st.session_state.edit_index = None; st.rerun()
+            if st.button("❌ CANCELAR"): st.session_state.edit_index = None; st.rerun()
 
     with col2:
         if partidos:
             st.write("### LISTA DE PARTIDOS")
-            df_display = pd.DataFrame(partidos)
-            df_display.index = range(1, len(df_display) + 1)
-            
-            # Formato de 3 decimales para que no se vea el "None"
-            for col in df_display.columns:
-                if "Peso" in col:
-                    df_display[col] = df_display[col].map('{:,.3f}'.format)
-            
-            st.dataframe(df_display, use_container_width=True)
-            
-            st.write("Selecciona el número para corregir:")
-            edit_cols = st.columns(10)
-            for i in range(len(partidos)):
-                with edit_cols[i % 10]:
-                    if st.button(f"✏️{i+1}"):
-                        st.session_state.edit_index = i
-                        st.rerun()
+            # Encabezados de la tabla
+            cols_header = st.columns([0.5, 2, 1, 1, 1, 1, 1.5]) # Ajustado para hasta 4 pesos + botones
+            cols_header[0].write("*#*")
+            cols_header[1].write("*PARTIDO*")
+            for i in range(tipo_derby):
+                cols_header[i+2].write(f"*P{i+1}*")
+            cols_header[6].write("*ACCIONES*")
             
             st.write("---")
-            if st.button("🗑️ BORRAR TODA LA LISTA"): 
+            
+            for i, p in enumerate(partidos):
+                c = st.columns([0.5, 2, 1, 1, 1, 1, 1.5])
+                c[0].write(f"{i+1}")
+                c[1].write(f"*{p['PARTIDO']}*")
+                for j in range(tipo_derby):
+                    c[j+2].write(f"{p.get(f'Peso {j+1}', 0.0):.3f}")
+                
+                # Botones de Editar y Eliminar
+                btn_edit = c[6].button("✏️", key=f"edit_{i}", help="Editar")
+                btn_del = c[6].button("🗑️", key=f"del_{i}", help="Eliminar")
+                
+                if btn_edit:
+                    st.session_state.edit_index = i
+                    st.rerun()
+                if btn_del:
+                    partidos.pop(i)
+                    guardar_todos(partidos)
+                    st.rerun()
+            
+            st.write("---")
+            if st.button("🧨 BORRAR TODO"): 
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
                 st.session_state.edit_index = None
                 st.rerun()
 
 with tab2:
-    # Se carga con el tipo de derby seleccionado para que el cotejo sea exacto
+    # El cotejo se mantiene igual para respetar tu diseño de impresión
     partidos = cargar_datos(tipo_derby)
     col_a, col_b = st.columns(2)
     nombre_t = col_a.text_input("Torneo:", "DERBY DE GALLOS")
-    fecha_t = col_b.date_input("Fecha del Evento:", datetime.now())
+    fecha_t = col_b.date_input("Fecha:", datetime.now())
 
     if len(partidos) >= 2:
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [f"Peso {i+1}" for i in range(tipo_derby)]
         
-        # HTML de Impresión (Diseño blindado igual a las fotos)
         html_impresion = f"<html><head><style>@page {{ size: letter; margin: 10mm; }} body {{ font-family: Arial; }} .t-titulo {{ text-align: center; font-size: 22px; font-weight: bold; }} .t-fecha {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; }} table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }} th {{ background: #222; color: white; border: 1px solid #000; padding: 8px; font-size: 12px; }} td {{ border: 1px solid #000; text-align: center; padding: 6px 2px; font-size: 12px; }} .ronda-header {{ background: #eee; font-weight: bold; padding: 8px; border: 1px solid #000; text-align: center; }} .rojo-celda {{ border-left: 10px solid #d32f2f; font-weight: bold; }} .verde-celda {{ border-right: 10px solid #388e3c; font-weight: bold; }} .detalle-celda {{ background: #f2f2f2; font-size: 10px; font-weight: bold; }} .casilla {{ width: 18px; height: 18px; border: 2px solid #000; margin: auto; }}</style></head><body><div class='t-titulo'>{nombre_t}</div><div class='t-fecha'>FECHA: {fecha_t.strftime('%d/%m/%Y')}</div>"
 
         contador_anillos = 1
