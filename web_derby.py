@@ -32,16 +32,13 @@ st.markdown("""
         font-family: Arial, sans-serif; 
         background: white; 
         color: black;
-        font-size: 13px;
+        font-size: 12px;
     }
-    .tabla-juez th { background-color: #333; color: white; padding: 5px; text-align: center; border: 1px solid #000; }
-    .tabla-juez td { border: 1px solid #000; padding: 6px; text-align: center; }
-    .casilla { width: 18px; height: 18px; border: 2px solid #000; margin: auto; }
-    .nombre-partido { font-weight: bold; font-size: 14px; }
-    .titulo-ronda { background: #eee; padding: 10px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; }
-    
-    /* Estilo de tarjetas para vista en pantalla */
-    .pelea-card { background-color: #1e1e1e; border: 2px solid #444; border-radius: 10px; padding: 12px; margin-bottom: 20px; color: white; }
+    .tabla-juez th { background-color: #333; color: white; padding: 4px; text-align: center; border: 1px solid #000; }
+    .tabla-juez td { border: 1px solid #000; padding: 5px; text-align: center; }
+    .casilla { width: 16px; height: 16px; border: 2px solid #000; margin: auto; }
+    .nombre-partido { font-weight: bold; font-size: 13px; }
+    .titulo-ronda { background: #eee; padding: 8px; margin-top: 15px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -155,8 +152,8 @@ with tab2:
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
             html_tabla = """<table class="tabla-juez">
-                <tr><th colspan="2">ROJO</th><th colspan="3">DETALLES</th><th colspan="2">VERDE</th></tr>
-                <tr><th>Gan.</th><th>Partido</th><th>Peso</th><th>VS</th><th>Peso</th><th>Partido</th><th>Gan.</th></tr>"""
+                <tr><th colspan="3">LADO ROJO</th><th colspan="3">DETALLES DEL COTEJO</th><th colspan="3">LADO VERDE</th></tr>
+                <tr><th>Gan.</th><th>Partido</th><th>Peso</th><th>Anillo</th><th>VS</th><th>Anillo</th><th>Peso</th><th>Partido</th><th>Gan.</th></tr>"""
             
             for i, (roj, ver) in enumerate(peleas):
                 if seleccion_print != "VER TODO EL EVENTO" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
@@ -167,7 +164,9 @@ with tab2:
                     <td><div class="casilla"></div></td>
                     <td class="nombre-partido">{roj["PARTIDO"]}</td>
                     <td>{p_rojo:.3f}</td>
+                    <td>_______</td>
                     <td><b>Cot. {i+1}</b><br><small>Empate [ ]</small></td>
+                    <td>_______</td>
                     <td>{p_verde:.3f}</td>
                     <td class="nombre-partido">{ver["PARTIDO"]}</td>
                     <td><div class="casilla"></div></td>
