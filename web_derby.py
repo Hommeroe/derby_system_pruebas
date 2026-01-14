@@ -20,29 +20,28 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
-    /* Estilos de la Tabla con Identificadores de Color */
     .tabla-juez { 
         width: 100%; 
         border-collapse: collapse; 
         font-family: Arial, sans-serif; 
         background: white; 
         color: black;
-        font-size: 9px; /* Un poco más pequeña para que quepa el texto de color */
+        font-size: 10px;
     }
-    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 3px; text-align: center; border: 1px solid #000; }
-    .tabla-juez td { border: 1px solid #000; padding: 4px 1px; text-align: center; }
+    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 4px; text-align: center; border: 1px solid #000; }
+    .tabla-juez td { border: 1px solid #000; padding: 5px 2px; text-align: center; }
     
-    /* Indicadores de color */
-    .txt-rojo { color: #d32f2f; font-weight: bold; font-size: 8px; }
-    .txt-verde { color: #388e3c; font-weight: bold; font-size: 8px; }
+    /* Barras laterales de color discretas */
+    .border-rojo { border-left: 4px solid #d32f2f !important; }
+    .border-verde { border-right: 4px solid #388e3c !important; }
     
-    .casilla { width: 14px; height: 14px; border: 1px solid #000; margin: auto; background: #fff; }
-    .nombre-partido { font-weight: bold; font-size: 10px; word-break: break-all; }
-    .titulo-ronda { background: #eee; padding: 5px; margin-top: 10px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 12px; }
+    .casilla { width: 15px; height: 15px; border: 1px solid #000; margin: auto; background: #fff; }
+    .nombre-partido { font-weight: bold; font-size: 11px; }
+    .titulo-ronda { background: #eee; padding: 6px; margin-top: 10px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 13px; }
 
     @media print {
         .no-print, header, footer, .stTabs, .stSelectbox, .stButton { display: none !important; }
-        .tabla-juez { font-size: 11px; }
+        .tabla-juez { font-size: 12px; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -89,7 +88,6 @@ tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 with tab1:
     partidos = cargar_datos()
     if "edit_index" not in st.session_state: st.session_state.edit_index = None
-
     col1, col2 = st.columns([1, 1.5])
     with col1:
         tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
@@ -135,38 +133,31 @@ with tab2:
 
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [c for c in partidos[0].keys() if "Peso" in c]
-        
-        # Contador global para que los anillos no se repitan entre rondas
         contador_anillos = 1
 
         for r_idx, r_col in enumerate(pesos_keys):
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
             html_tabla = """<table class="tabla-juez">
-                <tr><th>G</th><th colspan="2">ROJO</th><th>An.</th><th>VS</th><th>An.</th><th colspan="2">VERDE</th><th>G</th></tr>"""
+                <tr><th>G</th><th>ROJO</th><th>An.</th><th>VS</th><th>An.</th><th>VERDE</th><th>G</th></tr>"""
             
             for i, (roj, ver) in enumerate(peleas):
                 if seleccion_print != "TODOS" and roj["PARTIDO"] != seleccion_print and ver["PARTIDO"] != seleccion_print:
                     continue
                 p_rojo, p_verde = roj.get(r_col, 0), ver.get(r_col, 0)
-                
-                # Anillos secuenciales (001, 002, 003, 004...)
-                an_rojo = f"{contador_anillos:03}"
-                an_verde = f"{contador_anillos + 1:03}"
-                contador_anillos += 2 # Sumamos 2 para la siguiente pelea
+                an_rojo, an_verde = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
+                contador_anillos += 2
                 
                 html_tabla += f"""
                 <tr>
                     <td><div class="casilla"></div></td>
-                    <td class="txt-rojo">ROJO</td>
-                    <td class="nombre-partido">{roj["PARTIDO"][:6]}<br>{p_rojo:.3f}</td>
+                    <td class="nombre-partido border-rojo">{roj["PARTIDO"][:8]}<br>{p_rojo:.3f}</td>
                     <td><b>{an_rojo}</b></td>
                     <td><b>P{i+1}</b></td>
                     <td><b>{an_verde}</b></td>
-                    <td class="nombre-partido">{ver["PARTIDO"][:6]}<br>{p_verde:.3f}</td>
-                    <td class="txt-verde">VERDE</td>
+                    <td class="nombre-partido border-verde">{ver["PARTIDO"][:8]}<br>{p_verde:.3f}</td>
                     <td><div class="casilla"></div></td>
                 </tr>"""
             html_tabla += "</table>"
             st.markdown(html_tabla, unsafe_allow_html=True)
             
-    st.markdown('<p style="text-align:center; font-size:10px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align:center; font-size:10px; margin-top:20px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
