@@ -22,7 +22,7 @@ st.markdown("""
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
-    /* Estilos para la tabla en pantalla */
+    /* Estilos Web */
     .tabla-juez { 
         width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; 
         background-color: white; color: black; font-size: 11px; table-layout: fixed;
@@ -30,8 +30,8 @@ st.markdown("""
     .tabla-juez th { background-color: #333; color: white; padding: 8px; border: 1px solid #000; text-align: center; }
     .tabla-juez td { border: 1px solid #000; padding: 6px 2px; text-align: center; vertical-align: middle; }
     .col-gan { width: 30px; }
-    .col-an { width: 40px; }
-    .col-detalle { width: 85px; background-color: #f0f0f0; font-weight: bold; }
+    .col-an { width: 45px; }
+    .col-detalle { width: 95px; background-color: #f0f0f0; font-weight: bold; }
     .border-rojo { border-left: 8px solid #d32f2f !important; }
     .border-verde { border-right: 8px solid #388e3c !important; }
     .casilla { width: 18px; height: 18px; border: 1px solid #000; margin: auto; background: white; }
@@ -105,6 +105,7 @@ with tab1:
     with col2:
         if partidos:
             df = pd.DataFrame(partidos)
+            df.index = range(1, len(df) + 1)
             st.dataframe(df, use_container_width=True)
             if st.button("🗑️ LIMPIAR TODO"): 
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
@@ -120,22 +121,22 @@ with tab2:
         peleas = generar_cotejo_justo(partidos)
         pesos_keys = [c for c in partidos[0].keys() if "Peso" in c]
         
-        # HTML PARA IMPRESIÓN CON UBICACIÓN CORREGIDA
+        # HTML PARA IMPRESIÓN - ESTRUCTURA RÍGIDA PARA QUE NO SE MUEVA
         html_impresion = f"""
         <html><head><title>Imprimir Cotejo</title>
         <style>
-            body {{ font-family: Arial, sans-serif; padding: 20px; color: black; }}
-            .t-titulo {{ text-align: center; font-size: 26px; font-weight: bold; margin: 0; text-transform: uppercase; }}
-            .t-fecha {{ text-align: center; font-size: 16px; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 10px; }}
-            table {{ width: 100%; border-collapse: collapse; margin-bottom: 30px; table-layout: fixed; }}
-            th {{ background: #222 !important; color: white !important; border: 1px solid #000; padding: 10px; font-size: 13px; text-transform: uppercase; }}
-            td {{ border: 1px solid #000; text-align: center; padding: 10px 2px; font-size: 13px; vertical-align: middle; }}
-            .ronda-header {{ background: #eee !important; font-weight: bold; padding: 12px; border: 1px solid #000; text-align: center; font-size: 18px; }}
-            .rojo-celda {{ border-left: 12px solid #d32f2f !important; font-weight: bold; }}
-            .verde-celda {{ border-right: 12px solid #388e3c !important; font-weight: bold; }}
-            .detalle-celda {{ background: #f2f2f2 !important; font-size: 11px; font-weight: bold; line-height: 1.5; }}
-            .casilla {{ width: 22px; height: 22px; border: 2px solid #000; margin: auto; }}
-            b {{ font-size: 14px; }}
+            @page {{ size: letter; margin: 10mm; }}
+            body {{ font-family: Arial, sans-serif; padding: 0; color: black; }}
+            .t-titulo {{ text-align: center; font-size: 24px; font-weight: bold; margin: 0; text-transform: uppercase; }}
+            .t-fecha {{ text-align: center; font-size: 14px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 5px; }}
+            table {{ width: 100%; border-collapse: collapse; margin-bottom: 25px; table-layout: fixed; }}
+            th {{ background: #222 !important; color: white !important; border: 1px solid #000; padding: 8px; font-size: 12px; }}
+            td {{ border: 1px solid #000; text-align: center; padding: 8px 2px; font-size: 12px; vertical-align: middle; overflow: hidden; }}
+            .ronda-header {{ background: #ddd !important; font-weight: bold; padding: 10px; border: 1px solid #000; text-align: center; font-size: 16px; margin-top: 5px; }}
+            .rojo-celda {{ border-left: 10px solid #d32f2f !important; font-weight: bold; }}
+            .verde-celda {{ border-right: 10px solid #388e3c !important; font-weight: bold; }}
+            .detalle-celda {{ background: #f2f2f2 !important; font-size: 10px; font-weight: bold; line-height: 1.3; }}
+            .casilla {{ width: 20px; height: 20px; border: 2px solid #000; margin: auto; }}
         </style></head><body>
         <div class='t-titulo'>{nombre_t}</div>
         <div class='t-fecha'>Fecha: {fecha_t.strftime('%d/%m/%Y')}</div>
@@ -143,20 +144,19 @@ with tab2:
 
         contador_anillos = 1
         for r_idx, r_col in enumerate(pesos_keys):
-            # Títulos de columnas fijos para que nada se mueva
+            # Títulos de columnas con anchos fijos en % para que no se desacomoden
             html_impresion += f"<div class='ronda-header'>RONDA {r_idx+1}</div>"
             html_impresion += """<table>
                 <tr>
-                    <th style='width:35px;'>G</th>
-                    <th>LADO ROJO</th>
-                    <th style='width:45px;'>An.</th>
-                    <th style='width:90px;'>DETALLE</th>
-                    <th style='width:45px;'>An.</th>
-                    <th>LADO VERDE</th>
-                    <th style='width:35px;'>G</th>
+                    <th style='width:7%;'>G</th>
+                    <th style='width:30%;'>LADO ROJO</th>
+                    <th style='width:8%;'>An.</th>
+                    <th style='width:10%;'>DETALLE</th>
+                    <th style='width:8%;'>An.</th>
+                    <th style='width:30%;'>LADO VERDE</th>
+                    <th style='width:7%;'>G</th>
                 </tr>"""
             
-            # Tabla visual para la web
             st.markdown(f'<div class="titulo-ronda">RONDA {r_idx + 1}</div>', unsafe_allow_html=True)
             html_web = f'<table class="tabla-juez"><tr><th class="col-gan">G</th><th>LADO ROJO</th><th class="col-an">An.</th><th class="col-detalle">DETALLE</th><th class="col-an">An.</th><th>LADO VERDE</th><th class="col-gan">G</th></tr>'
             
@@ -166,12 +166,14 @@ with tab2:
                 an1, an2 = f"{contador_anillos:03}", f"{contador_anillos + 1:03}"
                 contador_anillos += 2
                 
+                num_pelea = i + 1
+                
                 fila_base = f"""
                 <tr>
                     <td><div class="casilla"></div></td>
                     <td class="CLASS_ROJO"><b>{roj['PARTIDO']}</b><br>{p_rojo:.3f}</td>
                     <td><b>{an1}</b></td>
-                    <td class="CLASS_DETALLE">P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td>
+                    <td class="CLASS_DETALLE">P{num_pelea}<br>DIF: {dif:.3f}<br>E [ ]</td>
                     <td><b>{an2}</b></td>
                     <td class="CLASS_VERDE"><b>{ver['PARTIDO']}</b><br>{p_verde:.3f}</td>
                     <td><div class="casilla"></div></td>
