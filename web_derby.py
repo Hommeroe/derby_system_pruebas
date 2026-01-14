@@ -18,54 +18,52 @@ st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
 
 st.markdown("""
     <style>
+    /* Estilos generales */
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
     
-    /* ENCABEZADO DE IMPRESIÓN */
-    .encabezado-impresion { display: none; text-align: center; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 5px; }
-    .torneo-titulo { font-size: 20px; font-weight: bold; text-transform: uppercase; margin: 0; color: black; }
-    .torneo-fecha { font-size: 12px; color: black; margin: 5px 0; }
+    /* Encabezado que solo se ve al imprimir */
+    .encabezado-impresion { display: none; text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; }
+    .torneo-titulo { font-size: 22px; font-weight: bold; margin: 0; color: black; }
+    .torneo-fecha { font-size: 14px; color: black; margin-bottom: 10px; }
 
-    /* TABLA PROFESIONAL */
+    /* Tabla Estilo Profesional */
     .tabla-juez { 
-        width: 100% !important; 
-        border-collapse: collapse !important; 
-        font-family: Arial, sans-serif !important; 
-        background-color: white !important; 
-        color: black !important;
+        width: 100%; 
+        border-collapse: collapse; 
+        font-family: Arial, sans-serif; 
+        background-color: white; 
+        color: black;
         font-size: 10px;
         table-layout: fixed;
     }
-    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 5px; text-align: center; border: 1px solid #000 !important; }
-    .tabla-juez td { border: 1px solid #000 !important; padding: 6px 2px; text-align: center; vertical-align: middle; color: black !important; }
+    .tabla-juez th { background-color: #333 !important; color: white !important; padding: 5px; border: 1px solid #000; }
+    .tabla-juez td { border: 1px solid #000; padding: 6px 2px; text-align: center; vertical-align: middle; }
     
-    /* COLUMNAS */
     .col-gan { width: 25px; }
     .col-an { width: 35px; }
-    .col-detalle { width: 65px; background-color: #f9f9f9 !important; font-size: 9px; font-weight: bold; }
+    .col-detalle { width: 65px; background-color: #f0f0f0; }
     .col-partido { width: auto; }
 
-    /* BORDES DE COLOR */
     .border-rojo { border-left: 6px solid #d32f2f !important; }
     .border-verde { border-right: 6px solid #388e3c !important; }
     
-    .casilla { width: 16px; height: 16px; border: 1px solid #000 !important; margin: auto; background-color: white !important; }
-    .nombre-partido { font-weight: bold; font-size: 11px; display: block; }
-    .peso-texto { font-weight: normal; font-size: 10px; color: black !important; }
-    .titulo-ronda { background-color: #eee !important; padding: 8px; margin-top: 20px; border: 1px solid #000 !important; font-weight: bold; text-align: center; color: black !important; font-size: 14px; }
+    .casilla { width: 16px; height: 16px; border: 1px solid #000; margin: auto; background: white; }
+    .nombre-partido { font-weight: bold; font-size: 11px; }
+    .titulo-ronda { background-color: #ddd; padding: 8px; margin-top: 20px; border: 1px solid #000; font-weight: bold; text-align: center; color: black; font-size: 14px; }
 
-    /* CORRECCIÓN DE IMPRESIÓN */
+    /* FUERZA LA IMPRESIÓN - ESTO CORRIGE LA HOJA EN BLANCO */
     @media print {
-        @page { size: auto; margin: 10mm; }
-        body { background: white !important; }
-        .no-print, header, footer, .stTabs, [data-testid="stSidebar"], .stSelectbox, .stButton, [data-testid="stForm"] { 
+        header, footer, .stTabs, [data-testid="stSidebar"], .no-print, .stButton, .stForm { 
             display: none !important; 
         }
-        .encabezado-impresion { display: block !important; visibility: visible !important; }
-        .tabla-juez { visibility: visible !important; display: table !important; width: 100% !important; }
-        .titulo-ronda { visibility: visible !important; display: block !important; }
+        .encabezado-impresion { display: block !important; }
         .main .block-container { padding: 0 !important; margin: 0 !important; }
-        .stMarkdown { display: block !important; }
+        .tabla-juez { display: table !important; width: 100% !important; border: 1px solid #000 !important; }
+        .titulo-ronda { display: block !important; background-color: #ddd !important; -webkit-print-color-adjust: exact; }
+        td, th { border: 1px solid #000 !important; -webkit-print-color-adjust: exact; }
+        .border-rojo { border-left: 6px solid #d32f2f !important; -webkit-print-color-adjust: exact; }
+        .border-verde { border-right: 6px solid #388e3c !important; -webkit-print-color-adjust: exact; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -153,9 +151,10 @@ with tab2:
     fecha_torneo = col_b.date_input("Fecha del Evento:", datetime.now())
     st.markdown('</div>', unsafe_allow_html=True)
 
+    # Encabezado que SÍ aparecerá en la impresión
     st.markdown(f"""
         <div class="encabezado-impresion">
-            <p class="torneo-titulo">{nombre_torneo}</p>
+            <h1 class="torneo-titulo">{nombre_torneo}</h1>
             <p class="torneo-fecha">Fecha: {fecha_torneo.strftime('%d/%m/%Y')}</p>
         </div>
     """, unsafe_allow_html=True)
@@ -164,8 +163,9 @@ with tab2:
         st.markdown('<div class="no-print">', unsafe_allow_html=True)
         opciones_print = ["TODOS"] + [p["PARTIDO"] for p in partidos]
         seleccion_print = st.selectbox("Filtrar por Partido:", opciones_print)
-        if st.button("📄 IMPRIMIR HOJA"): 
-            st.components.v1.html("<script>window.parent.print();</script>", height=0)
+        # Botón de impresión corregido
+        if st.button("📄 IMPRIMIR"): 
+            st.components.v1.html("<script>window.print();</script>", height=0)
         st.markdown('</div>', unsafe_allow_html=True)
 
         peleas = generar_cotejo_justo(partidos)
@@ -188,11 +188,11 @@ with tab2:
                 html_tabla += f"""
                 <tr>
                     <td class="col-gan"><div class="casilla"></div></td>
-                    <td class="col-partido border-rojo"><span class="nombre-partido">{roj["PARTIDO"]}</span><br><span class="peso-texto">{p_rojo:.3f}</span></td>
+                    <td class="col-partido border-rojo"><span class="nombre-partido">{roj["PARTIDO"]}</span><br>{p_rojo:.3f}</td>
                     <td class="col-an"><b>{an_rojo}</b></td>
                     <td class="col-detalle"><b>P{i+1}</b><br>DIF: {diferencia:.3f}<br>E [ ]</td>
                     <td class="col-an"><b>{an_verde}</b></td>
-                    <td class="col-partido border-verde"><span class="nombre-partido">{ver["PARTIDO"]}</span><br><span class="peso-texto">{p_verde:.3f}</span></td>
+                    <td class="col-partido border-verde"><span class="nombre-partido">{ver["PARTIDO"]}</span><br>{p_verde:.3f}</td>
                     <td class="col-gan"><div class="casilla"></div></td>
                 </tr>"""
             html_tabla += "</table>"
