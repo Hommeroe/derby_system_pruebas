@@ -21,6 +21,8 @@ st.markdown("""
     <style>
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
+    /* Estilo para que los botones de acción se vean uniformes */
+    .stButton > button { border-radius: 2px; font-size: 11px; height: 28px; width: 100%; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -64,19 +66,18 @@ def generar_cotejo_justo(lista_original):
 
 # --- INTERFAZ ---
 st.markdown('<p class="software-brand">DerbySystem PRUEBAS</p>', unsafe_allow_html=True)
-# Usamos iconos de texto más seguros
-tab1, tab2 = st.tabs(["📝 REGISTRO", "📊 COTEJO"])
+tab1, tab2 = st.tabs(["REGISTRO DE PARTIDOS", "COTEJO Y PESOS"])
 
 with tab1:
-    tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
+    tipo_derby = st.radio("Gallos por Partido:", [2, 3, 4], horizontal=True)
     partidos = cargar_datos(tipo_derby)
     
     if "edit_idx" not in st.session_state: st.session_state.edit_idx = None
     
-    col_reg, col_list = st.columns([1.2, 2.5])
+    col_izq, col_der = st.columns([1.2, 2.5])
     
-    with col_reg:
-        st.write("### DATOS")
+    with col_izq:
+        st.write("### ENTRADA DE DATOS")
         v_nombre = ""
         v_pesos = [1.800] * tipo_derby
         
@@ -87,13 +88,13 @@ with tab1:
                 v_nombre = p_edit["PARTIDO"]
                 for i in range(tipo_derby):
                     v_pesos[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.info(f"Modificando # {idx + 1}")
+            st.info(f"Modificando Partido {idx + 1}")
 
         with st.form("form_registro", clear_on_submit=True):
-            n = st.text_input("NOMBRE DEL PARTIDO:", value=v_nombre).upper()
+            n = st.text_input("NOMBRE:", value=v_nombre).upper()
             pesos_in = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, v_pesos[i], 0.001, format="%.3f") for i in range(tipo_derby)]
             
-            label_boton = "💾 ACTUALIZAR" if st.session_state.edit_idx is not None else "💾 GUARDAR"
+            label_boton = "ACTUALIZAR DATOS" if st.session_state.edit_idx is not None else "GUARDAR PARTIDO"
             if st.form_submit_button(label_boton):
                 if n:
                     nuevo = {"PARTIDO": n}
@@ -106,35 +107,35 @@ with tab1:
                     guardar_todos(partidos); st.rerun()
         
         if st.session_state.edit_idx is not None:
-            if st.button("❌ CANCELAR"):
+            if st.button("CANCELAR"):
                 st.session_state.edit_idx = None
                 st.rerun()
 
-    with col_list:
+    with col_der:
         if partidos:
-            st.write("### LISTA DE PARTIDOS")
+            st.write("### LISTA ACTUAL")
             df = pd.DataFrame(partidos)
             df.index = range(1, len(df) + 1)
             for c in df.columns:
                 if "Peso" in c: df[c] = df[c].map('{:,.3f}'.format)
             
-            # TU TABLA DE CELDAS PREFERIDA
+            # TABLA LIMPIA ORIGINAL
             st.table(df)
             
-            st.write("*ACCIONES:*")
+            st.write("*GESTIÓN DE FILAS:*")
+            # Botones con texto profesional
             for i in range(len(partidos)):
-                c1, c2, _ = st.columns([1, 1, 4])
-                # Usamos iconos y texto para asegurar que se vea bien
-                if c1.button(f"✏️ {i+1}", key=f"e{i}"):
+                c1, c2, c3 = st.columns([1.2, 1.2, 4])
+                if c1.button(f"CORREGIR {i+1}", key=f"e{i}"):
                     st.session_state.edit_idx = i
                     st.rerun()
-                if c2.button(f"🗑️ {i+1}", key=f"b{i}"):
+                if c2.button(f"ELIMINAR {i+1}", key=f"b{i}"):
                     partidos.pop(i)
                     guardar_todos(partidos)
                     st.rerun()
             
             st.write("---")
-            if st.button("🗑️ LIMPIAR TODO"):
+            if st.button("VACIAR LISTA COMPLETA"):
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
                 st.session_state.edit_idx = None
                 st.rerun()
@@ -142,14 +143,14 @@ with tab1:
 with tab2:
     partidos = cargar_datos(tipo_derby)
     c_t, c_f = st.columns(2)
-    nombre_torneo = c_t.text_input("Torneo:", "DERBY DE GALLOS")
+    nombre_torneo = c_t.text_input("Nombre Torneo:", "DERBY DE GALLOS")
     fecha_torneo = c_f.date_input("Fecha:", datetime.now())
 
     if len(partidos) >= 2:
         peleas = generar_cotejo_justo(partidos)
         pesos_k = [f"Peso {i+1}" for i in range(tipo_derby)]
         
-        # Diseño de impresión con el anillo automático
+        # El anillo se genera automático [2026-01-14]
         html_doc = f"<html><head><style>@page {{ size: letter; margin: 10mm; }} body {{ font-family: Arial; }} .t-titulo {{ text-align: center; font-size: 22px; font-weight: bold; }} .t-fecha {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; }} table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }} th {{ background: #222; color: white; border: 1px solid #000; padding: 8px; font-size: 12px; }} td {{ border: 1px solid #000; text-align: center; padding: 6px 2px; font-size: 12px; }} .ronda-h {{ background: #eee; font-weight: bold; padding: 8px; border: 1px solid #000; text-align: center; }} .rojo {{ border-left: 10px solid #d32f2f; font-weight: bold; }} .verde {{ border-right: 10px solid #388e3c; font-weight: bold; }} .det {{ background: #f2f2f2; font-size: 10px; font-weight: bold; }} .box {{ width: 18px; height: 18px; border: 2px solid #000; margin: auto; }}</style></head><body><div class='t-titulo'>{nombre_torneo}</div><div class='t-fecha'>FECHA: {fecha_torneo.strftime('%d/%m/%Y')}</div>"
 
         contador_a = 1
@@ -166,12 +167,12 @@ with tab2:
                 
                 fila = f"<tr><td><div class='box'></div></td><td class='rojo'><b>{roj['PARTIDO']}</b><br>{p_r:.3f}</td><td><b>{an1}</b></td><td class='det'>P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td><td><b>{an2}</b></td><td class='verde'><b>{ver['PARTIDO']}</b><br>{p_v:.3f}</td><td><div class='box'></div></td></tr>"
                 html_doc += fila
-                st.write(f"Pelea {i+1}: {roj['PARTIDO']} vs {ver['PARTIDO']} (Anillos {an1}-{an2})")
+                st.write(f"P{i+1}: {roj['PARTIDO']} vs {ver['PARTIDO']} (Anillos {an1}-{an2})")
             
             html_doc += "</table>"
 
         html_doc += "</body></html>"
-        if st.button("📄 GENERAR HOJA DE IMPRESIÓN"):
+        if st.button("IMPRIMIR RESULTADOS"):
             js = f"<script>var win = window.open('', '_blank'); win.document.write({json.dumps(html_doc)}); win.document.close(); win.focus(); setTimeout(function(){{ win.print(); }}, 500);</script>"
             st.components.v1.html(js, height=0)
 
