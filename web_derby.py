@@ -4,24 +4,22 @@ import os
 from datetime import datetime
 import json
 
-# --- 1. CONFIGURACIÓN DE PÁGINA ---
+# --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
 
-# Estilos CSS actualizados para incluir la columna de Pelea y Empate
 st.markdown("""
     <style>
-    .software-brand { color: #555; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-align: center; margin-bottom: 20px; text-transform: uppercase; }
+    .software-brand { color: #555; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-align: center; margin-bottom: 20px; }
     .stButton > button { border-radius: 4px; font-size: 12px; height: 35px; width: 100%; background-color: white; border: 1px solid #ccc; }
     
+    /* Estilo de la tabla de cotejo profesional */
     .tabla-cotejo { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-family: sans-serif; }
     .tabla-cotejo th { background: #1a1a1a; color: white; border: 1px solid #000; padding: 6px; font-size: 11px; text-align: center; }
-    .tabla-cotejo td { border: 1px solid #000; text-align: center; padding: 6px; font-size: 12px; }
-    
-    .celda-roja { border-left: 10px solid #d32f2f !important; font-weight: bold; width: 30%; }
-    .celda-verde { border-right: 10px solid #388e3c !important; font-weight: bold; width: 30%; }
+    .tabla-cotejo td { border: 1px solid #000; text-align: center; padding: 8px; font-size: 13px; }
+    .celda-roja { border-left: 10px solid #d32f2f !important; font-weight: bold; }
+    .celda-verde { border-right: 10px solid #388e3c !important; font-weight: bold; }
     .header-ronda { background: #f0f0f0; font-weight: bold; text-align: center; border: 2px solid #000; padding: 8px; margin-top: 20px; font-size: 16px; }
-    .box-g { width: 16px; height: 16px; border: 1px solid #000; margin: auto; }
-    .col-pelea { background: #f9f9f9; font-weight: bold; width: 40px; }
+    .box-g { width: 18px; height: 18px; border: 1px solid #000; margin: auto; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -105,19 +103,15 @@ with tab1:
                 if c1.button("EDITAR"): st.session_state.edit_idx = idx_s; st.rerun()
                 if c2.button("ELIMINAR"): 
                     partidos_actuales.pop(idx_s); guardar_todos(partidos_actuales); st.rerun()
-            if st.button("LIMPIAR EVENTO"):
-                if os.path.exists(DB_FILE): os.remove(DB_FILE)
-                st.session_state.edit_idx = None; st.rerun()
 
 with tab2:
     if hay_datos and len(partidos_actuales) >= 2:
         st.write("### COTEJO Y PESOS")
         
-        # HTML base para la impresión
-        html_imprimir = "<html><head><style>body{font-family:Arial;} table{width:100%; border-collapse:collapse; margin-bottom:15px;} th{background:#000; color:#fff; border:1px solid #000; padding:5px; font-size:11px;} td{border:1px solid #000; text-align:center; padding:5px; font-size:12px;} .rojo{border-left:10px solid #d32f2f; font-weight:bold;} .verde{border-right:10px solid #388e3c; font-weight:bold;} .ronda-header{background:#eee; font-weight:bold; text-align:center; border:1px solid #000; padding:5px;}</style></head><body>"
+        html_imprimir = "<html><head><style>body{font-family:Arial;} table{width:100%; border-collapse:collapse; margin-bottom:15px;} th{background:#000; color:#fff; border:1px solid #000; padding:5px; font-size:11px;} td{border:1px solid #000; text-align:center; padding:5px; font-size:12px;} .rojo{border-left:12px solid #d32f2f; font-weight:bold;} .verde{border-right:12px solid #388e3c; font-weight:bold;} .ronda-header{background:#eee; font-weight:bold; text-align:center; border:1px solid #000; padding:5px;}</style></head><body>"
 
         anillo_count = 1
-        num_pelea = 1  # Contador para el número de pelea
+        pelea_count = 1
         columnas_peso = [f"Peso {i+1}" for i in range(gallos_en_archivo)]
 
         for idx, col_p in enumerate(columnas_peso):
@@ -125,8 +119,7 @@ with tab2:
             st.markdown(f"<div class='header-ronda'>{titulo_r}</div>", unsafe_allow_html=True)
             html_imprimir += f"<div class='ronda-header'>{titulo_r}</div>"
             
-            # Tabla con columnas de Pelea y Empate E[]
-            # [cite: 2026-01-14] El anillo se genera automático.
+            # Encabezado de la tabla con # de Pelea y E[ ]
             tabla_html = "<table class='tabla-cotejo'><tr><th>#</th><th>G</th><th>ROJO</th><th>An.</th><th>DIF.</th><th>E[ ]</th><th>An.</th><th>VERDE</th><th>G</th></tr>"
             
             temp_lista = partidos_actuales.copy()
@@ -138,30 +131,19 @@ with tab2:
                 
                 dif = abs(p_r - p_v)
                 
-                fila = f"""
-                <tr>
-                    <td class='col-pelea'>{num_pelea}</td>
-                    <td><div class='box-g'></div></td>
-                    <td class='celda-roja'>{r['PARTIDO']}<br>{p_r:.3f}</td>
-                    <td>{an1}</td>
-                    <td>{dif:.3f}</td>
-                    <td><div class='box-g'></div></td>
-                    <td>{an2}</td>
-                    <td class='celda-verde'>{v['PARTIDO']}<br>{p_v:.3f}</td>
-                    <td><div class='box-g'></div></td>
-                </tr>
-                """
+                fila = f"<tr><td>{pelea_count}</td><td><div class='box-g'></div></td><td class='celda-roja'>{r['PARTIDO']}<br>{p_r:.3f}</td><td>{an1}</td><td>{dif:.3f}</td><td><div class='box-g'></div></td><td>{an2}</td><td class='celda-verde'>{v['PARTIDO']}<br>{p_v:.3f}</td><td><div class='box-g'></div></td></tr>"
                 tabla_html += fila
-                num_pelea += 1
+                pelea_count += 1
             
             tabla_html += "</table>"
+            # IMPORTANTE: st.markdown con unsafe_allow_html=True para que se vea la tabla
             st.markdown(tabla_html, unsafe_allow_html=True)
             html_imprimir += tabla_html
 
-        if st.button("📄 GENERAR REPORTE"):
+        if st.button("📄 IMPRIMIR COTEJO"):
             js = f"<script>var w=window.open('','_blank');w.document.write({json.dumps(html_imprimir)});w.document.close();setTimeout(function(){{w.print();}},500);</script>"
             st.components.v1.html(js, height=0)
     else:
-        st.info("Agregue al menos 2 partidos para generar el cotejo.")
+        st.info("Registre al menos 2 partidos.")
 
 st.markdown('<p style="text-align:center; font-size:10px; color:#aaa; margin-top:50px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
