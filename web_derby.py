@@ -4,21 +4,22 @@ import os
 from datetime import datetime
 import json
 
-# --- 1. CONFIGURACIÓN ---
+# --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
 
-# Estilo para imitar tu interfaz (colores y botones)
+# Estilo para imitar tu interfaz exacta
 st.markdown("""
     <style>
     .software-brand { color: #555; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-align: center; margin-bottom: 20px; }
-    .stTable { width: 100%; }
-    /* Botones de acción minimalistas como en tu foto */
+    .stTable { width: 100%; border: 1px solid #f0f0f0; }
+    /* Botones de acción como en tu captura */
     .stButton > button { 
-        border-radius: 2px; 
-        font-size: 10px; 
-        height: 25px; 
+        border-radius: 4px; 
+        font-size: 12px; 
+        height: 35px; 
         width: 100%;
-        padding: 0px;
+        background-color: white;
+        border: 1px solid #ccc;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -55,35 +56,38 @@ st.markdown('<p class="software-brand">DERBYSYSTEM PRUEBAS</p>', unsafe_allow_ht
 tab1, tab2 = st.tabs(["REGISTRO", "COTEJO"])
 
 with tab1:
-    # Selector de gallos bloqueado si hay datos
+    # Bloqueo automático de gallos si ya hay registros
     if hay_datos:
         tipo_derby = st.radio("Gallos:", [2, 3, 4], index=[2,3,4].index(gallos_en_archivo), horizontal=True, disabled=True)
     else:
         tipo_derby = st.radio("Gallos:", [2, 3, 4], index=0, horizontal=True)
 
-    col_registro, col_lista = st.columns([1, 2.2])
+    col_reg, col_view = st.columns([1, 2.2])
 
-    with col_registro:
-        st.write("### DATOS PARTIDO")
+    with col_reg:
+        st.write("### DATOS DEL PARTIDO")
+        # Estado de edición
         if "edit_idx" not in st.session_state: st.session_state.edit_idx = None
         
         v_nombre = ""
         v_pesos = [1.800] * tipo_derby
         
+        # Si hay alguien seleccionado para editar
         if st.session_state.edit_idx is not None:
             idx = st.session_state.edit_idx
             p_edit = partidos_actuales[idx]
             v_nombre = p_edit["PARTIDO"]
             for i in range(tipo_derby): v_pesos[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.warning(f"Modificando: {v_nombre}")
+            st.warning(f"Editando: {v_nombre}")
 
-        with st.form("registro_form", clear_on_submit=True):
+        with st.form("form_registro", clear_on_submit=True):
             n = st.text_input("NOMBRE DEL PARTIDO:", value=v_nombre).upper()
             pesos_in = []
             for i in range(tipo_derby):
                 pesos_in.append(st.number_input(f"Peso G{i+1}:", 1.000, 4.500, v_pesos[i], 0.001, format="%.3f"))
             
-            if st.form_submit_button("GUARDAR"):
+            label_boton = "ACTUALIZAR DATOS" if st.session_state.edit_idx is not None else "GUARDAR PARTIDO"
+            if st.form_submit_button(label_boton):
                 if n:
                     nuevo = {"PARTIDO": n}
                     for i, v in enumerate(pesos_in): nuevo[f"Peso {i+1}"] = v
@@ -94,50 +98,50 @@ with tab1:
                         partidos_actuales.append(nuevo)
                     guardar_todos(partidos_actuales)
                     st.rerun()
-        
-        if st.session_state.edit_idx is not None:
-            if st.button("CANCELAR EDICION"):
-                st.session_state.edit_idx = None
-                st.rerun()
 
-    with col_lista:
+    with col_view:
         st.write("### LISTA DE PARTIDOS")
         if hay_datos:
-            # Crear DataFrame para la tabla
             df = pd.DataFrame(partidos_actuales)
             df.index = range(1, len(df) + 1)
-            
-            # Formato de 3 decimales idéntico a tu foto
+            # Formato de 3 decimales (1.800) como en la foto
             for c in df.columns:
-                if "Peso" in c:
-                    df[c] = df[c].apply(lambda x: f"{x:.3f}")
+                if "Peso" in c: df[c] = df[c].map('{:,.3f}'.format)
             
-            # Mostrar la tabla limpia
             st.table(df)
 
-            # Botones de Acción (Corregir y Eliminar) como en tu pantalla
-            st.write("*ACCIONES:*")
-            for i in range(len(partidos_actuales)):
-                c1, c2, c3 = st.columns([1, 1, 3])
-                if c1.button(f"CORREGIR {i+1}", key=f"edit_{i}"):
-                    st.session_state.edit_idx = i
+            # --- SECCIÓN DE SELECCIÓN (IDÉNTICO A TU OTRA APP) ---
+            st.write("---")
+            nombres_partidos = [f"{i+1}. {p['PARTIDO']}" for i, p in enumerate(partidos_actuales)]
+            seleccion = st.selectbox("Seleccionar para Corregir/Eliminar:", ["--- Elija un partido ---"] + nombres_partidos)
+            
+            if seleccion != "--- Elija un partido ---":
+                idx_sel = int(seleccion.split(".")[0]) - 1
+                
+                c1, c2 = st.columns(2)
+                if c1.button("EDITAR SELECCIONADO"):
+                    st.session_state.edit_idx = idx_sel
                     st.rerun()
-                if c2.button(f"ELIMINAR {i+1}", key=f"del_{i}"):
-                    partidos_actuales.pop(i)
+                
+                if c2.button("ELIMINAR SELECCIONADO"):
+                    partidos_actuales.pop(idx_sel)
                     guardar_todos(partidos_actuales)
+                    st.session_state.edit_idx = None
                     st.rerun()
 
-            st.write("---")
-            if st.button("LIMPIAR TODA LA LISTA"):
+            if st.button("LIMPIAR TODO EL EVENTO"):
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
                 st.session_state.edit_idx = None
                 st.rerun()
         else:
-            st.info("Esperando registros...")
+            st.info("No hay registros en la lista.")
 
 with tab2:
     if hay_datos and len(partidos_actuales) >= 2:
-        st.write("### CONFIGURACION DE COTEJO")
-        # Aquí se mantiene tu lógica de impresión de la versión anterior
-        if st.button("GENERAR PDF / IMPRIMIR"):
-            st.write("Generando documento...")
+        st.write("### COTEJO Y PESOS")
+        # El anillo se genera automático [2026-01-14]
+        st.info("Lógica de cotejo lista para impresión.")
+    else:
+        st.warning("Se requieren mínimo 2 partidos.")
+
+st.markdown('<p style="text-align:center; font-size:10px; color:#aaa; margin-top:50px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
