@@ -4,14 +4,23 @@ import os
 from datetime import datetime
 import json
 
-# --- CONFIGURACIÓN ---
+# --- 1. CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
 
+# Estilo para imitar tu interfaz exacta y la tabla de la foto
 st.markdown("""
     <style>
     .software-brand { color: #555; font-size: 14px; font-weight: bold; letter-spacing: 2px; text-align: center; margin-bottom: 20px; }
     .stTable { width: 100%; border: 1px solid #f0f0f0; }
     .stButton > button { border-radius: 4px; font-size: 12px; height: 35px; width: 100%; background-color: white; border: 1px solid #ccc; }
+    
+    /* Estilos para la tabla de cotejo en pantalla */
+    .cotejo-table { width: 100%; border-collapse: collapse; font-family: sans-serif; margin-bottom: 20px; }
+    .cotejo-table th { background: #333; color: white; border: 1px solid #000; padding: 4px; font-size: 12px; }
+    .cotejo-table td { border: 1px solid #000; text-align: center; padding: 5px; font-size: 12px; }
+    .rojo-celda { border-left: 10px solid #d32f2f !important; font-weight: bold; }
+    .verde-celda { border-right: 10px solid #388e3c !important; font-weight: bold; }
+    .ronda-header { background: #eeeeee; font-weight: bold; text-align: center; border: 1px solid #000; padding: 5px; margin-top: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -42,7 +51,7 @@ partidos_actuales, gallos_en_archivo = cargar_datos()
 hay_datos = len(partidos_actuales) > 0
 
 st.markdown('<p class="software-brand">DERBYSYSTEM PRUEBAS</p>', unsafe_allow_html=True)
-tab1, tab2 = st.tabs(["REGISTRO", "COTEJO"])
+tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
 with tab1:
     if hay_datos:
@@ -62,12 +71,12 @@ with tab1:
             p_edit = partidos_actuales[idx]
             v_nombre = p_edit["PARTIDO"]
             for i in range(tipo_derby): v_pesos[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.warning(f"Editando: {v_nombre}")
+            st.warning(f"Modificando: {v_nombre}")
 
         with st.form("form_registro", clear_on_submit=True):
             n = st.text_input("NOMBRE DEL PARTIDO:", value=v_nombre).upper()
             pesos_in = [st.number_input(f"Peso G{i+1}:", 1.000, 4.500, v_pesos[i], 0.001, format="%.3f") for i in range(tipo_derby)]
-            if st.form_submit_button("GUARDAR PARTIDO"):
+            if st.form_submit_button("GUARDAR"):
                 if n:
                     nuevo = {"PARTIDO": n}
                     for i, v in enumerate(pesos_in): nuevo[f"Peso {i+1}"] = v
@@ -85,57 +94,49 @@ with tab1:
             for c in df.columns:
                 if "Peso" in c: df[c] = df[c].map('{:,.3f}'.format)
             st.table(df)
+            
             st.write("---")
             nombres_partidos = [f"{i+1}. {p['PARTIDO']}" for i, p in enumerate(partidos_actuales)]
             seleccion = st.selectbox("Seleccionar para Corregir/Eliminar:", ["--- Elija un partido ---"] + nombres_partidos)
             if seleccion != "--- Elija un partido ---":
                 idx_sel = int(seleccion.split(".")[0]) - 1
                 c1, c2 = st.columns(2)
-                if c1.button("EDITAR SELECCIONADO"):
-                    st.session_state.edit_idx = idx_sel; st.rerun()
-                if c2.button("ELIMINAR SELECCIONADO"):
-                    partidos_actuales.pop(idx_sel); guardar_todos(partidos_actuales); st.rerun()
-            if st.button("LIMPIAR TODO EL EVENTO"):
-                if os.path.exists(DB_FILE): os.remove(DB_FILE)
-                st.session_state.edit_idx = None; st.rerun()
+                if c1.button("EDITAR"): st.session_state.edit_idx = idx_sel; st.rerun()
+                if c2.button("ELIMINAR"): partidos_actuales.pop(idx_sel); guardar_todos(partidos_actuales); st.rerun()
 
 with tab2:
     if hay_datos and len(partidos_actuales) >= 2:
-        st.write("### COTEJO Y PESOS")
-        col1, col2 = st.columns(2)
-        nom_torneo = col1.text_input("Nombre del Torneo:", "DERBY DE GALLOS")
-        fec_torneo = col2.date_input("Fecha:", datetime.now())
-
-        # El anillo se genera automático [2026-01-14]
-        html_cotejo = f"<html><head><style>@page {{ size: letter; margin: 10mm; }} body {{ font-family: Arial, sans-serif; }} .t-titulo {{ text-align: center; font-size: 20px; font-weight: bold; }} .t-fecha {{ text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; }} table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }} th {{ background: #333; color: white; border: 1px solid #000; padding: 6px; font-size: 11px; }} td {{ border: 1px solid #000; text-align: center; padding: 5px; font-size: 11px; }} .rojo {{ border-left: 12px solid #d32f2f; font-weight: bold; }} .verde {{ border-right: 12px solid #388e3c; font-weight: bold; }} .det {{ background: #f9f9f9; font-size: 9px; font-weight: bold; }} .box {{ width: 14px; height: 14px; border: 2px solid #000; margin: auto; }}</style></head><body>"
-        html_cotejo += f"<div class='t-titulo'>{nom_torneo}</div><div class='t-fecha'>FECHA: {fec_torneo.strftime('%d/%m/%Y')}</div>"
-
-        contador_a = 1
+        # El anillo se genera automático
+        contador_anillos = 1
         pesos_cols = [f"Peso {i+1}" for i in range(gallos_en_archivo)]
         
+        # HTML para Impresión (Idéntico a tu foto del cel)
+        html_impresion = "<html><head><style>body{font-family:Arial;} table{width:100%; border-collapse:collapse; margin-bottom:15px;} th{background:#333; color:white; border:1px solid #000; padding:5px; font-size:12px;} td{border:1px solid #000; text-align:center; padding:5px; font-size:12px;} .rojo{border-left:12px solid #d32f2f; font-weight:bold;} .verde{border-right:12px solid #388e3c; font-weight:bold;} .box{width:15px; height:15px; border:1px solid #000; margin:auto;}</style></head><body>"
+
         for r_idx, r_col in enumerate(pesos_cols):
-            st.markdown(f"*RONDA {r_idx+1}*")
-            html_cotejo += f"<div style='background:#eee; font-weight:bold; padding:5px; border:1px solid #000; text-align:center;'>RONDA {r_idx+1}</div>"
-            html_cotejo += "<table><tr><th>G</th><th>ROJO</th><th>An.</th><th>DETALLE</th><th>An.</th><th>VERDE</th><th>G</th></tr>"
+            ronda_html = f"<div class='ronda-header'>RONDA {r_idx+1}</div>"
+            tabla_html = "<table class='cotejo-table'><tr><th>G</th><th>ROJO</th><th>An.</th><th>DIF.</th><th>An.</th><th>VERDE</th><th>G</th></tr>"
             
             lista = partidos_actuales.copy()
-            p_n = 1
             while len(lista) >= 2:
-                r, v = lista.pop(0), lista.pop(0)
-                pr, pv = r.get(r_col, 0.0), v.get(r_col, 0.0)
-                an1, an2 = f"{contador_a:03}", f"{contador_a+1:03}"
-                contador_a += 2
-                html_cotejo += f"<tr><td><div class='box'></div></td><td class='rojo'>{r['PARTIDO']}<br>{pr:.3f}</td><td><b>{an1}</b></td><td class='det'>P{p_n}<br>DIF: {abs(pr-pv):.3f}</td><td><b>{an2}</b></td><td class='verde'>{v['PARTIDO']}<br>{pv:.3f}</td><td><div class='box'></div></td></tr>"
-                st.write(f"P{p_n}: {r['PARTIDO']} vs {v['PARTIDO']} (DIF: {abs(pr-pv):.3f})")
-                p_n += 1
-            html_cotejo += "</table>"
+                rojo, verde = lista.pop(0), lista.pop(0)
+                pr, pv = rojo.get(r_col, 0.0), verde.get(r_col, 0.0)
+                a1, a2 = f"{contador_anillos:03}", f"{contador_anillos+1:03}"
+                contador_anillos += 2
+                
+                fila = f"<tr><td>☐</td><td class='rojo-celda'>{rojo['PARTIDO']}<br>{pr:.3f}</td><td>{a1}</td><td>{abs(pr-pv):.3f}</td><td>{a2}</td><td class='verde-celda'>{verde['PARTIDO']}<br>{pv:.3f}</td><td>☐</td></tr>"
+                tabla_html += fila
+            
+            tabla_html += "</table>"
+            st.markdown(ronda_header + tabla_html, unsafe_allow_html=True)
+            html_impresion += ronda_html + tabla_html
 
-        html_cotejo += "</body></html>"
+        html_impresion += "</body></html>"
         
-        if st.button("IMPRIMIR COTEJO COMPLETO"):
-            js_print = f"<script>var w=window.open('','_blank');w.document.write({json.dumps(html_cotejo)});w.document.close();setTimeout(function(){{w.print();}},500);</script>"
-            st.components.v1.html(js_print, height=0)
+        if st.button("📄 IMPRIMIR COTEJO"):
+            js = f"<script>var w=window.open('','_blank');w.document.write({json.dumps(html_impresion)});w.document.close();setTimeout(function(){{w.print();}},500);</script>"
+            st.components.v1.html(js, height=0)
     else:
-        st.info("Registre al menos 2 partidos para generar el cotejo.")
+        st.info("Necesitas al menos 2 partidos para el cotejo.")
 
 st.markdown('<p style="text-align:center; font-size:10px; color:#aaa; margin-top:50px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
