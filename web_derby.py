@@ -21,29 +21,27 @@ st.markdown("""
     <style>
     .software-brand { color: #555; font-size: 10px; letter-spacing: 3px; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
     .main .block-container { padding: 10px 5px !important; }
-    /* Estilo para que los botones de acción se vean uniformes */
+    /* Botones de acción sencillos */
     .stButton > button { border-radius: 2px; font-size: 11px; height: 28px; width: 100%; }
     </style>
     """, unsafe_allow_html=True)
 
 DB_FILE = "datos_derby.txt"
 
-def cargar_datos(num_gallos_actual):
+def cargar_datos():
     partidos = []
+    num_gallos_detectado = 2
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
             for linea in f:
                 p = linea.strip().split("|")
                 if len(p) >= 2:
+                    num_gallos_detectado = len(p) - 1
                     d = {"PARTIDO": p[0]}
-                    for i in range(1, num_gallos_actual + 1):
-                        try:
-                            val = float(p[i]) if i < len(p) else 0.0
-                            d[f"Peso {i}"] = val
-                        except:
-                            d[f"Peso {i}"] = 0.0
+                    for i in range(1, num_gallos_detectado + 1):
+                        d[f"Peso {i}"] = float(p[i]) if p[i] else 0.0
                     partidos.append(d)
-    return partidos
+    return partidos, num_gallos_detectado
 
 def guardar_todos(lista):
     with open(DB_FILE, "w", encoding="utf-8") as f:
@@ -51,129 +49,100 @@ def guardar_todos(lista):
             pesos = [str(v) for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-def generar_cotejo_justo(lista_original):
-    lista = lista_original.copy()
-    cotejo = []
-    while len(lista) >= 2:
-        rojo = lista.pop(0)
-        encontrado = False
-        for i in range(len(lista)):
-            if lista[i]['PARTIDO'] != rojo['PARTIDO']:
-                verde = lista.pop(i); cotejo.append((rojo, verde)); encontrado = True; break
-        if not encontrado:
-            verde = lista.pop(0); cotejo.append((rojo, verde))
-    return cotejo
+# --- PROCESO ---
+partidos_actuales, gallos_en_archivo = cargar_datos()
+hay_datos = len(partidos_actuales) > 0
 
-# --- INTERFAZ ---
 st.markdown('<p class="software-brand">DerbySystem PRUEBAS</p>', unsafe_allow_html=True)
-tab1, tab2 = st.tabs(["REGISTRO DE PARTIDOS", "COTEJO Y PESOS"])
+tab1, tab2 = st.tabs(["REGISTRO", "COTEJO"])
 
 with tab1:
-    tipo_derby = st.radio("Gallos por Partido:", [2, 3, 4], horizontal=True)
-    partidos = cargar_datos(tipo_derby)
+    # Bloqueo de opción de gallos si ya hay registros
+    if hay_datos:
+        tipo_derby = st.radio("Gallos:", [2, 3, 4], index=[2,3,4].index(gallos_en_archivo), horizontal=True, disabled=True)
+    else:
+        tipo_derby = st.radio("Gallos:", [2, 3, 4], horizontal=True)
     
     if "edit_idx" not in st.session_state: st.session_state.edit_idx = None
     
     col_izq, col_der = st.columns([1.2, 2.5])
     
     with col_izq:
-        st.write("### ENTRADA DE DATOS")
+        st.write("### DATOS")
         v_nombre = ""
         v_pesos = [1.800] * tipo_derby
         
         if st.session_state.edit_idx is not None:
             idx = st.session_state.edit_idx
-            if idx < len(partidos):
-                p_edit = partidos[idx]
-                v_nombre = p_edit["PARTIDO"]
-                for i in range(tipo_derby):
-                    v_pesos[i] = p_edit.get(f"Peso {i+1}", 1.800)
-            st.info(f"Modificando Partido {idx + 1}")
+            p_edit = partidos_actuales[idx]
+            v_nombre = p_edit["PARTIDO"]
+            for i in range(tipo_derby): v_pesos[i] = p_edit.get(f"Peso {i+1}", 1.800)
+            st.info(f"Editando fila {idx + 1}")
 
-        with st.form("form_registro", clear_on_submit=True):
+        with st.form("registro", clear_on_submit=True):
             n = st.text_input("NOMBRE:", value=v_nombre).upper()
-            pesos_in = [st.number_input(f"Peso G{i+1}", 1.000, 4.000, v_pesos[i], 0.001, format="%.3f") for i in range(tipo_derby)]
-            
-            label_boton = "ACTUALIZAR DATOS" if st.session_state.edit_idx is not None else "GUARDAR PARTIDO"
-            if st.form_submit_button(label_boton):
+            pesos_in = [st.number_input(f"G{i+1}", 1.000, 4.000, v_pesos[i], 0.001, format="%.3f") for i in range(tipo_derby)]
+            if st.form_submit_button("GUARDAR"):
                 if n:
                     nuevo = {"PARTIDO": n}
                     for i, v in enumerate(pesos_in): nuevo[f"Peso {i+1}"] = v
                     if st.session_state.edit_idx is not None:
-                        partidos[st.session_state.edit_idx] = nuevo
+                        partidos_actuales[st.session_state.edit_idx] = nuevo
                         st.session_state.edit_idx = None
-                    else:
-                        partidos.append(nuevo)
-                    guardar_todos(partidos); st.rerun()
-        
-        if st.session_state.edit_idx is not None:
-            if st.button("CANCELAR"):
-                st.session_state.edit_idx = None
-                st.rerun()
+                    else: partidos_actuales.append(nuevo)
+                    guardar_todos(partidos_actuales); st.rerun()
 
     with col_der:
-        if partidos:
-            st.write("### LISTA ACTUAL")
-            df = pd.DataFrame(partidos)
+        if hay_datos:
+            st.write("### LISTA")
+            df = pd.DataFrame(partidos_actuales)
             df.index = range(1, len(df) + 1)
             for c in df.columns:
                 if "Peso" in c: df[c] = df[c].map('{:,.3f}'.format)
             
-            # TABLA LIMPIA ORIGINAL
+            # Tabla de celdas que te gusta
             st.table(df)
             
-            st.write("*GESTIÓN DE FILAS:*")
-            # Botones con texto profesional
-            for i in range(len(partidos)):
-                c1, c2, c3 = st.columns([1.2, 1.2, 4])
-                if c1.button(f"CORREGIR {i+1}", key=f"e{i}"):
-                    st.session_state.edit_idx = i
-                    st.rerun()
-                if c2.button(f"ELIMINAR {i+1}", key=f"b{i}"):
-                    partidos.pop(i)
-                    guardar_todos(partidos)
-                    st.rerun()
+            # Botones de acción numerados
+            for i in range(len(partidos_actuales)):
+                c1, c2, _ = st.columns([1, 1, 4])
+                if c1.button(f"EDITAR {i+1}", key=f"e{i}"):
+                    st.session_state.edit_idx = i; st.rerun()
+                if c2.button(f"BORRAR {i+1}", key=f"b{i}"):
+                    partidos_actuales.pop(i); guardar_todos(partidos_actuales); st.rerun()
             
-            st.write("---")
-            if st.button("VACIAR LISTA COMPLETA"):
+            if st.button("VACIAR TODO"):
                 if os.path.exists(DB_FILE): os.remove(DB_FILE)
-                st.session_state.edit_idx = None
-                st.rerun()
+                st.session_state.edit_idx = None; st.rerun()
 
 with tab2:
-    partidos = cargar_datos(tipo_derby)
-    c_t, c_f = st.columns(2)
-    nombre_torneo = c_t.text_input("Nombre Torneo:", "DERBY DE GALLOS")
-    fecha_torneo = c_f.date_input("Fecha:", datetime.now())
+    if hay_datos and len(partidos_actuales) >= 2:
+        c1, c2 = st.columns(2)
+        nombre_t = c1.text_input("Torneo:", "DERBY DE GALLOS")
+        fecha_t = c2.date_input("Fecha:", datetime.now())
 
-    if len(partidos) >= 2:
-        peleas = generar_cotejo_justo(partidos)
-        pesos_k = [f"Peso {i+1}" for i in range(tipo_derby)]
-        
-        # El anillo se genera automático [2026-01-14]
-        html_doc = f"<html><head><style>@page {{ size: letter; margin: 10mm; }} body {{ font-family: Arial; }} .t-titulo {{ text-align: center; font-size: 22px; font-weight: bold; }} .t-fecha {{ text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; }} table {{ width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 20px; }} th {{ background: #222; color: white; border: 1px solid #000; padding: 8px; font-size: 12px; }} td {{ border: 1px solid #000; text-align: center; padding: 6px 2px; font-size: 12px; }} .ronda-h {{ background: #eee; font-weight: bold; padding: 8px; border: 1px solid #000; text-align: center; }} .rojo {{ border-left: 10px solid #d32f2f; font-weight: bold; }} .verde {{ border-right: 10px solid #388e3c; font-weight: bold; }} .det {{ background: #f2f2f2; font-size: 10px; font-weight: bold; }} .box {{ width: 18px; height: 18px; border: 2px solid #000; margin: auto; }}</style></head><body><div class='t-titulo'>{nombre_torneo}</div><div class='t-fecha'>FECHA: {fecha_torneo.strftime('%d/%m/%Y')}</div>"
+        # El anillo es automático [2026-01-14]
+        html = f"<html><head><style>body {{ font-family: Arial; }} table {{ width: 100%; border-collapse: collapse; }} th {{ background: #222; color: white; border: 1px solid #000; padding: 5px; }} td {{ border: 1px solid #000; text-align: center; padding: 5px; }} .rojo {{ border-left: 10px solid #d32f2f; font-weight: bold; }} .verde {{ border-right: 10px solid #388e3c; font-weight: bold; }}</style></head><body><h2 style='text-align:center;'>{nombre_t}</h2>"
 
-        contador_a = 1
+        contador_anillo = 1
+        pesos_k = [f"Peso {i+1}" for i in range(gallos_en_archivo)]
         for r_idx, r_col in enumerate(pesos_k):
-            st.markdown(f'<div style="background:#ddd; padding:8px; border:1px solid #000; font-weight:bold; text-align:center;">RONDA {r_idx+1}</div>', unsafe_allow_html=True)
-            html_doc += f"<div class='ronda-h'>RONDA {r_idx+1}</div>"
-            html_doc += "<table><tr><th style='width:7%;'>G</th><th style='width:30%;'>ROJO</th><th style='width:8%;'>An.</th><th style='width:10%;'>DETALLE</th><th style='width:8%;'>An.</th><th style='width:30%;'>VERDE</th><th style='width:7%;'>G</th></tr>"
+            st.markdown(f"*RONDA {r_idx+1}*")
+            html += f"<div style='background:#eee; padding:5px; border:1px solid #000; text-align:center;'>RONDA {r_idx+1}</div><table><tr><th>G</th><th>ROJO</th><th>An.</th><th>DETALLE</th><th>An.</th><th>VERDE</th><th>G</th></tr>"
             
-            for i, (roj, ver) in enumerate(peleas):
-                p_r, p_v = roj.get(r_col, 0.0), ver.get(r_col, 0.0)
-                dif = abs(p_r - p_v)
-                an1, an2 = f"{contador_a:03}", f"{contador_a + 1:03}"
-                contador_a += 2
-                
-                fila = f"<tr><td><div class='box'></div></td><td class='rojo'><b>{roj['PARTIDO']}</b><br>{p_r:.3f}</td><td><b>{an1}</b></td><td class='det'>P{i+1}<br>DIF: {dif:.3f}<br>E [ ]</td><td><b>{an2}</b></td><td class='verde'><b>{ver['PARTIDO']}</b><br>{p_v:.3f}</td><td><div class='box'></div></td></tr>"
-                html_doc += fila
-                st.write(f"P{i+1}: {roj['PARTIDO']} vs {ver['PARTIDO']} (Anillos {an1}-{an2})")
-            
-            html_doc += "</table>"
-
-        html_doc += "</body></html>"
-        if st.button("IMPRIMIR RESULTADOS"):
-            js = f"<script>var win = window.open('', '_blank'); win.document.write({json.dumps(html_doc)}); win.document.close(); win.focus(); setTimeout(function(){{ win.print(); }}, 500);</script>"
+            # Cotejo simple
+            lista = partidos_actuales.copy()
+            while len(lista) >= 2:
+                rojo = lista.pop(0); verde = lista.pop(0)
+                p_r, p_v = rojo.get(r_col, 0.0), verde.get(r_col, 0.0)
+                an1, an2 = f"{contador_anillo:03}", f"{contador_anillo+1:03}"
+                contador_anillo += 2
+                html += f"<tr><td>[ ]</td><td class='rojo'>{rojo['PARTIDO']}<br>{p_r:.3f}</td><td>{an1}</td><td>DIF: {abs(p_r-p_v):.3f}</td><td>{an2}</td><td class='verde'>{verde['PARTIDO']}<br>{p_v:.3f}</td><td>[ ]</td></tr>"
+                st.write(f"{rojo['PARTIDO']} vs {verde['PARTIDO']}")
+            html += "</table><br>"
+        
+        if st.button("IMPRIMIR"):
+            js = f"<script>var win = window.open('', '_blank'); win.document.write({json.dumps(html)}); win.document.close(); win.print();</script>"
             st.components.v1.html(js, height=0)
 
-    st.markdown('<p style="text-align:center; font-size:10px; margin-top:20px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
+st.markdown('<p style="text-align:center; font-size:10px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
