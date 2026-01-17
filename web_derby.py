@@ -5,41 +5,30 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO COMPACTO (PESO + ANILLO EN LÍNEA) ---
+# --- DISEÑO COMPACTO ---
 st.markdown("""
     <style>
-    /* Contenedor que junta el peso y el anillo */
-    .celda-registro {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background-color: #f8f9f9;
-        padding: 8px;
-        border-radius: 8px;
-        border: 1px solid #eaecee;
-        margin-bottom: 10px;
-    }
-    
-    .caja-anillo-v2 {
+    /* Estilo para el rectángulo del anillo */
+    .caja-anillo-compacta {
         background-color: #2c3e50;
-        color: #f1c40f;
-        padding: 8px 12px;
-        border-radius: 6px;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
         font-weight: bold;
         font-size: 16px;
         text-align: center;
-        min-width: 70px;
-        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        border: 1px solid #2c3e50;
+        margin-top: 32px; /* Alineación con el input de peso */
     }
-
-    .etiqueta-v2 {
-        font-size: 11px;
+    
+    .etiqueta-anillo {
+        font-size: 10px;
         color: #7f8c8d;
+        margin-bottom: -25px;
         font-weight: bold;
-        margin-bottom: 2px;
     }
 
-    .header-azul { background-color: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; }
+    .header-azul { background-color: #2c3e50; color: white; padding: 8px; text-align: center; font-weight: bold; }
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; }
     .tabla-final td { border: 1px solid #bdc3c7; text-align: center; padding: 10px; }
     </style>
@@ -77,8 +66,8 @@ st.title("DERBYSYSTEM PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
-    # Contador para anillos automáticos
-    anillo_actual = len(st.session_state.partidos) * st.session_state.n_gallos
+    # Cálculo para anillos automáticos
+    anillos_base = len(st.session_state.partidos) * st.session_state.n_gallos
     
     col_n, col_g = st.columns([2, 1])
     g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], 
@@ -87,41 +76,37 @@ with t_reg:
     st.session_state.n_gallos = g_sel
 
     with st.form("nuevo_p", clear_on_submit=True):
-        st.markdown(f"### 🐓 Registrando Partido # {len(st.session_state.partidos) + 1}")
+        st.subheader(f"Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         
         w_in = []
-        # Crear filas compactas para cada gallo
+        # Registro gallo por gallo
         for i in range(g_sel):
-            num_anillo = anillo_actual + (i + 1)
-            # Layout de dos columnas: una para el peso y otra para el anillo
-            c1, c2 = st.columns([3, 1])
-            with c1:
-                p_val = st.number_input(f"Peso Gallo {i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-                w_in.append(p_val)
-            with c2:
-                st.markdown(f"""
-                    <div style='margin-top: 28px;'>
-                        <div class='caja-anillo-v2'>
-                            <div style='font-size:9px; color:#bdc3c7;'>ANILLO</div>
-                            {num_anillo:03}
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+            num_anillo = anillos_base + (i + 1)
+            # Creamos dos columnas muy pegadas
+            c_peso, c_anillo = st.columns([4, 1])
+            
+            with c_peso:
+                peso = st.number_input(f"Peso Gallo {i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+                w_in.append(peso)
+            
+            with c_anillo:
+                st.markdown(f"<div class='etiqueta-anillo'>ANILLO</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='caja-anillo-compacta'>{num_anillo:03}</div>", unsafe_allow_html=True)
             
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
             if nombre:
                 nuevo = {"PARTIDO": nombre}
-                for j, peso in enumerate(w_in): nuevo[f"G{j+1}"] = peso
+                for i, w in enumerate(w_in): nuevo[f"G{i+1}"] = w
                 st.session_state.partidos.append(nuevo)
                 guardar_datos(st.session_state.partidos)
                 st.rerun()
 
     if st.session_state.partidos:
         st.markdown(f"### 📋 Listado de Partidos ({len(st.session_state.partidos)})")
-        df_ed = pd.DataFrame(st.session_state.partidos)
-        df_ed.index += 1 # Numeración de filas para saber cuántos hay
-        st.data_editor(df_ed, use_container_width=True)
+        df_display = pd.DataFrame(st.session_state.partidos)
+        df_display.index += 1 # Numeración de partidos en la tabla
+        st.data_editor(df_display, use_container_width=True)
 
         if st.button("🗑️ LIMPIAR TODO EL EVENTO"):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
@@ -150,3 +135,4 @@ with t_cot:
                     pelea_id += 1
                 else: break
             st.markdown(html + "</table>", unsafe_allow_html=True)
+
