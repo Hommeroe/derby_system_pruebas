@@ -5,30 +5,30 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO (RECTÁNGULOS DE PESO Y ANILLO) ---
+# --- DISEÑO (ESTILO DE CAJAS LADO A LADO) ---
 st.markdown("""
     <style>
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; margin-bottom: 25px; }
     .tabla-final th { background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #000; text-align: center; }
     .tabla-final td { border: 1px solid #bdc3c7; text-align: center; padding: 8px; vertical-align: middle; }
     
-    /* Contenedor para alinear cajas */
-    .caja-info {
+    /* Contenedor para alinear cajas de peso y anillo horizontalmente */
+    .fila-datos {
         display: flex;
-        flex-direction: column;
+        justify-content: center;
         align-items: center;
-        gap: 4px;
-        padding: 5px 0;
+        gap: 5px; /* Espacio entre las dos cajitas */
+        margin-top: 5px;
     }
 
-    .rect-peso { 
+    .caja-peso { 
         background-color: #f4f6f7; border: 1px solid #d5dbdb; border-radius: 4px; 
-        padding: 2px 10px; font-weight: bold; color: #2c3e50; font-size: 15px; min-width: 80px;
+        padding: 2px 8px; font-weight: bold; color: #2c3e50; font-size: 14px; min-width: 65px;
     }
     
-    .rect-anillo { 
+    .caja-anillo { 
         background-color: #2c3e50; color: white; border-radius: 4px; 
-        padding: 2px 10px; font-weight: bold; font-size: 13px; min-width: 80px;
+        padding: 2px 8px; font-weight: bold; font-size: 13px; min-width: 50px;
     }
     
     .rojo-v { border-left: 10px solid #d32f2f !important; }
@@ -38,6 +38,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- FUNCIONES DE PERSISTENCIA ---
 DB_FILE = "datos_derby.txt"
 TOLERANCIA_MAX = 0.080 
 
@@ -69,7 +70,7 @@ if 'partidos' not in st.session_state:
 st.title("DERBYSYSTEM PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
-# --- PESTAÑA 1: REGISTRO MEJORADO ---
+# --- PESTAÑA 1: REGISTRO Y EDICIÓN ---
 with t_reg:
     with st.container(border=True):
         st.subheader("Añadir Nuevo Partido")
@@ -83,6 +84,7 @@ with t_reg:
         
         with st.form("nuevo_p", clear_on_submit=True):
             nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
+            # En móvil se verán uno debajo de otro, en PC lado a lado
             cols_p = st.columns(g_sel)
             pesos_input = [cols_p[i].number_input(f"Peso G{i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f") for i in range(g_sel)]
             
@@ -95,8 +97,7 @@ with t_reg:
                     st.rerun()
 
     if st.session_state.partidos:
-        st.divider()
-        st.markdown("### ✏️ Tabla de Edición Rápida")
+        st.markdown("### ✏️ Tabla de Edición")
         df_ed = pd.DataFrame(st.session_state.partidos)
         config_c = {f"G{i+1}": st.column_config.NumberColumn(format="%.3f") for i in range(st.session_state.n_gallos)}
         
@@ -112,9 +113,10 @@ with t_reg:
             st.session_state.partidos = []
             st.rerun()
 
-# --- PESTAÑA 2: COTEJO CON ANILLO AUTOMÁTICO ---
+# --- PESTAÑA 2: COTEJO Y ANILLOS ---
 with t_cot:
     if len(st.session_state.partidos) >= 2:
+        # Los anillos se generan en el orden en que se listan las peleas
         anillo_idx = 1
         pelea_num = 1
         for r in range(1, st.session_state.n_gallos + 1):
@@ -143,19 +145,19 @@ with t_cot:
                         <td><b>{pelea_num}</b></td>
                         <td>□</td>
                         <td class='rojo-v'>
-                            <div class='caja-info'>
-                                <b>{rojo['PARTIDO']}</b>
-                                <div class='rect-peso'>{rojo[col_p]:.3f}</div>
-                                <div class='rect-anillo'>{anillo_idx:03}</div>
+                            <b>{rojo['PARTIDO']}</b>
+                            <div class='fila-datos'>
+                                <div class='caja-peso'>{rojo[col_p]:.3f}</div>
+                                <div class='caja-anillo'>{anillo_idx:03}</div>
                             </div>
                         </td>
                         <td><span {c_dif}>{dif:.3f}</span></td>
                         <td>□</td>
                         <td class='verde-v'>
-                            <div class='caja-info'>
-                                <b>{verde['PARTIDO']}</b>
-                                <div class='rect-peso'>{verde[col_p]:.3f}</div>
-                                <div class='rect-anillo'>{(anillo_idx+1):03}</div>
+                            <b>{verde['PARTIDO']}</b>
+                            <div class='fila-datos'>
+                                <div class='caja-peso'>{verde[col_p]:.3f}</div>
+                                <div class='caja-anillo'>{(anillo_idx+1):03}</div>
                             </div>
                         </td>
                         <td>□</td>
