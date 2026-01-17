@@ -5,7 +5,7 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO ---
+# --- DISEÑO (AZUL OSCURO Y GRIS - FIJO) ---
 st.markdown("""
     <style>
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; margin-bottom: 25px; }
@@ -26,8 +26,7 @@ def cargar_datos():
     g_por_evento = 2
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            for line in lines:
+            for line in f:
                 p = line.strip().split("|")
                 if len(p) >= 2:
                     g_por_evento = len(p) - 1
@@ -41,10 +40,10 @@ def cargar_datos():
 def guardar_datos(lista):
     with open(DB_FILE, "w", encoding="utf-8") as f:
         for p in lista:
+            # Aseguramos 3 decimales al guardar en el archivo de texto
             pesos = [f"{float(v):.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# Sincronización de estado
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar_datos()
 
@@ -53,24 +52,18 @@ t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
     col_n, col_g = st.columns([2, 1])
-    
-    # CANDADO: Si ya hay partidos, el selector se deshabilita (disabled=True)
     hay_datos = len(st.session_state.partidos) > 0
     g_sel = col_g.selectbox(
-        "GALLOS POR PARTIDO:", 
-        [2, 3, 4, 5, 6], 
+        "GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], 
         index=st.session_state.n_gallos-2 if st.session_state.n_gallos <= 6 else 0,
-        disabled=hay_datos,
-        help="Se bloquea automáticamente al registrar el primer partido."
+        disabled=hay_datos
     )
-    
-    # Actualizar número de gallos en el estado
     st.session_state.n_gallos = g_sel
 
     with st.form("nuevo_p", clear_on_submit=True):
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         cols = st.columns(g_sel)
-        w_in = [cols[i].number_input(f"P{i+1}", 1.8, 2.6, 2.2, 0.001, format="%.3f") for i in range(g_sel)]
+        w_in = [cols[i].number_input(f"P{i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f") for i in range(g_sel)]
         if st.form_submit_button("GUARDAR PARTIDO"):
             if nombre:
                 nuevo = {"PARTIDO": nombre}
@@ -82,7 +75,26 @@ with t_reg:
     if st.session_state.partidos:
         st.markdown("### ✏️ Tabla de Edición")
         df_ed = pd.DataFrame(st.session_state.partidos)
-        res_ed = st.data_editor(df_ed, use_container_width=True, num_rows="dynamic")
+        
+        # --- CORRECCIÓN CLAVE AQUÍ ---
+        # Configuramos cada columna de peso para que OBLIGATORIAMENTE use 3 decimales en pantalla
+        config_columnas = {
+            f"G{i+1}": st.column_config.NumberColumn(
+                f"Gallo {i+1}",
+                format="%.3f", # Esto obliga a ver 2.200 en lugar de 2.2
+                min_value=1.800,
+                max_value=2.600,
+                step=0.001
+            ) for i in range(st.session_state.n_gallos)
+        }
+        
+        res_ed = st.data_editor(
+            df_ed, 
+            use_container_width=True, 
+            num_rows="dynamic",
+            column_config=config_columnas
+        )
+        
         if not res_ed.equals(df_ed):
             st.session_state.partidos = res_ed.to_dict('records')
             guardar_datos(st.session_state.partidos)
@@ -106,7 +118,6 @@ with t_cot:
             while len(lista) >= 2:
                 rojo = lista.pop(0)
                 v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
-                
                 if v_idx is not None:
                     verde = lista.pop(v_idx)
                     dif = abs(rojo[col_p] - verde[col_p])
@@ -118,5 +129,3 @@ with t_cot:
                     html += f"<tr><td colspan='9' style='color:grey'>Esperando oponente para {rojo['PARTIDO']}...</td></tr>"
                     break
             st.markdown(html + "</table>", unsafe_allow_html=True)
-    else:
-        st.info("Registre al menos 2 partidos para ver el cotejo.")
