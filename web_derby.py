@@ -5,7 +5,7 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO (MANTENIENDO AZUL Y GRIS) ---
+# --- DISEÑO (RESTAURANDO PESO ARRIBA Y ANILLO ABAJO) ---
 st.markdown("""
     <style>
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; margin-bottom: 25px; }
@@ -15,12 +15,18 @@ st.markdown("""
     .rojo-v { border-left: 10px solid #d32f2f !important; }
     .verde-v { border-right: 10px solid #27ae60 !important; }
     
-    /* Rectángulos verticales solicitados */
-    .contenedor-datos { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .rect-peso { background-color: #f4f6f7; border: 1px solid #d5dbdb; border-radius: 4px; padding: 2px 12px; font-weight: bold; color: #2c3e50; font-size: 16px; min-width: 80px; }
-    .rect-anillo { background-color: #2c3e50; color: white; border-radius: 4px; padding: 2px 12px; font-weight: bold; font-size: 14px; min-width: 80px; }
+    /* Diseño vertical: Peso arriba, Anillo abajo */
+    .bloque-gallo { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .caja-peso { 
+        background-color: #f4f6f7; border: 1px solid #d5dbdb; border-radius: 4px; 
+        padding: 2px 10px; font-weight: bold; color: #2c3e50; font-size: 16px; min-width: 85px;
+    }
+    .caja-anillo { 
+        background-color: #2c3e50; color: white; border-radius: 4px; 
+        padding: 2px 10px; font-weight: bold; font-size: 14px; min-width: 85px;
+    }
     
-    .check-v { font-size: 20px; color: #95a5a6; font-weight: bold; }
+    .check-box { font-size: 20px; color: #bdc3c7; font-weight: bold; }
     .header-azul { background-color: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; margin-top: 20px; }
     .dif-alerta { background-color: #e74c3c; color: white; font-weight: bold; border-radius: 3px; padding: 2px 6px; }
     </style>
@@ -58,11 +64,11 @@ if 'partidos' not in st.session_state:
 st.title("DERBYSYSTEM PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
-# --- REGISTRO ---
+# --- PESTAÑA REGISTRO ---
 with t_reg:
     col_n, col_g = st.columns([2, 1])
     hay_datos = len(st.session_state.partidos) > 0
-    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], index=st.session_state.n_gallos-2 if st.session_state.n_gallos <= 6 else 0, disabled=hay_datos)
+    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], index=st.session_state.n_gallos-2 if st.session_state.n_gallos <= 6 else 2, disabled=hay_datos)
     st.session_state.n_gallos = g_sel
 
     with st.form("nuevo_p", clear_on_submit=True):
@@ -85,15 +91,11 @@ with t_reg:
             st.session_state.partidos = res_ed.to_dict('records')
             guardar_datos(st.session_state.partidos)
             st.rerun()
-        if st.button("🗑️ LIMPIAR TODO"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.session_state.partidos = []
-            st.rerun()
 
-# --- COTEJO (RESTAURADO Y MEJORADO) ---
+# --- PESTAÑA COTEJO (CON DISEÑO VERTICAL FIJO) ---
 with t_cot:
     if len(st.session_state.partidos) >= 2:
-        anillo_idx = 1
+        anillo_cont = 1
         pelea_id = 1
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
@@ -122,26 +124,26 @@ with t_cot:
                     html += f"""
                     <tr>
                         <td><b>{pelea_id}</b></td>
-                        <td class='check-v'>□</td>
+                        <td class='check-box'>□</td>
                         <td class='rojo-v'>
-                            <div class='contenedor-datos'>
+                            <div class='bloque-gallo'>
                                 <b>{rojo['PARTIDO']}</b>
-                                <div class='rect-peso'>{rojo[col_p]:.3f}</div>
-                                <div class='rect-anillo'>{anillo_idx:03}</div>
+                                <div class='caja-peso'>{rojo[col_p]:.3f}</div>
+                                <div class='caja-anillo'>{anillo_cont:03}</div>
                             </div>
                         </td>
                         <td><span {c_dif}>{dif:.3f}</span></td>
-                        <td class='check-v'>□</td>
+                        <td class='check-box'>□</td>
                         <td class='verde-v'>
-                            <div class='contenedor-datos'>
+                            <div class='bloque-gallo'>
                                 <b>{verde['PARTIDO']}</b>
-                                <div class='rect-peso'>{verde[col_p]:.3f}</div>
-                                <div class='rect-anillo'>{(anillo_idx+1):03}</div>
+                                <div class='caja-peso'>{verde[col_p]:.3f}</div>
+                                <div class='caja-anillo'>{(anillo_cont+1):03}</div>
                             </div>
                         </td>
-                        <td class='check-v'>□</td>
+                        <td class='check-box'>□</td>
                     </tr>"""
-                    anillo_idx += 2
+                    anillo_cont += 2
                     pelea_id += 1
                 else:
                     html += f"<tr><td colspan='7' style='color:grey'>Esperando oponente para {rojo['PARTIDO']}...</td></tr>"
