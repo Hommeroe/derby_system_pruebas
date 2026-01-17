@@ -5,28 +5,42 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO (RECTÁNGULOS LADO A LADO) ---
+# --- DISEÑO MEJORADO CON ETIQUETAS ---
 st.markdown("""
     <style>
-    .tabla-registro { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    .tabla-registro th { background-color: #f8f9fa; color: #2c3e50; border: 1px solid #dee2e6; padding: 8px; }
-    .tabla-registro td { border: 1px solid #dee2e6; padding: 8px; text-align: center; vertical-align: middle; }
+    .tabla-registro { width: 100%; border-collapse: collapse; margin-top: 10px; background-color: white; }
+    .tabla-registro th { background-color: #2c3e50; color: white; border: 1px solid #000; padding: 8px; text-align: center; font-size: 13px; }
+    .tabla-registro td { border: 1px solid #dee2e6; padding: 10px; text-align: center; vertical-align: middle; }
+    
+    .contenedor-gallo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+    }
     
     .fila-cajitas {
         display: flex;
         justify-content: center;
-        align-items: center;
-        gap: 4px;
+        gap: 5px;
     }
-    .caja-peso-chica { 
-        background-color: #f4f6f7; border: 1px solid #d5dbdb; border-radius: 3px; 
-        padding: 2px 6px; font-weight: bold; font-size: 13px; min-width: 60px;
+
+    /* Caja de Peso con etiqueta interna */
+    .caja-peso { 
+        background-color: #f4f6f7; border: 1px solid #d5dbdb; border-radius: 4px; 
+        padding: 2px 6px; color: #2c3e50; min-width: 75px;
     }
-    .caja-anillo-chica { 
-        background-color: #2c3e50; color: white; border-radius: 3px; 
-        padding: 2px 6px; font-weight: bold; font-size: 12px; min-width: 40px;
+    .etiqueta { font-size: 9px; color: #7f8c8d; display: block; text-transform: uppercase; font-weight: bold; }
+    .valor { font-weight: bold; font-size: 14px; display: block; }
+
+    /* Caja de Anillo con etiqueta interna */
+    .caja-anillo { 
+        background-color: #2c3e50; color: white; border-radius: 4px; 
+        padding: 2px 6px; min-width: 60px;
     }
-    .header-azul { background-color: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; }
+    .etiqueta-anillo { font-size: 9px; color: #bdc3c7; display: block; text-transform: uppercase; }
+    
+    .num-partido { font-weight: bold; color: #d32f2f; font-size: 16px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -82,25 +96,34 @@ with t_reg:
                     guardar_datos(st.session_state.partidos)
                     st.rerun()
 
-    # TABLA DE EDICIÓN CON ANILLOS AUTOMÁTICOS
+    # TABLA DE EDICIÓN CON NUMERACIÓN Y ETIQUETAS
     if st.session_state.partidos:
-        st.markdown("### ✏️ Resumen de Registro (Edición)")
+        st.markdown(f"### ✏️ Partidos Registrados: {len(st.session_state.partidos)}")
         
-        # Generar HTML para la tabla con anillos
-        html_reg = "<table class='tabla-registro'><tr><th>PARTIDO</th>"
+        html_reg = "<table class='tabla-registro'><tr><th>#</th><th>PARTIDO</th>"
         for i in range(st.session_state.n_gallos): html_reg += f"<th>GALLO {i+1}</th>"
         html_reg += "</tr>"
         
         anillo_global = 1
         for idx, p in enumerate(st.session_state.partidos):
-            html_reg += f"<tr><td><b>{p['PARTIDO']}</b></td>"
+            # Enumeración de partidos (idx + 1)
+            html_reg += f"<tr><td><span class='num-partido'>{idx+1}</span></td><td><b>{p['PARTIDO']}</b></td>"
+            
             for i in range(1, st.session_state.n_gallos + 1):
                 peso_val = f"{p[f'G{i}']:.3f}"
                 html_reg += f"""
                 <td>
-                    <div class='fila-cajitas'>
-                        <div class='caja-peso-chica'>{peso_val}</div>
-                        <div class='caja-anillo-chica'>{anillo_global:03}</div>
+                    <div class='contenedor-gallo'>
+                        <div class='fila-cajitas'>
+                            <div class='caja-peso'>
+                                <span class='etiqueta'>PESO</span>
+                                <span class='valor'>{peso_val}</span>
+                            </div>
+                            <div class='caja-anillo'>
+                                <span class='etiqueta-anillo'>ANILLO</span>
+                                <span class='valor'>{anillo_global:03}</span>
+                            </div>
+                        </div>
                     </div>
                 </td>"""
                 anillo_global += 1
@@ -108,10 +131,7 @@ with t_reg:
         
         st.markdown(html_reg + "</table>", unsafe_allow_html=True)
         
-        # Botón para limpiar
         if st.button("🗑️ LIMPIAR TODO", type="secondary"):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
             st.session_state.partidos = []
             st.rerun()
-
-# (La pestaña de Cotejo se mantiene igual que en la versión anterior)
