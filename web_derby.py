@@ -5,7 +5,7 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO (AZUL OSCURO Y GRIS - FIJO) ---
+# --- DISEÑO ---
 st.markdown("""
     <style>
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; margin-bottom: 25px; }
@@ -43,12 +43,10 @@ def guardar_datos(lista):
             pesos = [f"{float(v):.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- INICIO DE APP ---
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar_datos()
 
 st.title("DERBYSYSTEM PRUEBAS")
-
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
@@ -68,45 +66,41 @@ with t_reg:
                 st.rerun()
 
     if st.session_state.partidos:
-        st.markdown("### ✏️ Tabla de Edición")
         df_ed = pd.DataFrame(st.session_state.partidos)
-        # TABLA EDITABLE QUE SINCRONIZA AL INSTANTE
         res_ed = st.data_editor(df_ed, use_container_width=True, num_rows="dynamic")
-        
         if not res_ed.equals(df_ed):
             st.session_state.partidos = res_ed.to_dict('records')
             guardar_datos(st.session_state.partidos)
-            st.success("¡Datos actualizados! Ve a la pestaña de Cotejo.")
-
-        if st.button("LIMPIAR TODO EL EVENTO"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.session_state.partidos = []
             st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) >= 2:
-        # Botón para forzar que el cotejo se actualice con lo editado
-        if st.button("🔄 ACTUALIZAR NOMBRES Y PESOS"):
-            st.session_state.partidos, _ = cargar_datos()
-            st.rerun()
+        if st.button("🔄 ACTUALIZAR COTEJO"): st.rerun()
 
         anillo_cont = 1
         pelea_id = 1
         for r in range(1, g_sel + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_p = f"G{r}"
-            # Ordenamos por peso actualizado [cite: 2026-01-14]
             lista = sorted(st.session_state.partidos, key=lambda x: x.get(col_p, 0))
             html = "<table class='tabla-final'><tr><th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>DIF.</th><th>E[ ]</th><th>AN.</th><th>VERDE</th><th>G</th></tr>"
+            
             while len(lista) >= 2:
                 rojo = lista.pop(0)
-                v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), 0)
-                verde = lista.pop(v_idx)
-                dif = abs(rojo[col_p] - verde[col_p])
-                c_dif = "dif-alerta" if dif > TOLERANCIA_MAX else ""
-                html += f"""<tr><td>{pelea_id}</td><td>□</td><td class='rojo-v'>{rojo['PARTIDO']}<br>{rojo[col_p]:.3f}</td><td>{anillo_cont:03}</td><td class='{c_dif}'>{dif:.3f}</td><td>□</td><td>{(anillo_cont+1):03}</td><td class='verde-v'>{verde['PARTIDO']}<br>{verde[col_p]:.3f}</td><td>□</td></tr>"""
-                anillo_cont += 2
-                pelea_id += 1
+                # REGLA: Buscar oponente que NO sea el mismo partido
+                v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
+                
+                if v_idx is not None:
+                    verde = lista.pop(v_idx)
+                    dif = abs(rojo[col_p] - verde[col_p])
+                    c_dif = "dif-alerta" if dif > TOLERANCIA_MAX else ""
+                    html += f"""<tr><td>{pelea_id}</td><td>□</td><td class='rojo-v'>{rojo['PARTIDO']}<br>{rojo[col_p]:.3f}</td><td>{anillo_cont:03}</td><td class='{c_dif}'>{dif:.3f}</td><td>□</td><td>{(anillo_cont+1):03}</td><td class='verde-v'>{verde['PARTIDO']}<br>{verde[col_p]:.3f}</td><td>□</td></tr>"""
+                    anillo_cont += 2
+                    pelea_id += 1
+                else:
+                    # Si solo queda el mismo partido, se queda en espera
+                    html += f"<tr><td colspan='9' style='color:grey'>Esperando oponente para {rojo['PARTIDO']}...</td></tr>"
+                    break
             st.markdown(html + "</table>", unsafe_allow_html=True)
     else:
-        st.info("Registre partidos para ver el cotejo.")
+        st.info("Registre al menos 2 partidos diferentes.")
