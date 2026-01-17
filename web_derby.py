@@ -26,7 +26,8 @@ def cargar_datos():
     g_por_evento = 2
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
-            for line in f:
+            lines = f.readlines()
+            for line in lines:
                 p = line.strip().split("|")
                 if len(p) >= 2:
                     g_por_evento = len(p) - 1
@@ -43,6 +44,7 @@ def guardar_datos(lista):
             pesos = [f"{float(v):.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
+# Sincronización de estado
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar_datos()
 
@@ -51,8 +53,20 @@ t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
     col_n, col_g = st.columns([2, 1])
-    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], index=st.session_state.n_gallos-2 if st.session_state.n_gallos <= 6 else 0)
     
+    # CANDADO: Si ya hay partidos, el selector se deshabilita (disabled=True)
+    hay_datos = len(st.session_state.partidos) > 0
+    g_sel = col_g.selectbox(
+        "GALLOS POR PARTIDO:", 
+        [2, 3, 4, 5, 6], 
+        index=st.session_state.n_gallos-2 if st.session_state.n_gallos <= 6 else 0,
+        disabled=hay_datos,
+        help="Se bloquea automáticamente al registrar el primer partido."
+    )
+    
+    # Actualizar número de gallos en el estado
+    st.session_state.n_gallos = g_sel
+
     with st.form("nuevo_p", clear_on_submit=True):
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         cols = st.columns(g_sel)
@@ -66,6 +80,7 @@ with t_reg:
                 st.rerun()
 
     if st.session_state.partidos:
+        st.markdown("### ✏️ Tabla de Edición")
         df_ed = pd.DataFrame(st.session_state.partidos)
         res_ed = st.data_editor(df_ed, use_container_width=True, num_rows="dynamic")
         if not res_ed.equals(df_ed):
@@ -73,13 +88,16 @@ with t_reg:
             guardar_datos(st.session_state.partidos)
             st.rerun()
 
+        if st.button("🗑️ LIMPIAR TODO EL EVENTO"):
+            if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.session_state.partidos = []
+            st.rerun()
+
 with t_cot:
     if len(st.session_state.partidos) >= 2:
-        if st.button("🔄 ACTUALIZAR COTEJO"): st.rerun()
-
         anillo_cont = 1
         pelea_id = 1
-        for r in range(1, g_sel + 1):
+        for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_p = f"G{r}"
             lista = sorted(st.session_state.partidos, key=lambda x: x.get(col_p, 0))
@@ -87,7 +105,6 @@ with t_cot:
             
             while len(lista) >= 2:
                 rojo = lista.pop(0)
-                # REGLA: Buscar oponente que NO sea el mismo partido
                 v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
                 
                 if v_idx is not None:
@@ -98,9 +115,8 @@ with t_cot:
                     anillo_cont += 2
                     pelea_id += 1
                 else:
-                    # Si solo queda el mismo partido, se queda en espera
                     html += f"<tr><td colspan='9' style='color:grey'>Esperando oponente para {rojo['PARTIDO']}...</td></tr>"
                     break
             st.markdown(html + "</table>", unsafe_allow_html=True)
     else:
-        st.info("Registre al menos 2 partidos diferentes.")
+        st.info("Registre al menos 2 partidos para ver el cotejo.")
