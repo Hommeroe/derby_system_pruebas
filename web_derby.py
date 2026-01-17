@@ -1,137 +1,113 @@
 import streamlit as st
 import pandas as pd
 import os
-import json
 
 # ==========================================
-# BLOQUE 1: REGLAS FIJAS (LÓGICA BLINDADA)
+# BLOQUE 1: REGLAS Y LOGICA (BLINDADO)
 # ==========================================
-# [2026-01-14] El anillo se genera automático y vincula peso-partido-pelea.
-TOLERANCIA_MAX = 0.080 
+TOLERANCIA_MAX = 0.080  # 80 gramos [cite: 2026-01-14]
 
-def generar_cotejo_anti_fraude(partidos, num_gallos):
-    """
-    Función Maestra: 
-    1. Separa equipos iguales (Anti-choque).
-    2. Respeta los 80g de tolerancia.
-    3. Asigna anillos únicos y correlativos.
-    """
-    anillo_secuencia = 1
-    pelea_secuencia = 1
-    resultado_cotejo = {}
+def cargar_datos():
+    partidos = []
+    gallos = 2
+    if os.path.exists("datos_derby.txt"):
+        with open("datos_derby.txt", "r", encoding="utf-8") as f:
+            for line in f:
+                p = line.strip().split("|")
+                if len(p) >= 2:
+                    gallos = len(p) - 1
+                    d = {"PARTIDO": p[0]}
+                    for i in range(1, gallos + 1):
+                        try:
+                            d[f"Peso {i}"] = float(p[i])
+                        except:
+                            d[f"Peso {i}"] = 0.0
+                    partidos.append(d)
+    return partidos, gallos
 
-    for ronda in range(1, num_gallos + 1):
-        col_p = f"Peso {ronda}"
-        # Ordenar por peso para justicia deportiva
-        lista_disp = sorted(partidos, key=lambda x: x.get(col_p, 0))
-        peleas_ronda = []
-
-        while len(lista_disp) >= 2:
-            rojo = lista_disp.pop(0)
-            
-            # LÓGICA ANTI-CHOQUE: Buscar oponente de distinto partido
-            verde_idx = -1
-            for i in range(len(lista_disp)):
-                if lista_disp[i]["PARTIDO"] != rojo["PARTIDO"]:
-                    verde_idx = i
+def generar_cotejo_profesional(partidos, num_gallos):
+    anillo_seq = 1
+    pelea_seq = 1
+    rondas_res = {}
+    
+    for r_idx in range(1, num_gallos + 1):
+        col_p = f"Peso {r_idx}"
+        lista = sorted(partidos, key=lambda x: x.get(col_p, 0))
+        peleas_data = []
+        
+        while len(lista) >= 2:
+            rojo = lista.pop(0)
+            # ANTI-CHOQUE: No pelea contra si mismo
+            v_idx = -1
+            for i in range(len(lista)):
+                if lista[i]["PARTIDO"] != rojo["PARTIDO"]:
+                    v_idx = i
                     break
             
-            # Si solo quedan del mismo partido al final (caso forzado)
-            if verde_idx == -1: verde_idx = 0 
+            if v_idx == -1: v_idx = 0 
+            verde = lista.pop(v_idx)
             
-            verde = lista_disp.pop(verde_idx)
-
-            # ASIGNACIÓN DE ANILLOS REAL (Seguridad)
-            anillo_r = f"{anillo_secuencia:03}"
-            anillo_v = f"{(anillo_secuencia + 1):03}"
-            
+            # ANILLOS REALES (TRAZABILIDAD) [cite: 2026-01-14]
+            an_r = f"{anillo_seq:03}"
+            an_v = f"{(anillo_seq + 1):03}"
             dif = abs(rojo[col_p] - verde[col_p])
             
-            peleas_ronda.append({
-                "pelea": pelea_secuencia,
-                "partido_r": rojo["PARTIDO"],
-                "peso_r": rojo[col_p],
-                "an_r": anillo_r,
-                "partido_v": verde["PARTIDO"],
-                "peso_v": verde[col_p],
-                "an_v": anillo_v,
+            peleas_data.append({
+                "id": pelea_seq,
+                "n_rojo": rojo["PARTIDO"], "w_rojo": rojo[col_p], "an_rojo": an_r,
+                "n_verde": verde["PARTIDO"], "w_verde": verde[col_p], "an_verde": an_v,
                 "dif": dif
             })
-            
-            anillo_secuencia += 2
-            pelea_secuencia += 1
-            
-        resultado_cotejo[f"RONDA {ronda}"] = peleas_ronda
-    
-    return resultado_cotejo
+            anillo_seq += 2
+            pelea_seq += 1
+        rondas_res[f"RONDA {r_idx}"] = peleas_data
+    return rondas_res
 
 # ==========================================
-# BLOQUE 2: INTERFAZ Y ESTILOS (PROFESIONAL)
+# BLOQUE 2: INTERFAZ VISUAL
 # ==========================================
-st.set_page_config(page_title="DerbySystem PRUEBAS", layout="wide")
+st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
 st.markdown("""
     <style>
-    .software-brand { color: #555; font-size: 14px; font-weight: bold; text-align: center; margin-bottom: 20px; }
-    .tabla-cotejo { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
-    .tabla-cotejo th { background: #000; color: #fff; border: 1px solid #000; padding: 6px; font-size: 11px; }
-    .tabla-cotejo td { border: 1px solid #000; text-align: center; padding: 10px; font-size: 13px; }
-    .celda-roja { border-left: 12px solid #d32f2f !important; font-weight: bold; }
-    .celda-verde { border-right: 12px solid #388e3c !important; font-weight: bold; }
-    .alerta-peso { background-color: #ffebee; color: red; font-weight: bold; }
-    .box-check { width: 18px; height: 18px; border: 2px solid #000; margin: auto; }
+    .tabla-final { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .tabla-final th { background: #1a1a1a; color: white; padding: 10px; border: 1px solid #000; font-size: 12px; }
+    .tabla-final td { border: 1px solid #000; text-align: center; padding: 12px; font-size: 14px; }
+    .borde-rojo { border-left: 12px solid #d32f2f !important; font-weight: bold; }
+    .borde-verde { border-right: 12px solid #388e3c !important; font-weight: bold; }
+    .fuera-peso { background-color: #ffebee; color: red; font-weight: bold; }
+    .check-box { width: 20px; height: 20px; border: 2px solid #000; margin: auto; }
     </style>
 """, unsafe_allow_html=True)
 
-# ... (Aquí van las funciones cargar_datos y guardar_todos que ya tienes) ...
+st.title("DERBYSYSTEM PRUEBAS")
+t1, t2 = st.tabs(["REGISTRO", "COTEJO Y ANILLOS"])
 
-st.markdown('<p class="software-brand">DERBYSYSTEM PRUEBAS</p>', unsafe_allow_html=True)
-tab1, tab2 = st.tabs(["📝 REGISTRO", "🏆 COTEJO Y ANILLOS"])
-
-with tab2:
-    partidos_lista, total_gallos = cargar_datos()
-    if len(partidos_lista) >= 2:
-        # Generar los datos usando la lógica blindada
-        rondas_finales = generar_cotejo_anti_fraude(partidos_lista, total_gallos)
+with t2:
+    lista_p, n_g = cargar_datos()
+    if len(lista_p) >= 2:
+        st.subheader("CONTROL DE PELEAS Y ANILLOS")
+        data_final = generar_cotejo_profesional(lista_p, n_g)
         
-        for nombre_ronda, peleas in rondas_finales.items():
-            st.markdown(f"<div style='background:#f0f0f0; border:2px solid #000; padding:8px; text-align:center; font-weight:bold;'>{nombre_ronda}</div>", unsafe_allow_html=True)
+        for r_nombre, peleas in data_final.items():
+            st.markdown(f"<div style='background:#333; color:white; padding:10px; text-align:center; font-weight:bold;'>{r_nombre}</div>", unsafe_allow_html=True)
             
-            tabla_html = """<table class='tabla-cotejo'>
-                <tr>
-                    <th># PELEA</th>
-                    <th>G</th>
-                    <th>PARTIDO ROJO</th>
-                    <th>ANILLO</th>
-                    <th>DIF.</th>
-                    <th>E [ ]</th>
-                    <th>ANILLO</th>
-                    <th>PARTIDO VERDE</th>
-                    <th>G</th>
-                </tr>"""
+            html_table = "<table class='tabla-final'><tr><th>#</th><th>G</th><th>ROJO / ANILLO</th><th>PESO</th><th>DIF.</th><th>E [ ]</th><th>PESO</th><th>VERDE / ANILLO</th><th>G</th></tr>"
             
             for p in peleas:
-                clase_dif = "alerta-peso" if p['dif'] > TOLERANCIA_MAX else ""
-                
-                tabla_html += f"""
-                <tr>
-                    <td><b>{p['pelea']}</b></td>
-                    <td><div class='box-check'></div></td>
-                    <td class='celda-roja'>{p['partido_r']}<br>{p['peso_r']:.3f}</td>
-                    <td><small>ID:</small><br><b>{p['an_r']}</b></td>
-                    <td class='{clase_dif}'>{p['dif']:.3f}</td>
-                    <td><div class='box-check'></div></td>
-                    <td><small>ID:</small><br><b>{p['an_v']}</b></td>
-                    <td class='celda-verde'>{p['partido_v']}<br>{p['peso_v']:.3f}</td>
-                    <td><div class='box-check'></div></td>
-                </tr>
-                """
-            tabla_html += "</table>"
-            st.markdown(tabla_html, unsafe_allow_html=True)
-            
-        if st.button("📄 GENERAR IMPRESIÓN OFICIAL"):
-            st.info("Generando reporte con trazabilidad de anillos...")
+                estilo_dif = "fuera-peso" if p['dif'] > TOLERANCIA_MAX else ""
+                html_table += f"""<tr>
+                    <td>{p['id']}</td>
+                    <td><div class='check-box'></div></td>
+                    <td class='borde-rojo'>{p['n_rojo']}<br><small>ANILLO: {p['an_rojo']}</small></td>
+                    <td>{p['w_rojo']:.3f}</td>
+                    <td class='{estilo_dif}'>{p['dif']:.3f}</td>
+                    <td><div class='check-box'></div></td>
+                    <td>{p['w_verde']:.3f}</td>
+                    <td class='borde-verde'>{p['n_verde']}<br><small>ANILLO: {p['an_verde']}</small></td>
+                    <td><div class='check-box'></div></td>
+                </tr>"""
+            html_table += "</table>"
+            st.markdown(html_table, unsafe_allow_html=True)
     else:
-        st.info("Registre al menos 2 partidos para asignar anillos y generar peleas.")
-
-st.markdown('<p style="text-align:center; font-size:10px; color:#aaa; margin-top:50px;">Creado por HommerDesigns’s</p>', unsafe_allow_html=True)
+        st.info("Registre al menos 2 partidos para generar anillos.")
