@@ -21,7 +21,6 @@ st.markdown("""
 DB_FILE = "datos_derby.txt"
 TOLERANCIA_MAX = 0.080 
 
-# --- FUNCIONES DE DATOS ---
 def cargar_datos():
     partidos = []
     g_por_evento = 2
@@ -44,66 +43,60 @@ def guardar_datos(lista):
             pesos = [f"{float(v):.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- INTERFAZ ---
+# --- INICIO DE APP ---
+if 'partidos' not in st.session_state:
+    st.session_state.partidos, st.session_state.n_gallos = cargar_datos()
+
 st.title("DERBYSYSTEM PRUEBAS")
-partidos_act, n_gallos_act = cargar_datos()
 
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
-    # 1. FORMULARIO DE REGISTRO NUEVO
     col_n, col_g = st.columns([2, 1])
-    g_seleccionados = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], index=n_gallos_act-2 if n_gallos_act <= 6 else 0)
+    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], index=st.session_state.n_gallos-2 if st.session_state.n_gallos <= 6 else 0)
     
-    with st.form("registro_rapido", clear_on_submit=True):
-        nombre = st.text_input("NOMBRE DEL NUEVO PARTIDO:").upper().strip()
-        w_in = []
-        cols = st.columns(g_seleccionados)
-        for i in range(g_seleccionados):
-            w_in.append(cols[i].number_input(f"P{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f"))
-        
+    with st.form("nuevo_p", clear_on_submit=True):
+        nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
+        cols = st.columns(g_sel)
+        w_in = [cols[i].number_input(f"P{i+1}", 1.8, 2.6, 2.2, 0.001, format="%.3f") for i in range(g_sel)]
         if st.form_submit_button("GUARDAR PARTIDO"):
-            if len(nombre) >= 2:
+            if nombre:
                 nuevo = {"PARTIDO": nombre}
                 for i, w in enumerate(w_in): nuevo[f"G{i+1}"] = w
-                partidos_act.append(nuevo)
-                guardar_datos(partidos_act)
+                st.session_state.partidos.append(nuevo)
+                guardar_datos(st.session_state.partidos)
                 st.rerun()
 
-    # 2. TABLA EDITABLE (EDICIÓN DIRECTA)
-    if partidos_act:
-        st.markdown("### ✏️ Edición Directa (Haz clic para cambiar)")
-        df_editable = pd.DataFrame(partidos_act)
+    if st.session_state.partidos:
+        st.markdown("### ✏️ Tabla de Edición")
+        df_ed = pd.DataFrame(st.session_state.partidos)
+        # TABLA EDITABLE QUE SINCRONIZA AL INSTANTE
+        res_ed = st.data_editor(df_ed, use_container_width=True, num_rows="dynamic")
         
-        # Esta es la función mágica que permite editar haciendo clic
-        edited_df = st.data_editor(
-            df_editable,
-            num_rows="dynamic", # Permite borrar filas también
-            use_container_width=True,
-            column_config={
-                "PARTIDO": st.column_config.TextColumn("Nombre del Partido"),
-                **{f"G{i+1}": st.column_config.NumberColumn(format="%.3f") for i in range(g_seleccionados)}
-            }
-        )
-        
-        # Si el usuario cambió algo en la tabla, guardamos
-        if not edited_df.equals(df_editable):
-            nuevos_datos = edited_df.to_dict('records')
-            guardar_datos(nuevos_datos)
-            st.toast("Cambios guardados automáticamente")
+        if not res_ed.equals(df_ed):
+            st.session_state.partidos = res_ed.to_dict('records')
+            guardar_datos(st.session_state.partidos)
+            st.success("¡Datos actualizados! Ve a la pestaña de Cotejo.")
 
-        if st.button("BORRAR TODO EL EVENTO"):
+        if st.button("LIMPIAR TODO EL EVENTO"):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.session_state.partidos = []
             st.rerun()
 
 with t_cot:
-    if len(partidos_act) >= 2:
+    if len(st.session_state.partidos) >= 2:
+        # Botón para forzar que el cotejo se actualice con lo editado
+        if st.button("🔄 ACTUALIZAR NOMBRES Y PESOS"):
+            st.session_state.partidos, _ = cargar_datos()
+            st.rerun()
+
         anillo_cont = 1
         pelea_id = 1
-        for r in range(1, g_seleccionados + 1):
+        for r in range(1, g_sel + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_p = f"G{r}"
-            lista = sorted(partidos_act, key=lambda x: x.get(col_p, 0))
+            # Ordenamos por peso actualizado [cite: 2026-01-14]
+            lista = sorted(st.session_state.partidos, key=lambda x: x.get(col_p, 0))
             html = "<table class='tabla-final'><tr><th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>DIF.</th><th>E[ ]</th><th>AN.</th><th>VERDE</th><th>G</th></tr>"
             while len(lista) >= 2:
                 rojo = lista.pop(0)
@@ -115,3 +108,5 @@ with t_cot:
                 anillo_cont += 2
                 pelea_id += 1
             st.markdown(html + "</table>", unsafe_allow_html=True)
+    else:
+        st.info("Registre partidos para ver el cotejo.")
