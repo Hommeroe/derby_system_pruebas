@@ -5,34 +5,35 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO (RESTAURANDO PESO ARRIBA Y ANILLO ABAJO) ---
+# --- DISEÑO (FIJO SEGÚN IMÁGENES) ---
 st.markdown("""
     <style>
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; margin-bottom: 25px; }
-    .tabla-final th { background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #000; text-align: center; font-size: 14px; }
+    .tabla-final th { background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #000; text-align: center; }
     .tabla-final td { border: 1px solid #bdc3c7; text-align: center; padding: 10px; vertical-align: middle; }
     
+    /* Bordes de color para Rojo y Verde */
     .rojo-v { border-left: 10px solid #d32f2f !important; }
     .verde-v { border-right: 10px solid #27ae60 !important; }
     
-    /* Diseño vertical: Peso arriba, Anillo abajo */
+    /* Estructura Vertical de Datos */
     .bloque-gallo { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    
     .caja-peso { 
         background-color: #f4f6f7; border: 1px solid #d5dbdb; border-radius: 4px; 
-        padding: 2px 10px; font-weight: bold; color: #2c3e50; font-size: 16px; min-width: 85px;
+        padding: 2px 10px; font-weight: bold; color: #2c3e50; font-size: 16px; min-width: 80px;
     }
     .caja-anillo { 
         background-color: #2c3e50; color: white; border-radius: 4px; 
-        padding: 2px 10px; font-weight: bold; font-size: 14px; min-width: 85px;
+        padding: 2px 10px; font-weight: bold; font-size: 14px; min-width: 80px;
     }
     
-    .check-box { font-size: 20px; color: #bdc3c7; font-weight: bold; }
+    .check-box { font-size: 18px; color: #bdc3c7; }
     .header-azul { background-color: #2c3e50; color: white; padding: 10px; text-align: center; font-weight: bold; margin-top: 20px; }
     .dif-alerta { background-color: #e74c3c; color: white; font-weight: bold; border-radius: 3px; padding: 2px 6px; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE DATOS ---
 DB_FILE = "datos_derby.txt"
 TOLERANCIA_MAX = 0.080 
 
@@ -64,7 +65,6 @@ if 'partidos' not in st.session_state:
 st.title("DERBYSYSTEM PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
-# --- PESTAÑA REGISTRO ---
 with t_reg:
     col_n, col_g = st.columns([2, 1])
     hay_datos = len(st.session_state.partidos) > 0
@@ -92,7 +92,6 @@ with t_reg:
             guardar_datos(st.session_state.partidos)
             st.rerun()
 
-# --- PESTAÑA COTEJO (CON DISEÑO VERTICAL FIJO) ---
 with t_cot:
     if len(st.session_state.partidos) >= 2:
         anillo_cont = 1
@@ -108,7 +107,7 @@ with t_cot:
                     <th width='5%'>G</th>
                     <th width='35%'>LADO ROJO</th>
                     <th width='10%'>DIF.</th>
-                    <th width='5%'>E</th>
+                    <th width='5%'>E[ ]</th>
                     <th width='35%'>LADO VERDE</th>
                     <th width='5%'>G</th>
                 </tr>"""
