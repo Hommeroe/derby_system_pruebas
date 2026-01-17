@@ -5,28 +5,41 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO (RECTÁNGULOS DE REGISTRO) ---
+# --- DISEÑO (RECTÁNGULOS ALINEADOS) ---
 st.markdown("""
     <style>
-    /* Estilo para los rectángulos de anillo en el formulario */
-    .caja-anillo-form {
-        background-color: #2c3e50;
-        color: white;
-        padding: 5px 15px;
-        border-radius: 5px;
-        font-weight: bold;
-        font-size: 18px;
-        text-align: center;
-        margin-top: 28px; /* Alineación con el input de peso */
-        display: inline-block;
-        min-width: 60px;
+    /* Contenedor para alinear peso y anillo perfectamente */
+    .fila-registro-gallo {
+        display: flex;
+        align-items: flex-end; /* Alinea el fondo de la caja con el input */
+        gap: 10px;
+        margin-bottom: 5px;
     }
     
-    .tabla-final { width: 100%; border-collapse: collapse; background-color: white; margin-bottom: 25px; }
-    .tabla-final th { background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #000; text-align: center; }
-    .tabla-final td { border: 1px solid #bdc3c7; text-align: center; padding: 10px; font-size: 14px; }
-    
-    .num-partido-lista { color: #d32f2f; font-weight: bold; font-size: 20px; }
+    .caja-anillo-registro {
+        background-color: #2c3e50;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 16px;
+        min-width: 80px;
+        text-align: center;
+        border: 1px solid #2c3e50;
+        margin-bottom: 4px; /* Pequeño ajuste para centrar con el input */
+    }
+
+    .etiqueta-anillo-min {
+        font-size: 10px;
+        color: #7f8c8d;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+        display: block;
+    }
+
+    .tabla-final { width: 100%; border-collapse: collapse; background-color: white; }
+    .tabla-final th { background-color: #2c3e50; color: white; padding: 10px; border: 1px solid #000; }
+    .tabla-final td { border: 1px solid #bdc3c7; text-align: center; padding: 10px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -62,8 +75,8 @@ st.title("DERBYSYSTEM PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
-    # Cálculo del siguiente número de anillo disponible
-    total_gallos_registrados = len(st.session_state.partidos) * st.session_state.n_gallos
+    # Cálculo de anillos base
+    gallos_ya_registrados = len(st.session_state.partidos) * st.session_state.n_gallos
     
     col_n, col_g = st.columns([2, 1])
     hay_datos = len(st.session_state.partidos) > 0
@@ -73,18 +86,28 @@ with t_reg:
     st.session_state.n_gallos = g_sel
 
     with st.form("nuevo_p", clear_on_submit=True):
-        st.subheader(f"Partido # {len(st.session_state.partidos) + 1}")
+        st.subheader(f"Registrar Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         
-        # Formulario con Peso y Anillo lado a lado
         w_in = []
+        # Agrupamos por filas de 2 gallos para que no ocupe tanto espacio hacia abajo
         for i in range(g_sel):
-            c_peso, c_anillo = st.columns([3, 1])
-            peso = c_peso.number_input(f"Peso Gallo {i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f")
-            w_in.append(peso)
-            # El anillo se genera sumando los gallos ya existentes + la posición actual
-            n_anillo = total_gallos_registrados + (i + 1)
-            c_anillo.markdown(f"<div class='caja-anillo-form'>{n_anillo:03}</div>", unsafe_allow_html=True)
+            num_anillo = gallos_ya_registrados + (i + 1)
+            # Usamos columnas de Streamlit pero con CSS para pegarlas
+            col_izq, col_der = st.columns([3, 2])
+            
+            with col_izq:
+                peso = st.number_input(f"Peso Gallo {i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+                w_in.append(peso)
+            
+            with col_der:
+                # El cuadro del anillo queda alineado a la derecha del peso
+                st.markdown(f"""
+                    <div style='margin-top: 25px;'>
+                        <span class='etiqueta-anillo-min'>Anillo:</span>
+                        <div class='caja-anillo-registro'>{num_anillo:03}</div>
+                    </div>
+                """, unsafe_allow_html=True)
             
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
             if nombre:
@@ -95,10 +118,9 @@ with t_reg:
                 st.rerun()
 
     if st.session_state.partidos:
-        st.markdown(f"### 📋 Listado de Partidos Registrados ({len(st.session_state.partidos)})")
-        # Mostrar tabla de edición con número de partido
+        st.markdown(f"### 📋 Listado de Partidos ({len(st.session_state.partidos)})")
         df_display = pd.DataFrame(st.session_state.partidos)
-        df_display.index += 1 # Numerar partidos
+        df_display.index += 1 
         st.data_editor(df_display, use_container_width=True)
 
         if st.button("🗑️ LIMPIAR TODO EL EVENTO"):
@@ -106,13 +128,13 @@ with t_reg:
             st.session_state.partidos = []
             st.rerun()
 
-# --- PESTAÑA COTEJO (IGUAL QUE TU DISEÑO ORIGINAL) ---
+# --- PESTAÑA COTEJO ---
 with t_cot:
     if len(st.session_state.partidos) >= 2:
         anillo_cont = 1
         pelea_id = 1
         for r in range(1, st.session_state.n_gallos + 1):
-            st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='header-azul' style='background-color:#2c3e50;color:white;padding:8px;text-align:center;font-weight:bold;'>RONDA {r}</div>", unsafe_allow_html=True)
             col_p = f"G{r}"
             lista = sorted(st.session_state.partidos, key=lambda x: x.get(col_p, 0))
             html = "<table class='tabla-final'><tr><th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>DIF.</th><th>E[ ]</th><th>AN.</th><th>VERDE</th><th>G</th></tr>"
@@ -123,7 +145,7 @@ with t_cot:
                 if v_idx is not None:
                     verde = lista.pop(v_idx)
                     dif = abs(rojo[col_p] - verde[col_p])
-                    c_dif = "class='dif-alerta'" if dif > TOLERANCIA_MAX else ""
+                    c_dif = "style='background-color:#e74c3c;color:white;font-weight:bold;'" if dif > TOLERANCIA_MAX else ""
                     html += f"<tr><td>{pelea_id}</td><td>□</td><td style='border-left:8px solid #d32f2f'>{rojo['PARTIDO']}<br>{rojo[col_p]:.3f}</td><td>{anillo_cont:03}</td><td {c_dif}>{dif:.3f}</td><td>□</td><td>{(anillo_cont+1):03}</td><td style='border-right:8px solid #27ae60'>{verde['PARTIDO']}<br>{verde[col_p]:.3f}</td><td>□</td></tr>"
                     anillo_cont += 2
                     pelea_id += 1
