@@ -2,140 +2,155 @@
 import pandas as pd
 import os
 
-# --- CONFIGURACIÓN ---
+# --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- DISEÑO ---
+# --- ESTILOS CSS ---
 st.markdown("""
     <style>
-    .caja-anillo-compacta {
-        background-color: #2c3e50; color: white; padding: 5px 10px;
-        border-radius: 5px; font-weight: bold; font-size: 16px;
-        text-align: center; margin-top: 32px;
+    .caja-anillo {
+        background-color: #2c3e50; color: white; padding: 5px;
+        border-radius: 5px; font-weight: bold; text-align: center;
+        margin-top: 30px; border: 1px solid #34495e;
     }
-    .header-azul { background-color: #2c3e50; color: white; padding: 8px; text-align: center; font-weight: bold; }
-    .tabla-final { width: 100%; border-collapse: collapse; background-color: white; }
-    .tabla-final td { border: 1px solid #bdc3c7; text-align: center; padding: 10px; }
+    .header-ronda { 
+        background-color: #2c3e50; color: white; padding: 10px; 
+        text-align: center; font-weight: bold; border-radius: 5px;
+    }
+    .tabla-cotejo { width: 100%; border-collapse: collapse; background-color: white; }
+    .tabla-cotejo td, .tabla-cotejo th { 
+        border: 1px solid #bdc3c7; text-align: center; padding: 10px; 
+    }
     </style>
 """, unsafe_allow_html=True)
 
 DB_FILE = "datos_derby.txt"
-TOLERANCIA_MAX = 0.080 
+TOLERANCIA = 0.080
 
-def cargar_datos():
+def cargar():
     partidos = []
-    g_por_evento = 2
+    n_gallos = 2
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
             for line in f:
                 p = line.strip().split("|")
                 if len(p) >= 2:
-                    g_por_evento = len(p) - 1
+                    n_gallos = len(p) - 1
                     d = {"PARTIDO": p[0]}
-                    for i in range(1, g_por_evento + 1):
-                        try: d[f"G{i}"] = float(p[i])
-                        except: d[f"G{i}"] = 2.200
+                    for i in range(1, n_gallos + 1):
+                        d[f"G{i}"] = float(p[i])
                     partidos.append(d)
-    return partidos, g_por_evento
+    return partidos, n_gallos
 
-def guardar_datos(lista):
+def guardar(lista):
     with open(DB_FILE, "w", encoding="utf-8") as f:
         for p in lista:
-            pesos = [f"{float(v):.3f}" for k, v in p.items() if k != "PARTIDO"]
+            pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
 if 'partidos' not in st.session_state:
-    st.session_state.partidos, st.session_state.n_gallos = cargar_datos()
+    st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-st.title("DERBYSYSTEM PRUEBAS")
-t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
+st.title("🏆 DERBYSYSTEM PRUEBAS")
+t_reg, t_cot = st.tabs(["📝 REGISTRO", "📊 COTEJO"])
 
 with t_reg:
-    anillos_base = len(st.session_state.partidos) * st.session_state.n_gallos
+    # --- FORMULARIO ---
+    anillos_ya = len(st.session_state.partidos) * st.session_state.n_gallos
     
-    col_n, col_g = st.columns([2, 1])
-    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], 
-                            index=st.session_state.n_gallos-2 if st.session_state.n_gallos <= 6 else 0,
-                            disabled=len(st.session_state.partidos) > 0)
-    st.session_state.n_gallos = g_sel
+    col_a, col_b = st.columns([2,1])
+    n_sel = col_b.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, 
+                            disabled=len(st.session_state.partidos)>0)
+    st.session_state.n_gallos = n_sel
 
-    # --- FORMULARIO DE REGISTRO ---
-    with st.form("nuevo_p", clear_on_submit=True):
-        st.subheader(f"Registrar Partido # {len(st.session_state.partidos) + 1}")
-        nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
-        w_in = []
-        for i in range(g_sel):
-            num_anillo = anillos_base + (i + 1)
-            c_peso, c_anillo = st.columns([4, 1])
-            with c_peso:
-                peso = st.number_input(f"Peso G{i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-                w_in.append(peso)
-            with c_anillo:
-                st.markdown(f"<div class='caja-anillo-compacta'>{num_anillo:03}</div>", unsafe_allow_html=True)
-            
+    with st.form("f_nuevo", clear_on_submit=True):
+        st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
+        nom = st.text_input("NOMBRE DEL PARTIDO:").upper()
+        pesos_temp = []
+        
+        for i in range(n_sel):
+            c1, c2 = st.columns([4, 1])
+            with c1:
+                v = st.number_input(f"Peso Gallo {i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"in_{i}")
+                pesos_temp.append(v)
+            with c2:
+                st.markdown(f"<div class='caja-anillo'>{(anillos_ya + i + 1):03}</div>", unsafe_allow_html=True)
+        
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
-            if nombre:
-                nuevo = {"PARTIDO": nombre}
-                for i, w in enumerate(w_in): nuevo[f"G{i+1}"] = w
+            if nom:
+                nuevo = {"PARTIDO": nom}
+                for i, w in enumerate(pesos_temp): nuevo[f"G{i+1}"] = w
                 st.session_state.partidos.append(nuevo)
-                guardar_datos(st.session_state.partidos)
+                guardar(st.session_state.partidos)
                 st.rerun()
 
-    # --- TABLA DE EDICIÓN SEGURA ---
+    # --- TABLA DE EDICIÓN CON ANILLOS ---
     if st.session_state.partidos:
-        st.markdown(f"### ✏️ Edición de Pesos")
+        st.divider()
+        st.subheader("✏️ Tabla de Edición")
         
-        df_ed = pd.DataFrame(st.session_state.partidos)
+        # Preparamos los datos para mostrar anillos sin que sean editables
+        datos_ed = []
+        cont_anillo = 1
+        for p in st.session_state.partidos:
+            d = {"PARTIDO": p["PARTIDO"]}
+            for i in range(1, st.session_state.n_gallos + 1):
+                d[f"G{i} Peso"] = p[f"G{i}"]
+                d[f"Anillo {i}"] = f"{cont_anillo:03}"
+                cont_anillo += 1
+            datos_ed.append(d)
         
-        # Generamos la configuración de columnas para mostrar el Anillo como ayuda visual
-        config_cols = {
-            "PARTIDO": st.column_config.TextColumn("Partido", width="medium"),
-        }
+        df = pd.DataFrame(datos_ed)
         
-        # Añadimos columnas de peso editables
+        # Configuración de columnas para bloquear los anillos
+        config = {"PARTIDO": st.column_config.TextColumn("Partido", width="medium")}
         for i in range(1, st.session_state.n_gallos + 1):
-            config_cols[f"G{i}"] = st.column_config.NumberColumn(
-                f"G{i} (Peso)", format="%.3f", min_value=1.8, max_value=2.6
-            )
+            config[f"Anillo {i}"] = st.column_config.TextColumn(f"💍 A{i}", disabled=True)
+            config[f"G{i} Peso"] = st.column_config.NumberColumn(f"⚖️ G{i}", format="%.3f")
 
-        # Editor con bloqueo de nuevas filas
-        res_ed = st.data_editor(
-            df_ed,
-            use_container_width=True,
-            num_rows="fixed", # Impide agregar/quitar partidos
-            column_config=config_cols,
-            hide_index=False
-        )
+        res = st.data_editor(df, column_config=config, use_container_width=True, num_rows="fixed", hide_index=True)
 
-        if not res_ed.equals(df_ed):
-            st.session_state.partidos = res_ed.to_dict('records')
-            guardar_datos(st.session_state.partidos)
+        if not res.equals(df):
+            actualizados = []
+            for _, row in res.iterrows():
+                p_upd = {"PARTIDO": row["PARTIDO"]}
+                for i in range(1, st.session_state.n_gallos + 1):
+                    p_upd[f"G{i}"] = float(row[f"G{i} Peso"])
+                actualizados.append(p_upd)
+            st.session_state.partidos = actualizados
+            guardar(actualizados)
             st.rerun()
 
-        if st.button("🗑️ LIMPIAR TODO EL EVENTO"):
+        if st.button("🗑️ BORRAR TODO"):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
             st.session_state.partidos = []
             st.rerun()
 
-# --- PESTAÑA COTEJO ---
 with t_cot:
     if len(st.session_state.partidos) >= 2:
-        anillo_cont = 1
-        pelea_id = 1
+        an_idx = 1
+        pelea = 1
         for r in range(1, st.session_state.n_gallos + 1):
-            st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
-            col_p = f"G{r}"
-            lista = sorted(st.session_state.partidos, key=lambda x: x.get(col_p, 0))
-            html = "<table class='tabla-final'><tr><th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>DIF.</th><th>E[ ]</th><th>AN.</th><th>VERDE</th><th>G</th></tr>"
+            st.markdown(f"<div class='header-ronda'>RONDA {r}</div>", unsafe_allow_html=True)
+            col_g = f"G{r}"
+            # Clonar lista para no afectar la original al ordenar
+            lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g])
+            
+            html = "<table class='tabla-cotejo'><tr><th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>DIF.</th><th>[ ]</th><th>AN.</th><th>VERDE</th><th>G</th></tr>"
             while len(lista) >= 2:
                 rojo = lista.pop(0)
                 v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
                 if v_idx is not None:
                     verde = lista.pop(v_idx)
-                    dif = abs(rojo[col_p] - verde[col_p])
-                    c_dif = "style='background-color:#e74c3c;color:white;font-weight:bold;'" if dif > TOLERANCIA_MAX else ""
-                    html += f"<tr><td>{pelea_id}</td><td>□</td><td style='border-left:8px solid #d32f2f'>{rojo['PARTIDO']}<br>{rojo[col_p]:.3f}</td><td>{anillo_cont:03}</td><td {c_dif}>{dif:.3f}</td><td>□</td><td>{(anillo_cont+1):03}</td><td style='border-right:8px solid #27ae60'>{verde['PARTIDO']}<br>{verde[col_p]:.3f}</td><td>□</td></tr>"
-                    anillo_cont += 2
-                    pelea_id += 1
+                    d = abs(rojo[col_g] - verde[col_g])
+                    c = "style='background:#e74c3c;color:white;'" if d > TOLERANCIA else ""
+                    # Buscar el anillo original basado en la posición del partido y el gallo
+                    idx_rojo = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
+                    idx_verde = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
+                    an_r = (idx_rojo * st.session_state.n_gallos) + r
+                    an_v = (idx_verde * st.session_state.n_gallos) + r
+                    
+                    html += f"<tr><td>{pelea}</td><td>□</td><td style='border-left:5px solid red'>{rojo['PARTIDO']}<br>{rojo[col_g]:.3f}</td><td>{an_r:03}</td><td {c}>{d:.3f}</td><td>□</td><td>{an_v:03}</td><td style='border-right:5px solid green'>{verde['PARTIDO']}<br>{verde[col_g]:.3f}</td><td>□</td></tr>"
+                    pelea += 1
                 else: break
-            st.markdown(html + "</table>", unsafe_allow_html=True)
+            st.markdown(html + "</table><br>", unsafe_allow_html=True)
