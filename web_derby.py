@@ -14,7 +14,7 @@ def login():
     if not st.session_state.autenticado:
         st.subheader("🔑 Acceso al Sistema")
         user = st.text_input("Usuario")
-        password = st.text_input("homero", type="hoka")
+        password = st.text_input("Contraseña", type="password")
         if st.button("Entrar"):
             if user in USUARIOS_VALIDOS and USUARIOS_VALIDOS[user] == password:
                 st.session_state.autenticado = True
