@@ -20,13 +20,13 @@ st.markdown("""
     }
     .tabla-final { 
         width: 100%; border-collapse: collapse; background-color: white; 
-        font-size: 10px; /* Letra ajustada para nuevas columnas */
+        font-size: 11px; 
     }
     .tabla-final td, .tabla-final th { 
-        border: 1px solid #bdc3c7; text-align: center; padding: 3px;
+        border: 1px solid #bdc3c7; text-align: center; padding: 4px;
     }
-    .nombre-partido { font-weight: bold; font-size: 10px; }
-    .cuadro { font-size: 12px; }
+    .nombre-partido { font-weight: bold; font-size: 11px; }
+    .cuadro { font-size: 13px; font-weight: bold; }
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
@@ -118,7 +118,7 @@ with t_reg:
             st.session_state.partidos = []; st.rerun()
 
 with t_cot:
-    # --- COTEJO CON GANADOR Y EMPATE ---
+    # --- COTEJO CON EMPATE CENTRAL ---
     if len(st.session_state.partidos) >= 2:
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
@@ -127,7 +127,7 @@ with t_cot:
             
             html = """<table class='tabla-final'>
                         <tr>
-                            <th>#</th><th>G</th><th>E</th><th>ROJO</th><th>AN.</th><th>DIF.</th><th>AN.</th><th>VERDE</th><th>E</th><th>G</th>
+                            <th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>E</th><th>DIF.</th><th>AN.</th><th>VERDE</th><th>G</th>
                         </tr>"""
             pelea_n = 1
             while len(lista) >= 2:
@@ -147,13 +147,12 @@ with t_cot:
                     <tr>
                         <td>{pelea_n}</td>
                         <td class='cuadro'>□</td>
-                        <td class='cuadro'>□</td>
                         <td style='border-left:4px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><br>{rojo[col_g]:.3f}</td>
                         <td>{an_r:03}</td>
+                        <td class='cuadro'>□</td>
                         <td {c}>{d:.3f}</td>
                         <td>{an_v:03}</td>
                         <td style='border-right:4px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><br>{verde[col_g]:.3f}</td>
-                        <td class='cuadro'>□</td>
                         <td class='cuadro'>□</td>
                     </tr>"""
                     pelea_n += 1
