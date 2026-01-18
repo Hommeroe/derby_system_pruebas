@@ -1,4 +1,4 @@
-import streamlit as st
+ import streamlit as st
 import pandas as pd
 import os
 
@@ -9,15 +9,9 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 st.markdown("""
     <style>
     .caja-anillo-compacta {
-        background-color: #2c3e50;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-weight: bold;
-        font-size: 16px;
-        text-align: center;
-        border: 1px solid #2c3e50;
-        margin-top: 32px;
+        background-color: #2c3e50; color: white; padding: 5px 10px;
+        border-radius: 5px; font-weight: bold; font-size: 16px;
+        text-align: center; margin-top: 32px;
     }
     .header-azul { background-color: #2c3e50; color: white; padding: 8px; text-align: center; font-weight: bold; }
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; }
@@ -57,8 +51,7 @@ st.title("DERBYSYSTEM PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
-    # Cálculo para anillos automáticos en el formulario
-    anillos_totales = len(st.session_state.partidos) * st.session_state.n_gallos
+    anillos_base = len(st.session_state.partidos) * st.session_state.n_gallos
     
     col_n, col_g = st.columns([2, 1])
     g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], 
@@ -66,18 +59,18 @@ with t_reg:
                             disabled=len(st.session_state.partidos) > 0)
     st.session_state.n_gallos = g_sel
 
+    # --- FORMULARIO DE REGISTRO ---
     with st.form("nuevo_p", clear_on_submit=True):
         st.subheader(f"Registrar Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         w_in = []
         for i in range(g_sel):
-            num_anillo = anillos_totales + (i + 1)
+            num_anillo = anillos_base + (i + 1)
             c_peso, c_anillo = st.columns([4, 1])
             with c_peso:
-                peso = st.number_input(f"Peso Gallo {i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+                peso = st.number_input(f"Peso G{i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f", key=f"p_{i}")
                 w_in.append(peso)
             with c_anillo:
-                st.markdown(f"<div style='font-size:10px; font-weight:bold; color:grey;'>ANILLO</div>", unsafe_allow_html=True)
                 st.markdown(f"<div class='caja-anillo-compacta'>{num_anillo:03}</div>", unsafe_allow_html=True)
             
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -88,54 +81,34 @@ with t_reg:
                 guardar_datos(st.session_state.partidos)
                 st.rerun()
 
+    # --- TABLA DE EDICIÓN SEGURA ---
     if st.session_state.partidos:
-        st.markdown(f"### ✏️ Tabla de Edición")
+        st.markdown(f"### ✏️ Edición de Pesos")
         
-        # --- CREACIÓN DE TABLA CON FILA DE ANILLOS ---
-        filas_tabla = []
-        anillo_global = 1
-        for idx, p in enumerate(st.session_state.partidos):
-            # Fila de Pesos (Editable)
-            fila_peso = {"#": idx + 1, "TIPO": "PESO", "PARTIDO": p["PARTIDO"]}
-            # Fila de Anillos (Informativa)
-            fila_anillo = {"#": idx + 1, "TIPO": "ANILLO", "PARTIDO": p["PARTIDO"]}
-            
-            for i in range(1, st.session_state.n_gallos + 1):
-                fila_peso[f"Gallo {i}"] = p[f"G{i}"]
-                fila_anillo[f"Gallo {i}"] = f"AN: {anillo_global:03}"
-                anillo_global += 1
-            
-            filas_tabla.append(fila_peso)
-            filas_tabla.append(fila_anillo)
+        df_ed = pd.DataFrame(st.session_state.partidos)
+        
+        # Generamos la configuración de columnas para mostrar el Anillo como ayuda visual
+        config_cols = {
+            "PARTIDO": st.column_config.TextColumn("Partido", width="medium"),
+        }
+        
+        # Añadimos columnas de peso editables
+        for i in range(1, st.session_state.n_gallos + 1):
+            config_cols[f"G{i}"] = st.column_config.NumberColumn(
+                f"G{i} (Peso)", format="%.3f", min_value=1.8, max_value=2.6
+            )
 
-        df_editor = pd.DataFrame(filas_tabla)
-        
-        # Configuración para que solo la fila de PESO sea editable
+        # Editor con bloqueo de nuevas filas
         res_ed = st.data_editor(
-            df_editor,
+            df_ed,
             use_container_width=True,
-            num_rows="fixed", # Bloquea agregar/quitar filas [cite: 2026-01-17]
-            hide_index=True,
-            column_config={
-                "#": st.column_config.NumberColumn(disabled=True),
-                "TIPO": st.column_config.TextColumn(disabled=True),
-                "PARTIDO": st.column_config.TextColumn("Nombre Partido"),
-                **{f"Gallo {i+1}": st.column_config.TextColumn(f"Gallo {i+1}") for i in range(st.session_state.n_gallos)}
-            }
+            num_rows="fixed", # Impide agregar/quitar partidos
+            column_config=config_cols,
+            hide_index=False
         )
 
-        # Guardar solo si se editaron los pesos (filtramos las filas de TIPO PESO)
-        if not res_ed.equals(df_editor):
-            nuevos_datos = []
-            # Recogemos solo las filas que son de tipo PESO para actualizar el archivo
-            for i in range(0, len(res_ed), 2):
-                row = res_ed.iloc[i]
-                d = {"PARTIDO": row["PARTIDO"]}
-                for g in range(1, st.session_state.n_gallos + 1):
-                    try: d[f"G{g}"] = float(row[f"Gallo {g}"])
-                    except: d[f"G{g}"] = 2.200
-                nuevos_datos.append(d)
-            st.session_state.partidos = nuevos_datos
+        if not res_ed.equals(df_ed):
+            st.session_state.partidos = res_ed.to_dict('records')
             guardar_datos(st.session_state.partidos)
             st.rerun()
 
