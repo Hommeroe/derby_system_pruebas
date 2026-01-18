@@ -27,6 +27,8 @@ st.markdown("""
     }
     .nombre-partido { font-weight: bold; font-size: 11px; }
     .cuadro { font-size: 13px; font-weight: bold; }
+    /* Estilo especial para la columna de empate central */
+    .col-empate { background-color: #f8f9fa; font-weight: bold; }
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
@@ -62,7 +64,7 @@ st.title("🏆 PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
-    # --- REGISTRO (SIN CAMBIOS) ---
+    # --- REGISTRO (SE MANTIENE IGUAL) ---
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g = st.columns([2,1])
     g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, 
@@ -118,7 +120,7 @@ with t_reg:
             st.session_state.partidos = []; st.rerun()
 
 with t_cot:
-    # --- COTEJO CON EMPATE CENTRAL ---
+    # --- COTEJO CON EMPATE JUSTO EN MEDIO ---
     if len(st.session_state.partidos) >= 2:
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
@@ -127,7 +129,7 @@ with t_cot:
             
             html = """<table class='tabla-final'>
                         <tr>
-                            <th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>E</th><th>DIF.</th><th>AN.</th><th>VERDE</th><th>G</th>
+                            <th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th style='background:#f1f2f6'>E</th><th>DIF.</th><th>AN.</th><th>VERDE</th><th>G</th>
                         </tr>"""
             pelea_n = 1
             while len(lista) >= 2:
@@ -149,7 +151,7 @@ with t_cot:
                         <td class='cuadro'>□</td>
                         <td style='border-left:4px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><br>{rojo[col_g]:.3f}</td>
                         <td>{an_r:03}</td>
-                        <td class='cuadro'>□</td>
+                        <td class='cuadro' style='background:#f1f2f6'>□</td>
                         <td {c}>{d:.3f}</td>
                         <td>{an_v:03}</td>
                         <td style='border-right:4px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><br>{verde[col_g]:.3f}</td>
