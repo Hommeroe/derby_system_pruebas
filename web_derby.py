@@ -86,12 +86,12 @@ with t_reg:
 
     if st.session_state.partidos:
         st.markdown("### ✏️ Tabla de Edición")
-        st.info("Para eliminar: Selecciona la fila (clic al número de la izquierda) y usa la papelera o la tecla Borrar.")
         
+        # Preparar datos con la tachita a la izquierda [cite: 2026-01-18]
         display_data = []
         cont_anillo = 1
         for p in st.session_state.partidos:
-            item = {"PARTIDO": p["PARTIDO"]}
+            item = {"❌": False, "PARTIDO": p["PARTIDO"]}
             for i in range(1, st.session_state.n_gallos + 1):
                 item[f"G{i}"] = p[f"G{i}"]
                 item[f"Anillo {i}"] = f"{cont_anillo:03}"
@@ -100,25 +100,29 @@ with t_reg:
         
         df = pd.DataFrame(display_data)
         
-        config = {"PARTIDO": st.column_config.TextColumn("Nombre Partido")}
+        # Configuración de columnas
+        config = {
+            "❌": st.column_config.CheckboxColumn("Borrar", help="Haz clic para eliminar el partido", default=False),
+            "PARTIDO": st.column_config.TextColumn("Nombre Partido")
+        }
         for i in range(1, st.session_state.n_gallos + 1):
             config[f"G{i}"] = st.column_config.NumberColumn(f"Peso G{i}", format="%.3f")
             config[f"Anillo {i}"] = st.column_config.TextColumn(f"💍 A{i}", disabled=True)
 
-        # num_rows="dynamic" permite eliminar filas directamente en la tabla [cite: 2026-01-18]
         res = st.data_editor(df, column_config=config, use_container_width=True, 
-                             num_rows="dynamic", hide_index=False)
+                             num_rows="fixed", hide_index=True)
 
-        # Si el número de filas cambió o los datos cambiaron, guardamos [cite: 2026-01-18]
+        # Lógica de eliminación y edición [cite: 2026-01-18]
         if not res.equals(df):
             nuevos = []
             for _, r in res.iterrows():
-                # Evita procesar filas vacías o con None que Streamlit crea al borrar
-                if r["PARTIDO"] is not None:
+                # Si la tachita está marcada (True), no se añade a la nueva lista (se elimina) [cite: 2026-01-18]
+                if not r["❌"]:
                     p_upd = {"PARTIDO": str(r["PARTIDO"]).upper()}
                     for i in range(1, st.session_state.n_gallos + 1):
                         p_upd[f"G{i}"] = float(r[f"G{i}"])
                     nuevos.append(p_upd)
+            
             st.session_state.partidos = nuevos
             guardar(nuevos)
             st.rerun()
