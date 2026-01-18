@@ -1,11 +1,16 @@
 import streamlit as st
 import pandas as pd
 import os
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- ESTILOS PARA EVITAR DESACOMODO POR NOMBRES LARGOS ---
+# --- ESTILOS ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -21,11 +26,11 @@ st.markdown("""
     }
     .tabla-final { 
         width: 100%; border-collapse: collapse; background-color: white; 
-        table-layout: fixed; /* Mantiene las columnas en su lugar */
+        table-layout: fixed;
     }
     .tabla-final td, .tabla-final th { 
         border: 1px solid #bdc3c7; text-align: center; 
-        padding: 2px; height: 35px; /* Altura fija para orden visual */
+        padding: 2px; height: 35px;
     }
     .nombre-partido { 
         font-weight: bold; font-size: 10px; line-height: 1;
@@ -35,13 +40,12 @@ st.markdown("""
     .peso-texto { font-size: 10px; color: #2c3e50; display: block; }
     .cuadro { font-size: 11px; font-weight: bold; }
     
-    /* Definición estricta de anchos para celular */
     .col-num { width: 20px; }
     .col-g { width: 22px; }
     .col-an { width: 32px; }
     .col-e { width: 22px; background-color: #f1f2f6; }
     .col-dif { width: 42px; }
-    .col-partido { width: auto; } /* El nombre toma lo que sobra */
+    .col-partido { width: auto; }
 
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
@@ -70,6 +74,56 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
+def generar_pdf(partidos, n_gallos):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    elements.append(Paragraph("<b>COTEJO DE DERBY</b>", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    for r in range(1, n_gallos + 1):
+        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
+        col_g = f"G{r}"
+        lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
+        
+        data = [["#", "G", "ROJO", "AN.", "E", "DIF.", "AN.", "VERDE", "G"]]
+        pelea_n = 1
+        
+        while len(lista) >= 2:
+            rojo = lista.pop(0)
+            v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
+            if v_idx is not None:
+                verde = lista.pop(v_idx)
+                d = abs(rojo[col_g] - verde[col_g])
+                idx_r = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==rojo["PARTIDO"])
+                idx_v = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==verde["PARTIDO"])
+                an_r, an_v = (idx_r * n_gallos) + r, (idx_v * n_gallos) + r
+                
+                data.append([
+                    pelea_n, "[  ]", f"{rojo['PARTIDO']}\n{rojo[col_g]:.3f}", f"{an_r:03}", 
+                    "[  ]", f"{d:.3f}", f"{an_v:03}", f"{verde['PARTIDO']}\n{verde[col_g]:.3f}", "[  ]"
+                ])
+                pelea_n += 1
+            else: break
+        
+        t = Table(data, colWidths=[20, 25, 120, 35, 25, 45, 35, 120, 25])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#2c3e50")),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 8),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 20))
+
+    doc.build(elements)
+    return buffer.getvalue()
+
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
@@ -77,6 +131,7 @@ st.title("🏆 PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
+    # --- REGISTRO ---
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g = st.columns([2,1])
     g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, 
@@ -133,6 +188,11 @@ with t_reg:
 
 with t_cot:
     if len(st.session_state.partidos) >= 2:
+        # Botón de Descarga al inicio de la pestaña para fácil acceso
+        pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
+        st.download_button(label="📥 DESCARGAR COTEJO (PDF)", data=pdf_bytes, file_name="cotejo_derby.pdf", mime="application/pdf", use_container_width=True)
+        st.divider()
+
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g = f"G{r}"
@@ -159,7 +219,6 @@ with t_cot:
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
                     
-                    # Abreviación para nombres muy largos
                     n_rojo = (rojo['PARTIDO'][:15] + '..') if len(rojo['PARTIDO']) > 15 else rojo['PARTIDO']
                     n_verde = (verde['PARTIDO'][:15] + '..') if len(verde['PARTIDO']) > 15 else verde['PARTIDO']
                     
