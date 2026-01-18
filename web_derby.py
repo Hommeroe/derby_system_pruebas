@@ -5,13 +5,20 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- ESTILOS ---
+# --- ESTILOS AJUSTADOS ---
 st.markdown("""
     <style>
+    /* Estilo compacto para el anillo pegado al peso */
     .caja-anillo {
-        background-color: #2c3e50; color: white; padding: 5px;
-        border-radius: 5px; font-weight: bold; text-align: center;
-        margin-top: 30px; border: 1px solid #34495e;
+        background-color: #2c3e50; 
+        color: white; 
+        padding: 2px;
+        border-radius: 0px 0px 5px 5px; 
+        font-weight: bold; 
+        text-align: center;
+        margin-top: -15px; /* Sube el cuadro para pegarlo al input */
+        border: 1px solid #34495e;
+        font-size: 0.9em;
     }
     .header-azul { 
         background-color: #2c3e50; color: white; padding: 10px; 
@@ -20,6 +27,10 @@ st.markdown("""
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; }
     .tabla-final td, .tabla-final th { 
         border: 1px solid #bdc3c7; text-align: center; padding: 10px; 
+    }
+    /* Quitar margen inferior del input de número para pegar el anillo */
+    div[data-testid="stNumberInput"] {
+        margin-bottom: 0px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -55,7 +66,6 @@ st.title("🏆 PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
-    # Anillos automáticos [cite: 2026-01-14]
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     
     col_n, col_g = st.columns([2,1])
@@ -66,20 +76,18 @@ with t_reg:
     with st.form("f_nuevo", clear_on_submit=True):
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
-        pesos_temp = []
+        
+        # Registro con anillos pegados al peso [cite: 2026-01-14]
         for i in range(g_sel):
-            c1, c2 = st.columns([4, 1])
-            with c1:
-                p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-                pesos_temp.append(p_val)
-            with c2:
-                # El anillo se genera automático [cite: 2026-01-14]
-                st.markdown(f"<div class='caja-anillo'>{(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
+            p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
+            st.write("") # Espacio pequeño entre gallos
         
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
             if nombre:
                 nuevo = {"PARTIDO": nombre}
-                for i, w in enumerate(pesos_temp): nuevo[f"G{i+1}"] = w
+                for i in range(g_sel):
+                    nuevo[f"G{i+1}"] = st.session_state[f"p_{i}"]
                 st.session_state.partidos.append(nuevo)
                 guardar(st.session_state.partidos)
                 st.rerun()
@@ -87,7 +95,6 @@ with t_reg:
     if st.session_state.partidos:
         st.markdown("### ✏️ Tabla de Edición")
         
-        # Preparar datos con la tachita a la izquierda [cite: 2026-01-18]
         display_data = []
         cont_anillo = 1
         for p in st.session_state.partidos:
@@ -100,29 +107,25 @@ with t_reg:
         
         df = pd.DataFrame(display_data)
         
-        # Configuración de columnas
+        # Tachita a la izquierda para eliminar [cite: 2026-01-18]
         config = {
-            "❌": st.column_config.CheckboxColumn("Borrar", help="Haz clic para eliminar el partido", default=False),
+            "❌": st.column_config.CheckboxColumn("Borrar", default=False),
             "PARTIDO": st.column_config.TextColumn("Nombre Partido")
         }
         for i in range(1, st.session_state.n_gallos + 1):
             config[f"G{i}"] = st.column_config.NumberColumn(f"Peso G{i}", format="%.3f")
             config[f"Anillo {i}"] = st.column_config.TextColumn(f"💍 A{i}", disabled=True)
 
-        res = st.data_editor(df, column_config=config, use_container_width=True, 
-                             num_rows="fixed", hide_index=True)
+        res = st.data_editor(df, column_config=config, use_container_width=True, num_rows="fixed", hide_index=True)
 
-        # Lógica de eliminación y edición [cite: 2026-01-18]
         if not res.equals(df):
             nuevos = []
             for _, r in res.iterrows():
-                # Si la tachita está marcada (True), no se añade a la nueva lista (se elimina) [cite: 2026-01-18]
                 if not r["❌"]:
                     p_upd = {"PARTIDO": str(r["PARTIDO"]).upper()}
                     for i in range(1, st.session_state.n_gallos + 1):
                         p_upd[f"G{i}"] = float(r[f"G{i}"])
                     nuevos.append(p_upd)
-            
             st.session_state.partidos = nuevos
             guardar(nuevos)
             st.rerun()
