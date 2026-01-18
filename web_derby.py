@@ -57,7 +57,8 @@ st.title("DERBYSYSTEM PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
-    anillos_base = len(st.session_state.partidos) * st.session_state.n_gallos
+    # Cálculo para anillos automáticos en el formulario
+    anillos_totales = len(st.session_state.partidos) * st.session_state.n_gallos
     
     col_n, col_g = st.columns([2, 1])
     g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2, 3, 4, 5, 6], 
@@ -65,13 +66,12 @@ with t_reg:
                             disabled=len(st.session_state.partidos) > 0)
     st.session_state.n_gallos = g_sel
 
-    # Formulario de Registro (Única vía para agregar datos)
     with st.form("nuevo_p", clear_on_submit=True):
         st.subheader(f"Registrar Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         w_in = []
         for i in range(g_sel):
-            num_anillo = anillos_base + (i + 1)
+            num_anillo = anillos_totales + (i + 1)
             c_peso, c_anillo = st.columns([4, 1])
             with c_peso:
                 peso = st.number_input(f"Peso Gallo {i+1}", 1.8, 2.6, 2.200, 0.001, format="%.3f", key=f"p_{i}")
@@ -89,23 +89,53 @@ with t_reg:
                 st.rerun()
 
     if st.session_state.partidos:
-        st.markdown(f"### ✏️ Tabla de Edición (Solo correcciones)")
-        df_display = pd.DataFrame(st.session_state.partidos)
+        st.markdown(f"### ✏️ Tabla de Edición")
         
-        # --- BLOQUEO DE AGREGAR FILAS ---
-        # num_rows="fixed" impide que el usuario agregue o borre filas desde la tabla
+        # --- CREACIÓN DE TABLA CON FILA DE ANILLOS ---
+        filas_tabla = []
+        anillo_global = 1
+        for idx, p in enumerate(st.session_state.partidos):
+            # Fila de Pesos (Editable)
+            fila_peso = {"#": idx + 1, "TIPO": "PESO", "PARTIDO": p["PARTIDO"]}
+            # Fila de Anillos (Informativa)
+            fila_anillo = {"#": idx + 1, "TIPO": "ANILLO", "PARTIDO": p["PARTIDO"]}
+            
+            for i in range(1, st.session_state.n_gallos + 1):
+                fila_peso[f"Gallo {i}"] = p[f"G{i}"]
+                fila_anillo[f"Gallo {i}"] = f"AN: {anillo_global:03}"
+                anillo_global += 1
+            
+            filas_tabla.append(fila_peso)
+            filas_tabla.append(fila_anillo)
+
+        df_editor = pd.DataFrame(filas_tabla)
+        
+        # Configuración para que solo la fila de PESO sea editable
         res_ed = st.data_editor(
-            df_display, 
-            use_container_width=True, 
-            num_rows="fixed", 
+            df_editor,
+            use_container_width=True,
+            num_rows="fixed", # Bloquea agregar/quitar filas [cite: 2026-01-17]
+            hide_index=True,
             column_config={
-                "PARTIDO": st.column_config.TextColumn("Nombre Partido", required=True),
-                **{f"G{i+1}": st.column_config.NumberColumn(f"Peso G{i+1}", format="%.3f") for i in range(st.session_state.n_gallos)}
+                "#": st.column_config.NumberColumn(disabled=True),
+                "TIPO": st.column_config.TextColumn(disabled=True),
+                "PARTIDO": st.column_config.TextColumn("Nombre Partido"),
+                **{f"Gallo {i+1}": st.column_config.TextColumn(f"Gallo {i+1}") for i in range(st.session_state.n_gallos)}
             }
         )
 
-        if not res_ed.equals(df_display):
-            st.session_state.partidos = res_ed.to_dict('records')
+        # Guardar solo si se editaron los pesos (filtramos las filas de TIPO PESO)
+        if not res_ed.equals(df_editor):
+            nuevos_datos = []
+            # Recogemos solo las filas que son de tipo PESO para actualizar el archivo
+            for i in range(0, len(res_ed), 2):
+                row = res_ed.iloc[i]
+                d = {"PARTIDO": row["PARTIDO"]}
+                for g in range(1, st.session_state.n_gallos + 1):
+                    try: d[f"G{g}"] = float(row[f"Gallo {g}"])
+                    except: d[f"G{g}"] = 2.200
+                nuevos_datos.append(d)
+            st.session_state.partidos = nuevos_datos
             guardar_datos(st.session_state.partidos)
             st.rerun()
 
@@ -114,7 +144,7 @@ with t_reg:
             st.session_state.partidos = []
             st.rerun()
 
-# Pestaña de Cotejo (Sin cambios para mantener el diseño)
+# --- PESTAÑA COTEJO ---
 with t_cot:
     if len(st.session_state.partidos) >= 2:
         anillo_cont = 1
