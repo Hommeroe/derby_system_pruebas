@@ -77,7 +77,7 @@ def guardar(lista):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-st.title("🏆 PRUEBAS")
+st.title("🏆 DERBYsystem")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO"])
 
 with t_reg:
