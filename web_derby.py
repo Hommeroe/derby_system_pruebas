@@ -5,30 +5,47 @@ import os
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- ESTILOS ---
+# --- ESTILOS OPTIMIZADOS PARA NOMBRES LARGOS ---
 st.markdown("""
     <style>
     .caja-anillo {
         background-color: #2c3e50; color: white; padding: 2px;
         border-radius: 0px 0px 5px 5px; font-weight: bold; 
         text-align: center; margin-top: -15px; border: 1px solid #34495e;
-        font-size: 0.9em;
+        font-size: 0.8em;
     }
     .header-azul { 
-        background-color: #2c3e50; color: white; padding: 10px; 
+        background-color: #2c3e50; color: white; padding: 8px; 
         text-align: center; font-weight: bold; border-radius: 5px;
+        font-size: 12px; margin-bottom: 5px;
     }
     .tabla-final { 
         width: 100%; border-collapse: collapse; background-color: white; 
-        font-size: 11px; 
+        table-layout: fixed; /* Fuerza a respetar los anchos de columna */
     }
     .tabla-final td, .tabla-final th { 
-        border: 1px solid #bdc3c7; text-align: center; padding: 4px;
+        border: 1px solid #bdc3c7; text-align: center; 
+        padding: 2px; overflow: hidden;
     }
-    .nombre-partido { font-weight: bold; font-size: 11px; }
-    .cuadro { font-size: 13px; font-weight: bold; }
-    /* Estilo especial para la columna de empate central */
-    .col-empate { background-color: #f8f9fa; font-weight: bold; }
+    /* Estilo para nombres largos */
+    .nombre-partido { 
+        font-weight: bold; 
+        font-size: 9px; /* Letra más pequeña para nombres */
+        line-height: 1;
+        display: block;
+        word-wrap: break-word; /* Rompe el nombre en líneas si es largo */
+    }
+    .peso-texto { font-size: 10px; color: #2c3e50; }
+    .cuadro { font-size: 11px; }
+    
+    /* Anchos de columna específicos para celular */
+    .col-num { width: 25px; }
+    .col-g { width: 25px; }
+    .col-an { width: 30px; }
+    .col-e { width: 25px; background-color: #f1f2f6; }
+    .col-dif { width: 40px; }
+    .col-partido { width: 85px; } /* Espacio controlado para el nombre */
+
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
@@ -64,7 +81,7 @@ st.title("🏆 PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
 
 with t_reg:
-    # --- REGISTRO (SE MANTIENE IGUAL) ---
+    # --- REGISTRO ---
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g = st.columns([2,1])
     g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, 
@@ -120,7 +137,6 @@ with t_reg:
             st.session_state.partidos = []; st.rerun()
 
 with t_cot:
-    # --- COTEJO CON EMPATE JUSTO EN MEDIO ---
     if len(st.session_state.partidos) >= 2:
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
@@ -128,9 +144,20 @@ with t_cot:
             lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g])
             
             html = """<table class='tabla-final'>
-                        <tr>
-                            <th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th style='background:#f1f2f6'>E</th><th>DIF.</th><th>AN.</th><th>VERDE</th><th>G</th>
-                        </tr>"""
+                        <thead>
+                            <tr>
+                                <th class='col-num'>#</th>
+                                <th class='col-g'>G</th>
+                                <th class='col-partido'>ROJO</th>
+                                <th class='col-an'>AN.</th>
+                                <th class='col-e'>E</th>
+                                <th class='col-dif'>DIF.</th>
+                                <th class='col-an'>AN.</th>
+                                <th class='col-partido'>VERDE</th>
+                                <th class='col-g'>G</th>
+                            </tr>
+                        </thead>
+                        <tbody>"""
             pelea_n = 1
             while len(lista) >= 2:
                 rojo = lista.pop(0)
@@ -149,14 +176,20 @@ with t_cot:
                     <tr>
                         <td>{pelea_n}</td>
                         <td class='cuadro'>□</td>
-                        <td style='border-left:4px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><br>{rojo[col_g]:.3f}</td>
+                        <td style='border-left:3px solid red'>
+                            <span class='nombre-partido'>{rojo['PARTIDO']}</span>
+                            <span class='peso-texto'>{rojo[col_g]:.3f}</span>
+                        </td>
                         <td>{an_r:03}</td>
-                        <td class='cuadro' style='background:#f1f2f6'>□</td>
+                        <td class='cuadro col-e'>□</td>
                         <td {c}>{d:.3f}</td>
                         <td>{an_v:03}</td>
-                        <td style='border-right:4px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><br>{verde[col_g]:.3f}</td>
+                        <td style='border-right:3px solid green'>
+                            <span class='nombre-partido'>{verde['PARTIDO']}</span>
+                            <span class='peso-texto'>{verde[col_g]:.3f}</span>
+                        </td>
                         <td class='cuadro'>□</td>
                     </tr>"""
                     pelea_n += 1
                 else: break
-            st.markdown(html + "</table><br>", unsafe_allow_html=True)
+            st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
