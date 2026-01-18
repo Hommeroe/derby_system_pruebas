@@ -55,7 +55,7 @@ st.title("🏆 DERBYSYSTEM PRUEBAS")
 t_reg, t_cot = st.tabs(["📝 REGISTRO", "📊 COTEJO"])
 
 with t_reg:
-    # --- FORMULARIO DE REGISTRO ---
+    # --- FORMULARIO ---
     anillos_totales = len(st.session_state.partidos) * st.session_state.n_gallos
     
     col_a, col_b = st.columns([2,1])
@@ -74,7 +74,7 @@ with t_reg:
                 v = st.number_input(f"Peso Gallo {i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"in_{i}")
                 pesos_temp.append(v)
             with c2:
-                # El anillo se genera automático aquí [cite: 2026-01-14]
+                # Anillo automático en el registro
                 st.markdown(f"<div class='caja-anillo'>{(anillos_totales + i + 1):03}</div>", unsafe_allow_html=True)
         
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -85,10 +85,10 @@ with t_reg:
                 guardar(st.session_state.partidos)
                 st.rerun()
 
-    # --- TABLA DE EDICIÓN SEGURA (SIN AGREGAR FILAS) ---
+    # --- TABLA DE EDICIÓN SEGURA ---
     if st.session_state.partidos:
         st.divider()
-        st.subheader("✏️ Tabla de Edición")
+        st.subheader("✏️ Tabla de Edición (Pesos y Anillos)")
         
         datos_ed = []
         anillo_cnt = 1
@@ -96,14 +96,13 @@ with t_reg:
             d = {"PARTIDO": p["PARTIDO"]}
             for i in range(1, st.session_state.n_gallos + 1):
                 d[f"G{i} Peso"] = p[f"G{i}"]
-                # Mostramos el anillo en la celda de edición [cite: 2026-01-14]
                 d[f"Anillo {i}"] = f"{anillo_cnt:03}"
                 anillo_cnt += 1
             datos_ed.append(d)
         
         df = pd.DataFrame(datos_ed)
         
-        # Bloqueamos columnas de anillos y el número de filas [cite: 2026-01-17]
+        # Configuración para bloquear anillos y evitar filas vacías
         config = {"PARTIDO": st.column_config.TextColumn("Partido", width="medium")}
         for i in range(1, st.session_state.n_gallos + 1):
             config[f"Anillo {i}"] = st.column_config.TextColumn(f"💍 A{i}", disabled=True)
