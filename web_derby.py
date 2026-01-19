@@ -1,22 +1,20 @@
 import streamlit as st
 import pandas as pd
 import os
-import uuid
+import uuid 
 from io import BytesIO
 
 # --- CONFIGURACIÓN ---
-st.set_page_config(page_title="DerbySystem PRO", layout="wide")
+st.set_page_config(page_title="DerbySystem Multi-Usuario", layout="wide")
 TOLERANCIA = 0.080
 
-# --- LÓGICA DE AISLAMIENTO AUTOMÁTICO ---
-# Esto genera el ID único para que no se mezclen los datos
+# --- LÓGICA DE AISLAMIENTO ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = str(uuid.uuid4())[:8]
 
-# El archivo de datos es exclusivo para cada pestaña
 DB_FILE = f"datos_usuario_{st.session_state.id_usuario}.txt"
 
-# --- ESTILOS VISUALES ---
+# --- ESTILOS VISUALES (No se mueven) ---
 st.markdown("""
     <style>
     .caja-anillo { background-color: #2c3e50; color: white; padding: 2px; border-radius: 0px 0px 5px 5px; text-align: center; font-size: 0.8em; font-weight: bold; }
@@ -50,10 +48,9 @@ def guardar(lista):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-# --- INTERFAZ DE USUARIO ---
+# --- INTERFAZ ---
 st.title("🏆 DerbySystem PRO")
-# Mostramos el ID en la lateral para que sepas quién es quién
-st.sidebar.info(f"Sesión: {st.session_state.id_usuario}")
+st.sidebar.info(f"ID Sesión: {st.session_state.id_usuario}")
 
 t_reg, t_cot = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
@@ -68,7 +65,6 @@ with t_reg:
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
             st.number_input(f"Peso Gallo {i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-            # Anillo automático según tu instrucción
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
         
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -90,7 +86,7 @@ with t_reg:
 
 with t_cot:
     if len(st.session_state.partidos) < 2:
-        st.warning("Agrega al menos 2 partidos.")
+        st.warning("Registra al menos 2 partidos.")
     else:
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
@@ -113,27 +109,27 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- PANEL DE ADMIN (AL FINAL Y PEGADO A LA IZQUIERDA) ---
+# --- PANEL ADMIN (ESTA PARTE DEBE ESTAR TOTALMENTE A LA IZQUIERDA) ---
 st.sidebar.markdown("---")
 admin_key = st.sidebar.text_input("Acceso Admin", type="password")
 
 if admin_key == "homero2026":
     st.divider()
-    st.header("🕵️ Monitor de Activity")
+    st.header("🕵️ Monitor de Admin")
     archivos = [f for f in os.listdir(".") if f.startswith("datos_usuario_")]
     if not archivos:
-        st.info("No hay nadie usando la app con datos guardados.")
+        st.info("No hay usuarios con datos guardados aún.")
     else:
-        st.write(f"Usuarios hoy: {len(archivos)}")
+        st.write(f"Usuarios activos: {len(archivos)}")
         for arch in archivos:
-            with st.expander(f"Expediente: {arch}"):
+            with st.expander(f"Ver datos de: {arch}"):
                 try:
                     with open(arch, "r", encoding="utf-8") as f:
                         lineas = f.readlines()
                         if lineas:
                             st.table([l.strip().split("|") for l in lineas])
-                        else: st.write("Usuario sin datos.")
-                except: st.error("Error al leer archivo.")
-                if st.button("Cerrar Sesión Forzoso", key=arch):
+                        else: st.write("El archivo está vacío.")
+                except: st.error("Error al leer.")
+                if st.button("Eliminar esta sesión", key=arch):
                     os.remove(arch)
                     st.rerun()
