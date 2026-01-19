@@ -210,9 +210,3 @@ if acceso == "28days":
             with open(arch, "r") as f: st.text(f.read())
             if st.button("Eliminar esta gallera", key=arch):
                 os.remove(arch); st.rerun()
-
-Cámbialo tú y mándamelo sin modificar nada 
-
-"No toques el CSS ni los colores" [cite: 17-01-2026].
-• "Mantén los anillos automáticos" [cite: 14-01-2026].
-• "No cambies la estructura de las tablas de cotejo".
