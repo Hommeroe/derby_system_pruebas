@@ -128,9 +128,8 @@ with t_reg:
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            # Cambio aplicado aquí para forzar el mensaje con 3 decimales
-            p_val = st.number_input(f"Peso G{i+1}", min_value=1.800, max_value=2.600, value=2.200, step=0.001, format="%.3f", key=f"p_{i}")
-            # Anillo automático según instrucción
+            p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            # Anillo automático según instrucción [cite: 14-01-2026]
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -211,3 +210,9 @@ if acceso == "28days":
             with open(arch, "r") as f: st.text(f.read())
             if st.button("Eliminar esta gallera", key=arch):
                 os.remove(arch); st.rerun()
+
+Cámbialo tú y mándamelo sin modificar nada 
+
+"No toques el CSS ni los colores" [cite: 17-01-2026].
+• "Mantén los anillos automáticos" [cite: 14-01-2026].
+• "No cambies la estructura de las tablas de cotejo".
