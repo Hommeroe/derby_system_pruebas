@@ -1,20 +1,21 @@
 import streamlit as st
 import pandas as pd
 import os
-import uuid 
-from io import BytesIO
+import uuid
 
 # --- CONFIGURACIÓN ---
-st.set_page_config(page_title="DerbySystem Multi-Usuario", layout="wide")
+st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 TOLERANCIA = 0.080
 
-# --- LÓGICA DE AISLAMIENTO ---
+# --- LÓGICA DE USUARIOS INDEPENDIENTES ---
+# Esto evita que se mezclen los datos entre diferentes personas
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = str(uuid.uuid4())[:8]
 
+# Cada persona tiene su propio archivo invisible
 DB_FILE = f"datos_usuario_{st.session_state.id_usuario}.txt"
 
-# --- ESTILOS VISUALES (No se mueven) ---
+# --- ESTILOS (Como los de tu Foto 2) ---
 st.markdown("""
     <style>
     .caja-anillo { background-color: #2c3e50; color: white; padding: 2px; border-radius: 0px 0px 5px 5px; text-align: center; font-size: 0.8em; font-weight: bold; }
@@ -109,18 +110,21 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- PANEL ADMIN (ESTA PARTE DEBE ESTAR TOTALMENTE A LA IZQUIERDA) ---
+# --- PANEL ADMIN SEGURO (FUERA DE LAS PESTAÑAS) ---
 st.sidebar.markdown("---")
-admin_key = st.sidebar.text_input("Acceso Admin", type="password")
+# En tu Foto 3 escribiste 'admim', cámbialo por 'homero2026'
+clave_admin = st.sidebar.text_input("Acceso Admin", type="password")
 
-if admin_key == "homero2026":
+if clave_admin == "homero2026":
     st.divider()
-    st.header("🕵️ Monitor de Admin")
+    st.header("🕵️ Monitor de Galleras")
+    # Buscamos todos los archivos creados por diferentes usuarios
     archivos = [f for f in os.listdir(".") if f.startswith("datos_usuario_")]
+    
     if not archivos:
-        st.info("No hay usuarios con datos guardados aún.")
+        st.info("No hay usuarios registrados todavía.")
     else:
-        st.write(f"Usuarios activos: {len(archivos)}")
+        st.write(f"Hay **{len(archivos)}** usuarios activos.")
         for arch in archivos:
             with st.expander(f"Ver datos de: {arch}"):
                 try:
@@ -128,8 +132,9 @@ if admin_key == "homero2026":
                         lineas = f.readlines()
                         if lineas:
                             st.table([l.strip().split("|") for l in lineas])
-                        else: st.write("El archivo está vacío.")
-                except: st.error("Error al leer.")
-                if st.button("Eliminar esta sesión", key=arch):
+                        else: st.write("Este usuario no tiene datos.")
+                except: st.error("Error al leer archivo.")
+                
+                if st.button("Borrar Sesión", key=f"btn_{arch}"):
                     os.remove(arch)
                     st.rerun()
