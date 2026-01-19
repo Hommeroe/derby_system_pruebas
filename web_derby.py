@@ -3,7 +3,7 @@ import pandas as pd
 import os
 from io import BytesIO
 
-# Importamos reportlab (asegúrate de tenerlo en requirements.txt)
+# Importamos reportlab (asegúrate de tenerlo en tu entorno)
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
@@ -12,7 +12,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- ESTILOS (Corregidos para que los datos SE VEAN) ---
+# --- ESTILOS ORIGINALES (INTACTOS) ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -76,56 +76,6 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-def generar_pdf(partidos, n_gallos):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    elements = []
-    styles = getSampleStyleSheet()
-    
-    elements.append(Paragraph("<b>COTEJO OFICIAL DE DERBY</b>", styles['Title']))
-    elements.append(Spacer(1, 12))
-
-    for r in range(1, n_gallos + 1):
-        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
-        col_g = f"G{r}"
-        lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
-        
-        data = [["#", "G", "ROJO", "AN.", "E", "DIF.", "AN.", "VERDE", "G"]]
-        pelea_n = 1
-        
-        while len(lista) >= 2:
-            rojo = lista.pop(0)
-            v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
-            if v_idx is not None:
-                verde = lista.pop(v_idx)
-                d = abs(rojo[col_g] - verde[col_g])
-                idx_r = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==rojo["PARTIDO"])
-                idx_v = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==verde["PARTIDO"])
-                an_r, an_v = (idx_r * n_gallos) + r, (idx_v * n_gallos) + r
-                
-                data.append([
-                    pelea_n, " ", f"{rojo['PARTIDO']}\n({rojo[col_g]:.3f})", f"{an_r:03}", 
-                    " ", f"{d:.3f}", f"{an_v:03}", f"{verde['PARTIDO']}\n({verde[col_g]:.3f})", " "
-                ])
-                pelea_n += 1
-            else: break
-        
-        t = Table(data, colWidths=[20, 25, 140, 35, 25, 45, 35, 140, 25])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#2c3e50")),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0,0), (-1,-1), 8),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
-            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ]))
-        elements.append(t)
-        elements.append(Spacer(1, 20))
-
-    doc.build(elements)
-    return buffer.getvalue()
-
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
@@ -144,7 +94,7 @@ with t_reg:
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-            # Anillo automático según instrucción [cite: 14-01-2026]
+            # El anillo se genera automático [cite: 14-01-2026]
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
         
@@ -184,26 +134,13 @@ with t_reg:
                     nuevos.append(p_upd)
             st.session_state.partidos = nuevos; guardar(nuevos); st.rerun()
 
-        if st.button("🚨 LIMPIAR TODO EL EVENTO"):
+        # Botón para limpiar que tus invitados necesitan
+        if st.button("🚨 LIMPIAR TODO EL EVENTO", use_container_width=True):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
             st.session_state.partidos = []; st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) >= 2:
-        try:
-            pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-            st.download_button(
-                label="📥 DESCARGAR COTEJO (PDF)", 
-                data=pdf_bytes, 
-                file_name="cotejo_derby.pdf", 
-                mime="application/pdf", 
-                use_container_width=True
-            )
-        except Exception as e:
-            st.error(f"Error al generar PDF: {e}")
-        
-        st.divider()
-
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g = f"G{r}"
@@ -230,15 +167,12 @@ with t_cot:
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
                     
-                    n_rojo = (rojo['PARTIDO'][:15] + '..') if len(rojo['PARTIDO']) > 15 else rojo['PARTIDO']
-                    n_verde = (verde['PARTIDO'][:15] + '..') if len(verde['PARTIDO']) > 15 else verde['PARTIDO']
-                    
                     html += f"""
                     <tr>
                         <td>{pelea_n}</td><td class='cuadro'>□</td>
-                        <td style='border-left:3px solid red'><span class='nombre-partido'>{n_rojo}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td>
+                        <td style='border-left:3px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td>
                         <td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td>
-                        <td style='border-right:3px solid green'><span class='nombre-partido'>{n_verde}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td>
+                        <td style='border-right:3px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td>
                         <td class='cuadro'>□</td>
                     </tr>"""
                     pelea_n += 1
