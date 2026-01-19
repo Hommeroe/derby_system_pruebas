@@ -1,18 +1,21 @@
 import streamlit as st
 import pandas as pd
 import os
+import uuid # Esto es nuevo para separar a los usuarios
 from io import BytesIO
-
-# Importamos reportlab (asegúrate de tenerlo en tu entorno)
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
 
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- ESTILOS ORIGINALES (INTACTOS) ---
+# ESTO SEPARA A LOS USUARIOS: Cada quien tiene su propia "llave"
+if "id_usuario" not in st.session_state:
+    st.session_state.id_usuario = str(uuid.uuid4())[:8]
+
+# El archivo ahora lleva el nombre de esa llave única
+DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
+TOLERANCIA = 0.080
+
+# --- TUS ESTILOS ORIGINALES (NO SE TOCAN) ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -41,24 +44,12 @@ st.markdown("""
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
     .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
-    
-    .col-num { width: 20px; }
-    .col-g { width: 22px; }
-    .col-an { width: 32px; }
-    .col-e { width: 22px; background-color: #f1f2f6; }
-    .col-dif { width: 42px; }
-    .col-partido { width: auto; }
-
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
 
-DB_FILE = "datos_derby.txt"
-TOLERANCIA = 0.080
-
 def cargar():
-    partidos = []
-    n_gallos = 2
+    partidos, n_gallos = [], 2
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r", encoding="utf-8") as f:
             for line in f:
@@ -79,25 +70,31 @@ def guardar(lista):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-st.title("🏆 PRUEBAS")
-t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO Y ANILLOS"])
+# BARRA LATERAL PARA TU ACCESO ADMIN
+with st.sidebar:
+    st.write(f"Tu ID de Sesión: {st.session_state.id_usuario}")
+    acceso = st.text_input("Acceso Admin:", type="password")
 
-with t_reg:
+st.title("🏆 PRUEBAS")
+pestanas = ["📝 REGISTRO", "🏆 COTEJO"]
+if acceso == "homero2026":
+    pestanas.append("🕵️ ADMIN")
+
+t_list = st.tabs(pestanas)
+
+with t_list[0]:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g = st.columns([2,1])
-    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, 
-                            disabled=len(st.session_state.partidos)>0)
+    g_sel = col_g.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
 
     with st.form("f_nuevo", clear_on_submit=True):
-        st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-            # El anillo se genera automático [cite: 14-01-2026]
+            st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            # Anillo automático
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
-        
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
             if nombre:
                 nuevo = {"PARTIDO": nombre}
@@ -107,74 +104,40 @@ with t_reg:
                 st.rerun()
 
     if st.session_state.partidos:
-        st.markdown("### ✏️ Tabla de Edición")
-        display_data = []
-        cont_anillo = 1
-        for p in st.session_state.partidos:
-            item = {"❌": False, "PARTIDO": p["PARTIDO"]}
-            for i in range(1, st.session_state.n_gallos + 1):
-                item[f"G{i}"] = p[f"G{i}"]; item[f"Anillo {i}"] = f"{cont_anillo:03}"
-                cont_anillo += 1
-            display_data.append(item)
-        
-        df = pd.DataFrame(display_data)
-        config = {"❌": st.column_config.CheckboxColumn("B", default=False), "PARTIDO": st.column_config.TextColumn("Partido")}
-        for i in range(1, st.session_state.n_gallos + 1):
-            config[f"G{i}"] = st.column_config.NumberColumn(f"G{i}", format="%.3f")
-            config[f"Anillo {i}"] = st.column_config.TextColumn(f"A{i}", disabled=True)
-
-        res = st.data_editor(df, column_config=config, use_container_width=True, num_rows="fixed", hide_index=True)
-
-        if not res.equals(df):
-            nuevos = []
-            for _, r in res.iterrows():
-                if not r["❌"]:
-                    p_upd = {"PARTIDO": str(r["PARTIDO"]).upper()}
-                    for i in range(1, st.session_state.n_gallos + 1): p_upd[f"G{i}"] = float(r[f"G{i}"])
-                    nuevos.append(p_upd)
-            st.session_state.partidos = nuevos; guardar(nuevos); st.rerun()
-
-        # Botón para limpiar que tus invitados necesitan
-        if st.button("🚨 LIMPIAR TODO EL EVENTO", use_container_width=True):
+        st.write("---")
+        df = pd.DataFrame(st.session_state.partidos)
+        st.data_editor(df, use_container_width=True, hide_index=True)
+        if st.button("🚨 BORRAR MI LISTA"):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
             st.session_state.partidos = []; st.rerun()
 
-with t_cot:
+with t_list[1]:
     if len(st.session_state.partidos) >= 2:
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g = f"G{r}"
             lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g])
-            
-            html = """<table class='tabla-final'>
-                        <thead>
-                            <tr>
-                                <th class='col-num'>#</th><th class='col-g'>G</th><th class='col-partido'>ROJO</th>
-                                <th class='col-an'>AN.</th><th class='col-e'>E</th><th class='col-dif'>DIF.</th>
-                                <th class='col-an'>AN.</th><th class='col-partido'>VERDE</th><th class='col-g'>G</th>
-                            </tr>
-                        </thead>
-                        <tbody>"""
+            html = "<table class='tabla-final'><thead><tr><th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>E</th><th>DIF.</th><th>AN.</th><th>VERDE</th><th>G</th></tr></thead><tbody>"
             pelea_n = 1
             while len(lista) >= 2:
-                rojo = lista.pop(0)
-                v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
-                if v_idx is not None:
-                    verde = lista.pop(v_idx)
-                    d = abs(rojo[col_g] - verde[col_g])
-                    c = "style='background:#e74c3c;color:white;'" if d > TOLERANCIA else ""
-                    idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
-                    idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
-                    an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    
-                    html += f"""
-                    <tr>
-                        <td>{pelea_n}</td><td class='cuadro'>□</td>
-                        <td style='border-left:3px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td>
-                        <td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td>
-                        <td style='border-right:3px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td>
-                        <td class='cuadro'>□</td>
-                    </tr>"""
-                    pelea_n += 1
-                else: break
+                rojo = lista.pop(0); verde = lista.pop(0)
+                d = abs(rojo[col_g] - verde[col_g])
+                idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
+                idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
+                an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
+                c = "style='background:#e74c3c;color:white;'" if d > TOLERANCIA else ""
+                html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td><td>□</td></tr>"
+                pelea_n += 1
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
+
+# PANEL DE ADMIN (SOLO TÚ LO VES)
+if acceso == "homero2026":
+    with t_list[2]:
+        st.header("🕵️ Monitor de Usuarios")
+        archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
+        st.write(f"Hay **{len(archivos)}** personas usando el sistema.")
+        for arch in archivos:
+            with st.expander(f"Ver lista: {arch}"):
+                with open(arch, "r") as f: st.text(f.read())
+                if st.button("Eliminar esta lista", key=arch):
+                    os.remove(arch); st.rerun()
