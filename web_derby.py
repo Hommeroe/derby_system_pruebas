@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
-import uuid  # Necesario para separar usuarios
+import uuid 
+import re # Nueva librería para limpiar números
 from io import BytesIO
 
 # Importamos reportlab
@@ -13,15 +14,13 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- LÓGICA DE USUARIOS (NUEVO: NO AFECTA EL DISEÑO) ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = str(uuid.uuid4())[:8]
 
-# El archivo ahora es único por usuario para no mezclar datos
 DB_FILE = f"datos_usuario_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS ORIGINALES (INTACTOS) ---
+# --- ESTILOS ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -50,17 +49,14 @@ st.markdown("""
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
     .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
-    
-    .col-num { width: 20px; }
-    .col-g { width: 22px; }
-    .col-an { width: 32px; }
-    .col-e { width: 22px; background-color: #f1f2f6; }
-    .col-dif { width: 42px; }
-    .col-partido { width: auto; }
-
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
+
+# Función para limpiar el nombre (quita números al final para evitar peleas entre sí)
+def limpiar_nombre(nombre):
+    # Quita espacios y números al final del nombre
+    return re.sub(r'\s*\d+$', '', nombre).strip().upper()
 
 def cargar():
     partidos, n_gallos = [], 2
@@ -96,7 +92,10 @@ def generar_pdf(partidos, n_gallos):
         pelea_n = 1
         while len(lista) >= 2:
             rojo = lista.pop(0)
-            v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
+            # LOGICA MEJORADA: Compara nombres limpiando los números
+            nombre_rojo_limpio = limpiar_nombre(rojo["PARTIDO"])
+            v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre(x["PARTIDO"]) != nombre_rojo_limpio), None)
+            
             if v_idx is not None:
                 verde = lista.pop(v_idx)
                 d = abs(rojo[col_g] - verde[col_g])
@@ -128,10 +127,8 @@ with t_reg:
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            # ETIQUETA NUEVA SOLICITADA:
             st.caption("Solo se aceptan pesos de 1.800 a 2.600")
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-            # Anillo automático según instrucción [cite: 14-01-2026]
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -184,7 +181,10 @@ with t_cot:
             pelea_n = 1
             while len(lista) >= 2:
                 rojo = lista.pop(0)
-                v_idx = next((i for i, x in enumerate(lista) if x["PARTIDO"] != rojo["PARTIDO"]), None)
+                # LOGICA MEJORADA: Compara nombres limpiando los números
+                nombre_rojo_limpio = limpiar_nombre(rojo["PARTIDO"])
+                v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre(x["PARTIDO"]) != nombre_rojo_limpio), None)
+                
                 if v_idx is not None:
                     verde = lista.pop(v_idx); d = abs(rojo[col_g] - verde[col_g]); c = "style='background:#e74c3c;color:white;'" if d > TOLERANCIA else ""
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
@@ -197,7 +197,7 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- ACCESO ADMIN (MONITOREO) ---
+# --- ACCESO ADMIN ---
 with st.sidebar:
     st.write(f"ID Sesión: {st.session_state.id_usuario}")
     acceso = st.text_input("Acceso Admin:", type="password")
