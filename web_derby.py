@@ -200,7 +200,7 @@ with st.sidebar:
     st.write(f"ID Sesión: {st.session_state.id_usuario}")
     acceso = st.text_input("Acceso Admin:", type="password")
 
-if acceso == "homero2026":
+if acceso == "28days":
     st.divider()
     st.subheader("🕵️ Control de Usuarios Activos")
     archivos = [f for f in os.listdir(".") if f.startswith("datos_usuario_") and f.endswith(".txt")]
