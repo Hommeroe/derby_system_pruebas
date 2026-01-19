@@ -1,21 +1,19 @@
 import streamlit as st
 import pandas as pd
 import os
-import uuid  # Crea el identificador único para cada persona
+import uuid
 from io import BytesIO
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
 
 # --- CONFIGURACIÓN ---
-st.set_page_config(page_title="DerbySystem Multi-Usuario", layout="wide")
+st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 TOLERANCIA = 0.080
 
-# --- LÓGICA DE AISLAMIENTO ---
+# --- LÓGICA DE AISLAMIENTO AUTOMÁTICO ---
+# Esto genera el ID único para que no se mezclen los datos
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = str(uuid.uuid4())[:8]
 
+# El archivo de datos es exclusivo para cada pestaña
 DB_FILE = f"datos_usuario_{st.session_state.id_usuario}.txt"
 
 # --- ESTILOS VISUALES ---
@@ -54,9 +52,10 @@ if 'partidos' not in st.session_state:
 
 # --- INTERFAZ DE USUARIO ---
 st.title("🏆 DerbySystem PRO")
-st.sidebar.info(f"Tu ID de Sesión: **{st.session_state.id_usuario}**")
+# Mostramos el ID en la lateral para que sepas quién es quién
+st.sidebar.info(f"Sesión: {st.session_state.id_usuario}")
 
-t_reg, t_cot = st.tabs(["📝 REGISTRO DE PESOS", "🏆 TABLA DE COTEJO"])
+t_reg, t_cot = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -69,6 +68,7 @@ with t_reg:
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
             st.number_input(f"Peso Gallo {i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            # Anillo automático según tu instrucción
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
         
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -87,15 +87,10 @@ with t_reg:
             st.session_state.partidos = res.to_dict('records')
             guardar(st.session_state.partidos)
             st.rerun()
-        
-        if st.button("🚨 BORRAR MIS DATOS"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.session_state.partidos = []
-            st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) < 2:
-        st.warning("Registra al menos 2 partidos.")
+        st.warning("Agrega al menos 2 partidos.")
     else:
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
@@ -118,26 +113,27 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- PANEL ADMIN (FUERA DE TODO) ---
+# --- PANEL DE ADMIN (AL FINAL Y PEGADO A LA IZQUIERDA) ---
 st.sidebar.markdown("---")
 admin_key = st.sidebar.text_input("Acceso Admin", type="password")
 
 if admin_key == "homero2026":
     st.divider()
-    st.header("🕵️ Monitor de Admin")
+    st.header("🕵️ Monitor de Activity")
     archivos = [f for f in os.listdir(".") if f.startswith("datos_usuario_")]
     if not archivos:
-        st.info("No hay usuarios con datos.")
+        st.info("No hay nadie usando la app con datos guardados.")
     else:
-        st.write(f"Usuarios activos: {len(archivos)}")
+        st.write(f"Usuarios hoy: {len(archivos)}")
         for arch in archivos:
-            with st.expander(f"Ver: {arch}"):
+            with st.expander(f"Expediente: {arch}"):
                 try:
                     with open(arch, "r", encoding="utf-8") as f:
                         lineas = f.readlines()
                         if lineas:
                             st.table([l.strip().split("|") for l in lineas])
-                        else: st.write("Vacío.")
-                except: st.error("Error al leer.")
-                if st.button("Eliminar", key=arch):
-                    os.remove(arch); st.rerun()
+                        else: st.write("Usuario sin datos.")
+                except: st.error("Error al leer archivo.")
+                if st.button("Cerrar Sesión Forzoso", key=arch):
+                    os.remove(arch)
+                    st.rerun()
