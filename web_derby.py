@@ -12,7 +12,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- ESTILOS PARA NOMBRES LARGOS ---
+# --- ESTILOS (Corregidos para que los datos SE VEAN) ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -28,19 +28,19 @@ st.markdown("""
     }
     .tabla-final { 
         width: 100%; border-collapse: collapse; background-color: white; 
-        table-layout: fixed;
+        table-layout: fixed; color: black !important;
     }
     .tabla-final td, .tabla-final th { 
         border: 1px solid #bdc3c7; text-align: center; 
-        padding: 2px; height: 38px;
+        padding: 2px; height: 38px; color: black !important;
     }
     .nombre-partido { 
         font-weight: bold; font-size: 10px; line-height: 1;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-        display: block; width: 100%;
+        display: block; width: 100%; color: black !important;
     }
-    .peso-texto { font-size: 10px; color: #2c3e50; display: block; }
-    .cuadro { font-size: 11px; font-weight: bold; }
+    .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
+    .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
     
     .col-num { width: 20px; }
     .col-g { width: 22px; }
@@ -143,8 +143,8 @@ with t_reg:
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-            # El anillo se genera automático [cite: 14-01-2026]
+            p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            # Anillo automático según instrucción [cite: 14-01-2026]
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
         
