@@ -12,13 +12,10 @@ from reportlab.lib.styles import getSampleStyleSheet
 st.set_page_config(page_title="DerbySystem Multi-Usuario", layout="wide")
 TOLERANCIA = 0.080
 
-# --- LÓGICA DE AISLAMIENTO (La clave de todo) ---
-# Si la persona es nueva en la página, le damos su propio ID secreto
+# --- LÓGICA DE AISLAMIENTO ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = str(uuid.uuid4())[:8]
 
-# Cada usuario tendrá su propio archivo de texto basado en su ID
-# Ejemplo: datos_temp_a1b2c3d4.txt
 DB_FILE = f"datos_usuario_{st.session_state.id_usuario}.txt"
 
 # --- ESTILOS VISUALES ---
@@ -52,19 +49,16 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# Cargar datos solo de esta sesión
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
 # --- INTERFAZ DE USUARIO ---
 st.title("🏆 DerbySystem PRO")
-st.sidebar.info(f"ID de Sesión Privada: **{st.session_state.id_usuario}**")
-st.sidebar.caption("Tus datos están aislados de otros usuarios en este momento.")
+st.sidebar.info(f"Tu ID de Sesión: **{st.session_state.id_usuario}**")
 
 t_reg, t_cot = st.tabs(["📝 REGISTRO DE PESOS", "🏆 TABLA DE COTEJO"])
 
 with t_reg:
-    # Lógica de registro con Anillos Automáticos (Instrucción 14-01-2026)
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g = st.columns([2,1])
     g_sel = col_g.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, 
@@ -87,7 +81,6 @@ with t_reg:
 
     if st.session_state.partidos:
         st.write("---")
-        st.subheader("📋 Lista de Partidos")
         df = pd.DataFrame(st.session_state.partidos)
         res = st.data_editor(df, use_container_width=True, hide_index=True)
         if not res.equals(df):
@@ -95,23 +88,19 @@ with t_reg:
             guardar(st.session_state.partidos)
             st.rerun()
         
-        if st.button("🚨 BORRAR TODOS MIS DATOS"):
+        if st.button("🚨 BORRAR MIS DATOS"):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
             st.session_state.partidos = []
             st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) < 2:
-        st.warning("Debes registrar al menos 2 partidos para generar el cotejo.")
+        st.warning("Registra al menos 2 partidos.")
     else:
-        st.success("Cotejo generado exitosamente.")
-        # Generación visual de las rondas
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g = f"G{r}"
-            # Ordenar por peso para buscar la pareja más cercana
             lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g])
-            
             html = "<table class='tabla-final'><thead><tr><th>#</th><th>ROJO</th><th>AN.</th><th>DIF.</th><th>AN.</th><th>VERDE</th></tr></thead><tbody>"
             pelea_n = 1
             while len(lista) >= 2:
@@ -121,54 +110,34 @@ with t_cot:
                     verde = lista.pop(v_idx)
                     d = abs(rojo[col_g] - verde[col_g])
                     c_style = "class='badge-rojo'" if d >= TOLERANCIA else ""
-                    
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    
                     html += f"<tr><td>{pelea_n}</td><td style='border-left:4px solid red'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g]:.3f}</td><td>{an_r:03}</td><td><span {c_style}>{d:.3f}</span></td><td>{an_v:03}</td><td style='border-right:4px solid green'><b>{verde['PARTIDO']}</b><br>{verde[col_g]:.3f}</td></tr>"
                     pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
-            # --- COPIAR DESDE AQUÍ HASTA EL FINAL ---
 
-# Este bloque debe ir al final, sin ninguna sangría (espacios al inicio)
+# --- PANEL ADMIN (FUERA DE TODO) ---
 st.sidebar.markdown("---")
-# Aquí creamos el acceso secreto en la barra lateral
 admin_key = st.sidebar.text_input("Acceso Admin", type="password")
 
-# Solo si escribes la clave correcta se activará el monitor
-if admin_key == "homero2026": 
+if admin_key == "homero2026":
     st.divider()
-    st.header("🕵️ Monitor de Actividad (Admin)")
-    
-    # Buscamos todos los archivos de los usuarios que están usando la app
-    archivos_usuarios = [f for f in os.listdir(".") if f.startswith("datos_usuario_")]
-    
-    if not archivos_usuarios:
-        st.info("Aún no hay usuarios activos con datos guardados.")
+    st.header("🕵️ Monitor de Admin")
+    archivos = [f for f in os.listdir(".") if f.startswith("datos_usuario_")]
+    if not archivos:
+        st.info("No hay usuarios con datos.")
     else:
-        st.write(f"### Usuarios activos: {len(archivos_usuarios)}")
-        
-        # Creamos una lista desplegable por cada usuario encontrado
-        for arch in archivos_usuarios:
-            with st.expander(f"👁️ Ver datos de: {arch}"):
+        st.write(f"Usuarios activos: {len(archivos)}")
+        for arch in archivos:
+            with st.expander(f"Ver: {arch}"):
                 try:
                     with open(arch, "r", encoding="utf-8") as f:
                         lineas = f.readlines()
                         if lineas:
-                            # Mostramos los datos en una tabla simple para que la leas fácil
-                            datos_ver = [l.strip().split("|") for l in lineas]
-                            st.table(datos_ver)
-                        else:
-                            st.write("El archivo está vacío.")
-                except Exception as e:
-                    st.error(f"No se pudo leer el archivo: {e}")
-                
-                # Botón para borrar archivos viejos o de prueba
-                if st.button("Eliminar esta sesión", key=f"del_{arch}"):
-                    os.remove(arch)
-                    st.rerun()
-
-# --- FIN DEL CÓDIGO ---
-
+                            st.table([l.strip().split("|") for l in lineas])
+                        else: st.write("Vacío.")
+                except: st.error("Error al leer.")
+                if st.button("Eliminar", key=arch):
+                    os.remove(arch); st.rerun()
