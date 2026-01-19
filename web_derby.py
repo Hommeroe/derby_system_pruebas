@@ -130,3 +130,45 @@ with t_cot:
                     pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
+            # --- COPIAR DESDE AQUÍ HASTA EL FINAL ---
+
+# Este bloque debe ir al final, sin ninguna sangría (espacios al inicio)
+st.sidebar.markdown("---")
+# Aquí creamos el acceso secreto en la barra lateral
+admin_key = st.sidebar.text_input("Acceso Admin", type="password")
+
+# Solo si escribes la clave correcta se activará el monitor
+if admin_key == "homero2026": 
+    st.divider()
+    st.header("🕵️ Monitor de Actividad (Admin)")
+    
+    # Buscamos todos los archivos de los usuarios que están usando la app
+    archivos_usuarios = [f for f in os.listdir(".") if f.startswith("datos_usuario_")]
+    
+    if not archivos_usuarios:
+        st.info("Aún no hay usuarios activos con datos guardados.")
+    else:
+        st.write(f"### Usuarios activos: {len(archivos_usuarios)}")
+        
+        # Creamos una lista desplegable por cada usuario encontrado
+        for arch in archivos_usuarios:
+            with st.expander(f"👁️ Ver datos de: {arch}"):
+                try:
+                    with open(arch, "r", encoding="utf-8") as f:
+                        lineas = f.readlines()
+                        if lineas:
+                            # Mostramos los datos en una tabla simple para que la leas fácil
+                            datos_ver = [l.strip().split("|") for l in lineas]
+                            st.table(datos_ver)
+                        else:
+                            st.write("El archivo está vacío.")
+                except Exception as e:
+                    st.error(f"No se pudo leer el archivo: {e}")
+                
+                # Botón para borrar archivos viejos o de prueba
+                if st.button("Eliminar esta sesión", key=f"del_{arch}"):
+                    os.remove(arch)
+                    st.rerun()
+
+# --- FIN DEL CÓDIGO ---
+
