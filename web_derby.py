@@ -8,14 +8,14 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 TOLERANCIA = 0.080
 
 # --- LÓGICA DE USUARIOS INDEPENDIENTES ---
-# Esto evita que se mezclen los datos entre diferentes personas
+# Esto genera el ID único para que los datos NO se mezclen (Foto 4)
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = str(uuid.uuid4())[:8]
 
-# Cada persona tiene su propio archivo invisible
+# Archivo único para cada persona que entre al link
 DB_FILE = f"datos_usuario_{st.session_state.id_usuario}.txt"
 
-# --- ESTILOS (Como los de tu Foto 2) ---
+# --- ESTILOS VISUALES (Tu diseño de la Foto 2) ---
 st.markdown("""
     <style>
     .caja-anillo { background-color: #2c3e50; color: white; padding: 2px; border-radius: 0px 0px 5px 5px; text-align: center; font-size: 0.8em; font-weight: bold; }
@@ -49,8 +49,9 @@ def guardar(lista):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-# --- INTERFAZ ---
+# --- INTERFAZ DE USUARIO ---
 st.title("🏆 DerbySystem PRO")
+# Muestra el ID en la barra lateral como en tu Foto 4
 st.sidebar.info(f"ID Sesión: {st.session_state.id_usuario}")
 
 t_reg, t_cot = st.tabs(["📝 REGISTRO", "🏆 COTEJO"])
@@ -66,6 +67,7 @@ with t_reg:
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
             st.number_input(f"Peso Gallo {i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            # El anillo se genera solo para no revolver pesos
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
         
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -87,7 +89,7 @@ with t_reg:
 
 with t_cot:
     if len(st.session_state.partidos) < 2:
-        st.warning("Registra al menos 2 partidos.")
+        st.warning("Agrega al menos 2 partidos para ver el cotejo.")
     else:
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
@@ -110,21 +112,20 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- PANEL ADMIN SEGURO (FUERA DE LAS PESTAÑAS) ---
+# --- PANEL DE ADMIN (AL FINAL DEL ARCHIVO) ---
 st.sidebar.markdown("---")
-# En tu Foto 3 escribiste 'admim', cámbialo por 'homero2026'
-clave_admin = st.sidebar.text_input("Acceso Admin", type="password")
+# Escribe homero2026 aquí (Foto 4)
+admin_key = st.sidebar.text_input("Acceso Admin", type="password")
 
-if clave_admin == "homero2026":
+if admin_key == "homero2026":
     st.divider()
     st.header("🕵️ Monitor de Galleras")
-    # Buscamos todos los archivos creados por diferentes usuarios
+    # Buscamos todos los archivos 'datos_usuario_*.txt' creados
     archivos = [f for f in os.listdir(".") if f.startswith("datos_usuario_")]
-    
     if not archivos:
-        st.info("No hay usuarios registrados todavía.")
+        st.info("No hay usuarios con datos todavía.")
     else:
-        st.write(f"Hay **{len(archivos)}** usuarios activos.")
+        st.write(f"Usuarios activos en el servidor: {len(archivos)}")
         for arch in archivos:
             with st.expander(f"Ver datos de: {arch}"):
                 try:
@@ -132,9 +133,8 @@ if clave_admin == "homero2026":
                         lineas = f.readlines()
                         if lineas:
                             st.table([l.strip().split("|") for l in lineas])
-                        else: st.write("Este usuario no tiene datos.")
-                except: st.error("Error al leer archivo.")
-                
-                if st.button("Borrar Sesión", key=f"btn_{arch}"):
+                        else: st.write("Sin datos.")
+                except: st.error("Error al leer.")
+                if st.button("Borrar Sesión", key=f"del_{arch}"):
                     os.remove(arch)
                     st.rerun()
