@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
 import os
-import uuid  
-import re # Necesario para la lógica de nombres sin alterar diseño
+import uuid
+import re
 from io import BytesIO
 
 # Importamos reportlab
@@ -14,11 +14,32 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- LÓGICA DE USUARIOS ---
+# --- LÓGICA DE ACCESO SEGURO (NUEVO) ---
 if "id_usuario" not in st.session_state:
-    st.session_state.id_usuario = str(uuid.uuid4())[:8]
+    st.session_state.id_usuario = ""
 
-DB_FILE = f"datos_usuario_{st.session_state.id_usuario}.txt"
+# Pantalla de entrada para que no se pierdan los datos
+if st.session_state.id_usuario == "":
+    st.markdown("""
+        <div style='text-align: center; padding: 20px; background-color: #2c3e50; border-radius: 10px; color: white;'>
+            <h2>🏟️ BIENVENIDO A DERBYsystem</h2>
+            <p>Escribe el nombre de tu evento o mesa para comenzar.<br>
+            Si sales de la página, escribe el mismo nombre para recuperar tus datos.</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ej: PALENQUE_ENERO").upper().strip()
+    
+    if st.button("ENTRAR AL SISTEMA", use_container_width=True):
+        if nombre_acceso:
+            st.session_state.id_usuario = nombre_acceso
+            st.rerun()
+        else:
+            st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+    st.stop()
+
+# El archivo ahora es fijo según el nombre elegido por el usuario
+DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
 # --- ESTILOS ORIGINALES (INTACTOS) ---
@@ -62,8 +83,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Lógica interna para comparar nombres (No cambia lo que se ve)
-def limpiar(n):
+# Lógica interna para que no peleen socios (Homero 1 vs Homero 2)
+def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
 def cargar():
@@ -90,7 +111,7 @@ def generar_pdf(partidos, n_gallos):
     doc = SimpleDocTemplate(buffer, pagesize=letter)
     elements = []
     styles = getSampleStyleSheet()
-    elements.append(Paragraph("<b>COTEJO OFICIAL DE DERBY</b>", styles['Title']))
+    elements.append(Paragraph(f"<b>COTEJO OFICIAL: {st.session_state.id_usuario}</b>", styles['Title']))
     elements.append(Spacer(1, 12))
     for r in range(1, n_gallos + 1):
         elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
@@ -100,8 +121,8 @@ def generar_pdf(partidos, n_gallos):
         pelea_n = 1
         while len(lista) >= 2:
             rojo = lista.pop(0)
-            # Aquí está el truco: limpia el nombre solo para buscar oponente
-            v_idx = next((i for i, x in enumerate(lista) if limpiar(x["PARTIDO"]) != limpiar(rojo["PARTIDO"])), None)
+            # Lógica: No pelear contra el mismo dueño (ignora números al final)
+            v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
             if v_idx is not None:
                 verde = lista.pop(v_idx)
                 d = abs(rojo[col_g] - verde[col_g])
@@ -120,7 +141,7 @@ def generar_pdf(partidos, n_gallos):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-st.title("DERBYsystem")
+st.title(f"DERBYsystem - {st.session_state.id_usuario}")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO"])
 
 with t_reg:
@@ -176,7 +197,7 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-            st.download_button(label="📥 DESCARGAR COTEJO (PDF)", data=pdf_bytes, file_name="cotejo_derby.pdf", mime="application/pdf", use_container_width=True)
+            st.download_button(label="📥 DESCARGAR COTEJO (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True)
         except Exception as e: st.error(f"Error al generar PDF: {e}")
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
@@ -187,8 +208,7 @@ with t_cot:
             pelea_n = 1
             while len(lista) >= 2:
                 rojo = lista.pop(0)
-                # Misma lógica aquí para la tabla visual
-                v_idx = next((i for i, x in enumerate(lista) if limpiar(x["PARTIDO"]) != limpiar(rojo["PARTIDO"])), None)
+                v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
                 if v_idx is not None:
                     verde = lista.pop(v_idx); d = abs(rojo[col_g] - verde[col_g]); c = "style='background:#e74c3c;color:white;'" if d > TOLERANCIA else ""
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
@@ -203,16 +223,18 @@ with t_cot:
 
 # --- ACCESO ADMIN ---
 with st.sidebar:
-    st.write(f"ID Sesión: {st.session_state.id_usuario}")
+    st.write(f"Sesión: {st.session_state.id_usuario}")
+    if st.button("🚪 CERRAR SESIÓN"):
+        st.session_state.id_usuario = ""
+        st.rerun()
     acceso = st.text_input("Acceso Admin:", type="password")
 
 if acceso == "28days":
     st.divider()
-    st.subheader("🕵️ Control de Usuarios Activos")
-    archivos = [f for f in os.listdir(".") if f.startswith("datos_usuario_") and f.endswith(".txt")]
-    st.write(f"Personas usando el sistema: **{len(archivos)}**")
+    st.subheader("🕵️ Archivos en Servidor")
+    archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
     for arch in archivos:
-        with st.expander(f"Ver datos de: {arch}"):
+        with st.expander(f"Ver: {arch}"):
             with open(arch, "r") as f: st.text(f.read())
-            if st.button("Eliminar esta gallera", key=arch):
+            if st.button("Eliminar", key=arch):
                 os.remove(arch); st.rerun()
