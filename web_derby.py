@@ -128,7 +128,7 @@ with t_reg:
         st.subheader(f"AGREGAR REGISTRO # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+                        st.caption("Solo se aceptan pesos de 1.800 a 2.600")
             # Anillo automático según instrucción [cite: 14-01-2026]
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
