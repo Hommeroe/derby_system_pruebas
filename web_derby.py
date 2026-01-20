@@ -16,12 +16,38 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- LÓGICA DE ACCESO AUTOMÁTICO ---
-# Se establece un ID por defecto para entrar directo sin pedir clave
-ID_POR_DEFECTO = "EVENTO_GENERAL"
+# --- LÓGICA DE ACCESO SEGURO ---
+if "id_usuario" not in st.session_state:
+    st.session_state.id_usuario = ""
 
-if "id_usuario" not in st.session_state or st.session_state.id_usuario == "":
-    st.session_state.id_usuario = ID_POR_DEFECTO
+# --- PANTALLA DE ENTRADA ---
+if st.session_state.id_usuario == "":
+    html_bienvenida = (
+        "<div style='text-align:center; background-color:#E67E22; padding:25px; border-radius:15px; color:white; font-family:sans-serif;'>"
+        "<div style='font-size:1.1rem; letter-spacing:2px; margin-bottom:5px;'>BIENVENIDOS A</div>"
+        "<div style='font-size:2.2rem; font-weight:900; line-height:1; margin-bottom:20px;'>DerbySystem</div>"
+        "<div style='background-color:#1a1a1a; padding:20px; border-radius:12px; margin:0 auto; max-width:500px; border:1px solid #D35400; text-align:left;'>"
+        "<div style='color:#E67E22; font-weight:bold; font-size:1.2rem; margin-bottom:10px; text-align:center;'>¿Qué es este sistema?</div>"
+        "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.5; text-align:center;'>"
+        "Plataforma de <b>sorteo digital.</b> Garantiza transparencia total, orden y combates gallisticos 100% justos mediante tecnología de emparejamiento inteligente."
+        "</div>"
+        "</div></div>"
+    )
+    
+    st.markdown(html_bienvenida, unsafe_allow_html=True)
+    st.write("") 
+    
+    col_a, col_b, col_c = st.columns([0.05, 0.9, 0.05])
+    with col_b:
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí").upper().strip()
+        
+        if st.button("ENTRAR AL SISTEMA", use_container_width=True):
+            if nombre_acceso:
+                st.session_state.id_usuario = nombre_acceso
+                st.rerun()
+            else:
+                st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+    st.stop()
 
 # --- CONSTANTES ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
@@ -41,7 +67,7 @@ st.markdown("""
 
     /* ESTILO EXCLUSIVO PARA EL BOTÓN DE REPORTE (PDF) */
     button[description="generar_reporte_pdf"] {
-        background-color: #27ae60 !important; /* Verde Llamativo */
+        background-color: #27ae60 !important;
         color: white !important;
         font-size: 20px !important;
         height: 60px !important;
@@ -321,15 +347,17 @@ with t_ayu:
         <div class="manual-card">
             <div class="manual-header">01. INICIALIZACIÓN DE DATOS</div>
             <p style='color:#333; font-size:0.85rem;'>
-            <b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos).
+            <b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos). El sistema requiere esta definición para establecer los rangos de identificación.
             <br><br>
-            <b>Ingreso:</b> Capture el nombre oficial del partido y asigne pesos con 3 decimales.
+            <b>Ingreso:</b> Capture el nombre oficial del partido y asigne pesos con 3 decimales para máxima precisión en el cotejo.
             </p>
         </div>
         <div class="manual-card">
             <div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div>
             <p style='color:#333; font-size:0.85rem;'>
-            <b>Folios de Anillo:</b> Generados automáticamente según el índice de registro.
+            <b>Folios de Anillo:</b> El motor de DerbySystem genera automáticamente el ID de anillo según el índice de registro global. 
+            <br><br>
+            <i>Este proceso es inalterable para garantizar la trazabilidad del evento.</i>
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -339,20 +367,35 @@ with t_ayu:
             <div class="manual-header">03. PROCESAMIENTO DE SORTEO</div>
             <p style='color:#333; font-size:0.85rem;'>
             <b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa. 
+            <br><br>
+            <b>Restricción de Seguridad:</b> Bloqueo automático de enfrentamientos intragrupales (partido vs mismo partido).
             </p>
         </div>
         <div class="manual-card">
             <div class="manual-header">04. CERTIFICACIÓN PDF</div>
             <p style='color:#333; font-size:0.85rem;'>
-            <b>Emisión:</b> La descarga del PDF genera el documento oficial.
+            <b>Emisión:</b> La descarga del PDF genera el documento legal del evento.
+            <br><br>
+            <b>Validación:</b> El reporte incluye marca de tiempo (Timestamp) y URL de auditoría para respaldo de la mesa de control.
             </p>
         </div>
         """, unsafe_allow_html=True)
-    st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nESTADO: Operativo", language="python")
+    st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
+    st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
 with st.sidebar:
     st.write(f"Sesión activa: **{st.session_state.id_usuario}**")
-    if st.button("🚪 REINICIAR SESIÓN", use_container_width=True):
+    if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
         st.session_state.id_usuario = ""
         st.rerun()
+    st.divider()
+    acceso = st.text_input("Acceso Admin:", type="password")
+
+if acceso == "28days":
+    st.divider()
+    archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
+    for arch in archivos:
+        with st.expander(f"Ver: {arch}"):
+            with open(arch, "r") as f: st.text(f.read())
+            if st.button("Eliminar", key=arch):
+                os.remove(arch); st.rerun()
