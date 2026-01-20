@@ -18,23 +18,34 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- SOLUCIÓN AL CUADRO BLANCO Y CENTRADO COMPACTO ---
+# --- SOLUCIÓN DEFINITIVA AL CUADRO BLANCO ---
 st.markdown("""
     <style>
-    /* Forzar fondo oscuro en todos los contenedores de Streamlit */
-    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], .main {
+    /* 1. Forzar color oscuro en todas las capas posibles de la aplicación */
+    .stApp, 
+    [data-testid="stAppViewContainer"], 
+    [data-testid="stHeader"], 
+    [data-testid="stAppViewMain"],
+    .main {
         background-color: #0e1117 !important;
     }
-    
-    /* Eliminar el espacio blanco inferior asegurando altura mínima del 100% */
-    [data-testid="stAppViewContainer"] {
-        min-height: 100vh !important;
+
+    /* 2. Eliminar específicamente el fondo blanco del contenedor de scroll */
+    [data-testid="stAppViewBlockContainer"] {
+        background-color: #0e1117 !important;
+        padding-bottom: 0px !important;
     }
 
-    /* Ocultar elementos innecesarios */
+    /* 3. Asegurar que el body y html no tengan rastro blanco */
+    html, body {
+        background-color: #0e1117 !important;
+    }
+
+    /* 4. Ocultar el footer y elementos que empujan el diseño */
     footer {visibility: hidden !important;}
+    [data-testid="stManageAppView"] {display: none !important;}
     
-    /* Diseño de la tarjeta de bienvenida ultra-compacto */
+    /* 5. Diseño de la tarjeta (Manteniendo tu estilo preferido) */
     .welcome-card {
         text-align: center; 
         padding: 20px; 
@@ -45,12 +56,10 @@ st.markdown("""
         margin: 10px auto;
         box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
-
     .welcome-card h2 { font-size: 1.1rem !important; margin: 0 !important; opacity: 0.8; }
     .welcome-card h1 { font-size: 1.8rem !important; margin: 5px 0 15px 0 !important; letter-spacing: 1px; }
     .welcome-card p { font-size: 0.85rem !important; line-height: 1.3; }
     
-    /* Ajuste de margen superior para móviles */
     .block-container {
         padding-top: 2rem !important;
     }
@@ -70,7 +79,6 @@ if st.session_state.id_usuario == "":
         </div>
     """, unsafe_allow_html=True)
     
-    # Input y Botón centrados
     col1, col2, col3 = st.columns([0.1, 0.8, 0.1])
     with col2:
         nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
@@ -82,7 +90,7 @@ if st.session_state.id_usuario == "":
                 st.warning("⚠️ Escribe una clave.")
     st.stop()
 
-# --- EL RESTO DEL CÓDIGO (SIN EDITAR NADA MÁS) ---
+# --- EL RESTO DEL CÓDIGO PERMANECE IGUAL ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -120,8 +128,6 @@ st.markdown("""
     .col-an { width: 32px; }
     .col-e { width: 22px; background-color: #f1f2f6; }
     .col-dif { width: 42px; }
-    .col-partido { width: auto; }
-
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
