@@ -30,7 +30,7 @@ sales</p>
         </div>
     """, unsafe_allow_html=True)
     
-    nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ej: PALENQUE_ENERO").upper().strip()
+    nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
     
     if st.button("ENTRAR AL SISTEMA", use_container_width=True):
         if nombre_acceso:
