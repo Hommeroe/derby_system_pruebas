@@ -18,30 +18,34 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# Pantalla de entrada con el nuevo diseño naranja y explicación
+# PANTALLA DE ENTRADA CORREGIDA (Aquí estaba el error de las capturas)
 if st.session_state.id_usuario == "":
+    # Usamos st.markdown con unsafe_allow_html=True para que se vea el diseño naranja
     st.markdown("""
         <div style='text-align: center; padding: 30px; background-color: #E67E22; border-radius: 15px; color: white; font-family: sans-serif;'>
             <h2 style='margin-bottom: 10px;'>BIENVENIDO A DERBYsystem PRO</h2>
             
-            <div style='background-color: #D35400; padding: 20px; border-radius: 10px; margin: 20px auto; max-width: 600px; text-align: left; line-height: 1.6;'>
-                <b>¿Qué es este sistema?</b><br>
-                Es una plataforma profesional diseñada para la gestión de torneos. 
-                El sistema <b>automatiza el registro de pesos</b> y asegura la transparencia total mediante un motor de <b>sorteo digital y cotejo automático</b>. 
-                <br><br>
-                Garantiza que los combates sean justos y equitativos, eliminando errores manuales y facilitando el control de mesa en tiempo real.
+            <div style='background-color: #D35400; padding: 25px; border-radius: 12px; margin: 20px auto; max-width: 600px; text-align: center; line-height: 1.6;'>
+                <h4 style='margin-top: 0;'>¿Qué es este sistema?</h4>
+                <p style='font-size: 1.05rem;'>
+                    <b>DERBYsystem PRO</b> es una plataforma integral diseñada para la gestión profesional de eventos de competencia. 
+                    El sistema <b>automatiza el registro de pesos</b> y asegura transparencia absoluta mediante un motor de <b>sorteo digital</b>.
+                </p>
+                <p style='font-size: 1.05rem;'>
+                    Garantiza combates <b>justos y equitativos</b>, eliminando errores manuales y facilitando el control de mesa en tiempo real.
+                </p>
             </div>
 
             <p style='font-size: 0.9em; color: #FAD7A0;'>
                 Escribe una clave única para tu evento. Esta clave es tu llave de acceso privada.
             </p>
         </div>
+        <br>
     """, unsafe_allow_html=True)
     
     # Contenedor centrado para el input y botón
     col_a, col_b, col_c = st.columns([1, 2, 1])
     with col_b:
-        st.write("")
         nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
@@ -55,7 +59,7 @@ if st.session_state.id_usuario == "":
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS ACTUALIZADOS (NARANJA) ---
+# --- ESTILOS ACTUALIZADOS (Todo en Naranja) ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -83,9 +87,8 @@ st.markdown("""
         display: block; width: 100%; color: black !important;
     }
     .peso-texto { font-size: 10px; color: #D35400 !important; display: block; }
-    .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
     
-    /* Personalización del botón principal de Streamlit */
+    /* Botón de Streamlit estilo Naranja */
     div.stButton > button {
         background-color: #E67E22;
         color: white;
@@ -98,7 +101,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- LÓGICA DE FUNCIONES (IDÉNTICA A TU ORIGINAL) ---
+# --- FUNCIONES DE LÓGICA ---
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -230,25 +233,7 @@ with t_cot:
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
                     n_rojo = (rojo['PARTIDO'][:15] + '..') if len(rojo['PARTIDO']) > 15 else rojo['PARTIDO']
                     n_verde = (verde['PARTIDO'][:15] + '..') if len(verde['PARTIDO']) > 15 else verde['PARTIDO']
-                    html += f"<tr><td>{pelea_n}</td><td class='cuadro'>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{n_rojo}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{n_verde}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td><td class='cuadro'>□</td></tr>"
+                    html += f"<tr><td>{pelea_n}</td><td class='cuadro'>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{n_rojo}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{n_verde}</span><span class='peso-texto'>{verde[verde[col_g]]:.3f}</span></td><td class='cuadro'>□</td></tr>"
                     pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
-
-# --- ACCESO ADMIN ---
-with st.sidebar:
-    st.write(f"Sesión: {st.session_state.id_usuario}")
-    if st.button("🚪 CERRAR SESIÓN"):
-        st.session_state.id_usuario = ""
-        st.rerun()
-    acceso = st.text_input("Acceso Admin:", type="password")
-
-if acceso == "28days":
-    st.divider()
-    st.subheader("🕵️ Archivos en Servidor")
-    archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
-    for arch in archivos:
-        with st.expander(f"Ver: {arch}"):
-            with open(arch, "r") as f: st.text(f.read())
-            if st.button("Eliminar", key=arch):
-                os.remove(arch); st.rerun()
