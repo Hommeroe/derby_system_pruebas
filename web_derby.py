@@ -20,12 +20,12 @@ if "id_usuario" not in st.session_state:
 
 # Pantalla de entrada
 if st.session_state.id_usuario == "":
-    # CSS para subir el contenido y eliminar el scroll
+    # CSS Ajustado para margen interno cómodo y posición superior
     st.markdown("""
         <style>
-        /* Eliminar espacio superior de Streamlit */
+        /* Eliminar espacio superior de la app */
         .block-container {
-            padding-top: 1rem !important;
+            padding-top: 1.5rem !important;
             padding-bottom: 0rem !important;
         }
         .login-container {
@@ -37,17 +37,18 @@ if st.session_state.id_usuario == "":
         }
         .welcome-card {
             background-color: #2c3e50; 
-            padding: 15px 20px; 
+            /* Padding ajustado para comodidad visual: 30px arriba/abajo */
+            padding: 30px 20px; 
             border-radius: 15px; 
             color: white; 
             width: 95%;
             max-width: 450px; 
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        /* Ajuste de inputs para que estén más arriba */
+        /* Pegar el input a la tarjeta */
         div[data-testid="stVerticalBlock"] > div:has(div.stTextInput) {
-            gap: 0rem !important;
+            gap: 0.5rem !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -55,10 +56,11 @@ if st.session_state.id_usuario == "":
     st.markdown("""
         <div class="login-container">
             <div class="welcome-card">
-                <h2 style='margin: 0; font-size: 1.4rem;'>BIENVENIDOS</h2>
-                <h1 style='margin: 0; font-size: 1.8rem; letter-spacing: 1px;'>DERBYsystem</h1>
-                <p style='font-size: 0.85rem; line-height: 1.2; margin-top: 10px; opacity: 0.9;'>
-                    Escribe una clave única para tu evento o mesa.
+                <h2 style='margin: 0; font-size: 1.3rem; opacity: 0.8;'>BIENVENIDOS</h2>
+                <h1 style='margin: 0; font-size: 2.2rem; letter-spacing: 2px; font-weight: 800;'>DERBYsystem</h1>
+                <div style='height: 2px; background: #34495e; width: 60%; margin: 15px auto;'></div>
+                <p style='font-size: 0.95rem; line-height: 1.3; margin-top: 10px; opacity: 0.9;'>
+                    Escribe una clave única para tu evento o mesa. 
                     Esta es tu llave privada para proteger tus registros.
                 </p>
             </div>
