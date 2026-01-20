@@ -20,7 +20,7 @@ if "id_usuario" not in st.session_state:
 
 # Pantalla de entrada
 if st.session_state.id_usuario == "":
-    # CSS Ajustado con color NARANJA y margen cómodo
+    # CSS Ajustado con color NARANJA y resumen integrado
     st.markdown("""
         <style>
         .block-container {
@@ -36,13 +36,23 @@ if st.session_state.id_usuario == "":
         }
         .welcome-card {
             background-color: #E67E22; 
-            padding: 30px 20px; 
+            padding: 25px 20px; 
             border-radius: 15px; 
             color: white; 
             width: 95%;
-            max-width: 450px; 
+            max-width: 500px; 
             margin-bottom: 5px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .resumen-texto {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin: 15px 0;
+            text-align: justify;
+            opacity: 0.95;
+            background: rgba(0,0,0,0.1);
+            padding: 15px;
+            border-radius: 10px;
         }
         div[data-testid="stVerticalBlock"] > div:has(div.stTextInput) {
             gap: 0.5rem !important;
@@ -53,29 +63,35 @@ if st.session_state.id_usuario == "":
     st.markdown("""
         <div class="login-container">
             <div class="welcome-card">
-                <h2 style='margin: 0; font-size: 1.3rem; opacity: 0.9;'>BIENVENIDOS</h2>
-                <h1 style='margin: 0; font-size: 2.2rem; letter-spacing: 2px; font-weight: 800;'>DERBYsystem</h1>
-                <div style='height: 2px; background: rgba(255,255,255,0.3); width: 60%; margin: 15px auto;'></div>
-                <p style='font-size: 0.95rem; line-height: 1.3; margin-top: 10px; opacity: 0.95;'>
-                    Escribe una clave única para tu evento o mesa. 
-                    Esta es tu llave privada para proteger tus registros.
+                <h2 style='margin: 0; font-size: 1.2rem; opacity: 0.9;'>BIENVENIDOS</h2>
+                <h1 style='margin: 0; font-size: 2.1rem; letter-spacing: 2px; font-weight: 800;'>DERBYsystem</h1>
+                
+                <div class="resumen-texto">
+                    <b>DERBYsystem PRO</b> es una plataforma digital avanzada diseñada para la gestión integral de eventos gallísticos. 
+                    El sistema automatiza el registro de partidos, el pesaje y la asignación inteligente de anillos. 
+                    Su función principal es el <b>Cotejo Automatizado</b>, que organiza las peleas por rondas basándose en el peso, 
+                    garantizando equidad y evitando enfrentamientos entre socios del mismo partido.
+                </div>
+
+                <p style='font-size: 0.85rem; margin-top: 10px; opacity: 0.8; font-style: italic;'>
+                    Ingresa tu clave privada para gestionar tus registros.
                 </p>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
-    _, center_col, _ = st.columns([0.05, 0.9, 0.05])
+    _, center_col, _ = st.columns([0.1, 0.8, 0.1])
     with center_col:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ej: DERBY_FERIA_2026").upper().strip()
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
                 st.session_state.id_usuario = nombre_acceso
                 st.rerun()
             else:
-                st.warning("⚠️ Escribe un nombre.")
+                st.warning("⚠️ Escribe un nombre para continuar.")
     st.stop()
 
-# --- EL RESTO DEL CÓDIGO (COLORES DE TABLA TAMBIÉN AJUSTADOS A NARANJA) ---
+# --- EL RESTO DEL CÓDIGO (CONFIGURACIÓN NARANJA) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -167,7 +183,6 @@ def generar_pdf(partidos, n_gallos):
                 pelea_n += 1
             else: break
         t = Table(data, colWidths=[20, 25, 140, 35, 25, 45, 35, 140, 25])
-        # PDF también con encabezado naranja
         t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E67E22")), ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,-1), 8), ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
         elements.append(t); elements.append(Spacer(1, 20))
     doc.build(elements)
