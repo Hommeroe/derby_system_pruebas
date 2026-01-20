@@ -99,6 +99,23 @@ st.markdown("""
         border-radius: 8px !important;
         border: none !important;
     }
+    
+    /* Estilo para el Manual Corporativo */
+    .manual-card {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-left: 5px solid #E67E22;
+        border-radius: 5px;
+        margin-bottom: 20px;
+    }
+    .manual-header {
+        color: #1a1a1a;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -223,7 +240,7 @@ if 'partidos' not in st.session_state:
 
 st.title(f"🏆 {st.session_state.id_usuario}")
 
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "⚙️ ESPECIFICACIONES TÉCNICAS"])
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -299,43 +316,55 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- RECURSOS Y PROTOCOLOS TÉCNICOS (MANUAL REDISEÑADO) ---
+# --- MANUAL CON DISEÑO CORPORATIVO (REDISEÑADO) ---
 with t_ayu:
-    st.header("⚙️ PROTOCOLOS TÉCNICOS Y OPERACIÓN")
+    st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
     
-    st.info("""
-    **PROTOCOLO DE CONFIGURACIÓN DEL EVENTO**
-    1.  **Selección de Modalidad:** Establezca la métrica de 'Gallos por Partido' previo a cualquier ingreso de datos. 
-    2.  **Validación de Clave:** Verifique que el identificador del evento en la barra lateral sea el correcto para asegurar el almacenamiento en el servidor asignado.
-    """)
+    col_1, col_2 = st.columns(2)
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("📋 Gestión de Registros")
+    with col_1:
         st.markdown("""
-        * **Ingreso Nominal:** Utilice nombres estandarizados para los partidos.
-        * **Captura Gravimétrica:** Ingrese el peso con precisión de tres decimales (ej. 2.250).
-        * **Asignación de ID:** El sistema genera folios de identificación (Anillos) de forma secuencial y automática según el orden de entrada.
-        """)
+        <div class="manual-card">
+            <div class="manual-header">01. INICIALIZACIÓN DE DATOS</div>
+            <p style='color:#333; font-size:0.85rem;'>
+            <b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos). El sistema requiere esta definición para establecer los rangos de identificación.
+            <br><br>
+            <b>Ingreso:</b> Capture el nombre oficial del partido y asigne pesos con 3 decimales para máxima precisión en el cotejo.
+            </p>
+        </div>
+        <div class="manual-card">
+            <div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div>
+            <p style='color:#333; font-size:0.85rem;'>
+            <b>Folios de Anillo:</b> El motor de DerbySystem genera automáticamente el ID de anillo según el índice de registro global. 
+            <br><br>
+            <i>Este proceso es inalterable para garantizar la trazabilidad del evento.</i>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
-    with col2:
-        st.subheader("⚖️ Algoritmo de Cotejo")
+    with col_2:
         st.markdown("""
-        * **Criterio de Ordenamiento:** Clasificación por masa (peso) ascendente.
-        * **Filtro de Exclusión:** Algoritmo programado para evitar emparejamientos intragrupales (mismo partido).
-        * **Margen Crítico:** Diferencias superiores a **0.080 kg** activan la alerta visual de sistema (celda roja).
-        """)
+        <div class="manual-card">
+            <div class="manual-header">03. PROCESAMIENTO DE SORTEO</div>
+            <p style='color:#333; font-size:0.85rem;'>
+            <b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa. 
+            <br><br>
+            <b>Restricción de Seguridad:</b> Bloqueo automático de enfrentamientos intragrupales (partido vs mismo partido).
+            </p>
+        </div>
+        <div class="manual-card">
+            <div class="manual-header">04. CERTIFICACIÓN PDF</div>
+            <p style='color:#333; font-size:0.85rem;'>
+            <b>Emisión:</b> La descarga del PDF genera el documento legal del evento.
+            <br><br>
+            <b>Validación:</b> El reporte incluye marca de tiempo (Timestamp) y URL de auditoría para respaldo de la mesa de control.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
 
-    st.divider()
+    st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
     
-    st.warning("""
-    **RECOMENDACIONES DE INTEGRIDAD DE DATOS**
-    * **Edición Directa:** Cualquier modificación en la tabla de edición se sincroniza en tiempo real con la base de datos local.
-    * **Certificación PDF:** El reporte oficial es el único documento válido para firmas de conformidad. Se recomienda generar el reporte final únicamente al concluir el pesaje de todos los participantes.
-    """)
-    
-    st.markdown("<p style='text-align: center; color: gray;'>DerbySystem v2.0 | Control de Calidad y Transparencia Digital</p>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL ---
 with st.sidebar:
