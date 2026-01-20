@@ -18,47 +18,58 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA (DISEÑO SOLICITADO) ---
+# --- PANTALLA DE ENTRADA (NUEVA IDEA VISUAL) ---
 if st.session_state.id_usuario == "":
-    # HTML para recrear la interfaz de la imagen
-    html_bienvenida = (
-        "<div style='text-align:center; background-color:#E67E22; padding:25px; border-radius:15px; color:white; font-family:sans-serif;'>"
-        "<div style='font-size:1.1rem; letter-spacing:2px; margin-bottom:5px;'>BIENVENIDOS A</div>"
-        "<div style='font-size:2.2rem; font-weight:900; line-height:1; margin-bottom:20px;'>DERBYsystem</div>"
-        "<div style='background-color:#1a1a1a; padding:20px; border-radius:12px; margin:0 auto; max-width:500px; border:1px solid #D35400; text-align:left;'>"
-        "<div style='color:#E67E22; font-weight:bold; font-size:1.2rem; margin-bottom:10px; text-align:center;'>¿Qué es este sistema?</div>"
-        "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.4;'>"
-        "Es una plataforma profesional que <b>automatiza el pesaje</b> y asegura transparencia absoluta mediante un <b>sorteo digital</b> avanzado."
-        "</div><br>"
-        "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.4;'>"
-        "Garantiza combates <b>justos y equitativos</b>, eliminando errores manuales y facilitando el control de mesa."
-        "</div>"
-        "<hr style='border:0.5px solid #333; margin:15px 0;'>"
-        "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Escribe la clave única de tu evento para ingresar.</div>"
-        "</div></div>"
-    )
+    st.markdown("""
+        <div style='text-align: center; background-color: #E67E22; padding: 30px; border-radius: 20px; color: white; font-family: sans-serif;'>
+            <h3 style='margin-bottom: 0px; font-weight: 300; letter-spacing: 3px;'>PLATAFORMA PROFESIONAL</h3>
+            <h1 style='margin-top: 0px; font-size: 2.8rem; font-weight: 900; text-shadow: 3px 3px 6px rgba(0,0,0,0.3);'>DERBYsystem</h1>
+            
+            <div style='background-color: #1a1a1a; padding: 25px; border-radius: 15px; margin: 20px auto; max-width: 600px; border: 1px solid #D35400; box-shadow: 0px 10px 20px rgba(0,0,0,0.5);'>
+                <div style='display: flex; justify-content: space-around; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px;'>
+                    <div style='text-align: center;'>
+                        <div style='font-size: 25px;'>⚖️</div>
+                        <div style='font-size: 10px; color: #E67E22; font-weight: bold;'>PESAJE EXACTO</div>
+                    </div>
+                    <div style='text-align: center;'>
+                        <div style='font-size: 25px;'>🎲</div>
+                        <div style='font-size: 10px; color: #E67E22; font-weight: bold;'>SORTEO DIGITAL</div>
+                    </div>
+                    <div style='text-align: center;'>
+                        <div style='font-size: 25px;'>📱</div>
+                        <div style='font-size: 10px; color: #E67E22; font-weight: bold;'>CONTROL TOTAL</div>
+                    </div>
+                </div>
+                
+                <p style='font-size: 1rem; line-height: 1.5; color: #f2f2f2; margin-top: 10px;'>
+                    <b>DERBYsystem</b> transforma la mesa de control en un proceso 100% transparente. 
+                    Elimina el error humano y garantiza que cada combate sea <b>legal y equitativo</b> mediante algoritmos de emparejamiento automático.
+                </p>
+                
+                <p style='font-size: 0.9rem; color: #bdc3c7; font-style: italic; border-left: 3px solid #E67E22; padding-left: 10px; margin-top: 15px;'>
+                    "Tecnología diseñada para la transparencia del deporte."
+                </p>
+            </div>
+        </div>
+        <br>
+    """, unsafe_allow_html=True)
     
-    st.markdown(html_bienvenida, unsafe_allow_html=True)
-    st.write("") 
-    
-    # Contenedor del input
     col_a, col_b, col_c = st.columns([0.05, 0.9, 0.05])
     with col_b:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí").upper().strip()
-        
-        if st.button("ENTRAR AL SISTEMA", use_container_width=True):
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ejemplo: DERBY_TEPIC_2026").upper().strip()
+        if st.button("INGRESAR AL EVENTO", use_container_width=True):
             if nombre_acceso:
                 st.session_state.id_usuario = nombre_acceso
                 st.rerun()
             else:
-                st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+                st.warning("⚠️ Debes ingresar una clave para activar el sistema.")
     st.stop()
 
 # --- CONSTANTES ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS DE INTERFAZ INTERNA ---
+# --- ESTILOS DE INTERFAZ (NARANJA Y NEGRO) ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -85,29 +96,26 @@ st.markdown("""
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
         display: block; width: 100%; color: black !important;
     }
-    .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
-    .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
+    .peso-texto { font-size: 10px; color: #D35400 !important; display: block; }
     
-    .col-num { width: 20px; }
-    .col-g { width: 22px; }
-    .col-an { width: 32px; }
-    .col-e { width: 22px; background-color: #f1f2f6; }
-    .col-dif { width: 42px; }
-    .col-partido { width: auto; }
-
-    /* Personalización de botones */
+    /* Botones Naranjas Profesionales */
     div.stButton > button {
         background-color: #E67E22 !important;
         color: white !important;
         font-weight: bold !important;
-        border-radius: 8px !important;
+        border-radius: 10px !important;
         border: none !important;
+        padding: 10px !important;
+        box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
     }
-    div[data-testid="stNumberInput"] { margin-bottom: 0px; }
+    div.stButton > button:hover {
+        background-color: #D35400 !important;
+        transform: scale(1.02);
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# --- LÓGICA DE FUNCIONAMIENTO (SIN CAMBIOS) ---
+# --- FUNCIONES DE LÓGICA (INTACTAS) ---
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -161,12 +169,12 @@ def generar_pdf(partidos, n_gallos):
     doc.build(elements)
     return buffer.getvalue()
 
-# --- INICIO DE INTERFAZ ---
+# --- INTERFAZ ---
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
 st.title(f"🏆 {st.session_state.id_usuario}")
-t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO"])
+t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "📊 COTEJO"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -178,7 +186,7 @@ with t_reg:
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            st.caption("Solo se aceptan pesos de 1.800 a 2.600")
+            st.caption("Rango: 1.800 a 2.600")
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
@@ -247,7 +255,7 @@ with t_cot:
 
 # --- ACCESO ADMIN ---
 with st.sidebar:
-    st.write(f"Sesión activa: {st.session_state.id_usuario}")
+    st.write(f"Sesión: {st.session_state.id_usuario}")
     if st.button("🚪 CERRAR SESIÓN"):
         st.session_state.id_usuario = ""
         st.rerun()
@@ -255,7 +263,7 @@ with st.sidebar:
 
 if acceso == "28days":
     st.divider()
-    st.subheader("🕵️ Gestión de Archivos")
+    st.subheader("🕵️ Archivos en Servidor")
     archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
     for arch in archivos:
         with st.expander(f"Ver: {arch}"):
