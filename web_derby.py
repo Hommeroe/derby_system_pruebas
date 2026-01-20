@@ -254,7 +254,7 @@ def generar_pdf(partidos, n_gallos):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-# MODIFICACIÓN: EL TÍTULO YA NO MUESTRA LA LLAVE (ID_USUARIO)
+# EL TÍTULO YA NO MUESTRA LA LLAVE
 st.title("DerbySystem ")
 
 t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
@@ -311,10 +311,11 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
+            # MODIFICACIÓN: EL NOMBRE DEL ARCHIVO AHORA ES GENÉRICO PARA MANTENER PRIVACIDAD
             st.download_button(
                 label="📥 GENERAR REPORTE OFICIAL (PDF)", 
                 data=pdf_bytes, 
-                file_name=f"cotejo_{st.session_state.id_usuario}.pdf", 
+                file_name="cotejo_oficial.pdf", 
                 mime="application/pdf", 
                 use_container_width=True,
                 help="Haz clic aquí para finalizar el sorteo e imprimir el reporte oficial.",
@@ -379,7 +380,6 @@ with t_ayu:
 
 # --- BARRA LATERAL ---
 with st.sidebar:
-    # MODIFICACIÓN: TAMBIÉN SE OCULTA EN LA BARRA LATERAL
     st.write("Sesión activa: **SISTEMA PROTEGIDO**")
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
         st.session_state.id_usuario = ""
