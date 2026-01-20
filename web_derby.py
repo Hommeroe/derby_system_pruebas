@@ -18,72 +18,76 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- ESTILOS PARA CENTRADO PERFECTO Y ELIMINAR CUADRO BLANCO ---
+# --- SOLUCIÓN DEFINITIVA AL CUADRO BLANCO Y DISEÑO COMPACTO ---
 st.markdown("""
     <style>
-    /* 1. Elimina el fondo blanco y el pie de página de Streamlit */
-    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+    /* Forzar fondo oscuro en toda la pantalla para eliminar el cuadro blanco */
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], .main {
         background-color: #0e1117 !important;
-    }
-    footer {visibility: hidden !important;}
-    
-    /* 2. Centrado de la tarjeta de bienvenida */
-    .main-welcome-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        position: fixed;
         width: 100%;
-        padding: 40px 10px 10px 10px;
+        height: 100%;
+        top: 0;
+        left: 0;
     }
     
+    /* Ocultar elementos que causan el espacio blanco abajo */
+    footer {visibility: hidden !important;}
+    [data-testid="stManageAppView"] {display: none !important;}
+    
+    /* Contenedor compacto para que todo suba y quepa en el móvil */
     .welcome-card {
         text-align: center; 
-        padding: 30px; 
+        padding: 15px; 
         background-color: #2c3e50; 
-        border-radius: 15px; 
+        border-radius: 12px; 
         color: white; 
-        max-width: 500px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        max-width: 380px;
+        margin: 5px auto;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
+
+    h2 { font-size: 1.2rem !important; margin-bottom: 5px !important; }
+    h1 { font-size: 1.8rem !important; margin-top: 0px !important; }
+    p { font-size: 0.85rem !important; margin-bottom: 10px !important; }
     
-    /* Ajuste para que el input no se vea desalineado */
-    .stTextInput {
-        margin-top: 20px;
+    /* Reducir márgenes de Streamlit */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Pantalla de entrada para que no se pierdan los datos
+# Pantalla de entrada compacta
 if st.session_state.id_usuario == "":
     st.markdown("""
-        <div class="main-welcome-container">
-            <div class="welcome-card">
-                <h2 style='margin:0;'>BIENVENIDO A</h2>
-                <h1 style='margin:0; font-size: 2.5em;'>DERBYsystem</h1>
-                <p style='margin-top:15px;'> Escribe una clave única para tu evento o mesa.<br><br>
-                <small><strong>Seguridad:</strong> Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
-                Usa una combinación difícil para proteger tus datos.</small></p>
-            </div>
+        <div class="welcome-card">
+            <h2 style='opacity: 0.8;'>BIENVENIDO A</h2>
+            <h1 style='letter-spacing: 2px;'>DERBYsystem</h1>
+            <p>Escribe la clave única de tu evento.<br>
+            <span style='font-size: 0.75rem; color: #bdc3c7;'>
+            <b>Seguridad:</b> Evita nombres comunes para proteger tus datos.
+            </span></p>
         </div>
     """, unsafe_allow_html=True)
     
-    # Contenedor para el input y el botón
-    col1, col2, col3 = st.columns([1, 2, 1])
+    # Input y Botón más pegados arriba
+    col1, col2, col3 = st.columns([0.1, 0.8, 0.1])
     with col2:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE:", placeholder="Ingresa tus palabras claves").upper().strip()
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
                 st.session_state.id_usuario = nombre_acceso
                 st.rerun()
             else:
-                st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+                st.warning("⚠️ Escribe una clave.")
     st.stop()
 
-# El archivo ahora es fijo según el nombre elegido por el usuario
+# --- EL RESTO DEL CÓDIGO PERMANECE FIJO ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS ORIGINALES (INTACTOS) ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -112,19 +116,15 @@ st.markdown("""
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
     .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
-    
     .col-num { width: 20px; }
     .col-g { width: 22px; }
     .col-an { width: 32px; }
     .col-e { width: 22px; background-color: #f1f2f6; }
     .col-dif { width: 42px; }
-    .col-partido { width: auto; }
-
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
 
-# Lógica interna para que no peleen socios (Homero 1 vs Homero 2)
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -187,14 +187,13 @@ t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO"])
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g = st.columns([2,1])
-    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
+    g_sel = col_g.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
 
     with st.form("f_nuevo", clear_on_submit=True):
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            st.caption("Solo se aceptan pesos de 1.800 a 2.600")
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
@@ -229,9 +228,6 @@ with t_reg:
                     for i in range(1, st.session_state.n_gallos + 1): p_upd[f"G{i}"] = float(r[f"G{i}"])
                     nuevos.append(p_upd)
             st.session_state.partidos = nuevos; guardar(nuevos); st.rerun()
-        if st.button("🚨 LIMPIAR TODO EL EVENTO"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.session_state.partidos = []; st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) >= 2:
@@ -267,14 +263,3 @@ with st.sidebar:
     if st.button("🚪 CERRAR SESIÓN"):
         st.session_state.id_usuario = ""
         st.rerun()
-    acceso = st.text_input("Acceso Admin:", type="password")
-
-if acceso == "28days":
-    st.divider()
-    st.subheader("🕵️ Archivos en Servidor")
-    archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
-    for arch in archivos:
-        with st.expander(f"Ver: {arch}"):
-            with open(arch, "r") as f: st.text(f.read())
-            if st.button("Eliminar", key=arch):
-                os.remove(arch); st.rerun()
