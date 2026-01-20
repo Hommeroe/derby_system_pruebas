@@ -125,7 +125,7 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- FUNCIÓN DE PDF CON URL Y MARCA DERBYSYSTEM ---
+# --- FUNCIÓN DE PDF SIN CLAVE DE ACCESO Y URL GRANDE ---
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
@@ -136,21 +136,20 @@ def generar_pdf(partidos, n_gallos):
     zona_horaria = pytz.timezone('America/Mexico_City')
     ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
     
-    # Encabezado Negro Personalizado
+    # Encabezado Negro - Clave eliminada y URL aumentada
     data_header = [
-        [Paragraph("<font color='white' size=18><b>DerbySystem</b></font>", styles['Title'])],
-        [Paragraph("<font color='#E67E22' size=9>https://tuderby.streamlit.app</font>", styles['Normal'])],
-        [Paragraph(f"<font color='white' size=10>EVENTO: {st.session_state.id_usuario}</font>", styles['Normal'])],
-        [Paragraph(f"<font color='white' size=7>GENERADO: {ahora}</font>", styles['Normal'])]
+        [Paragraph("<font color='white' size=20><b>DerbySystem</b></font>", styles['Title'])],
+        [Paragraph("<font color='#E67E22' size=14><b>https://tuderby.streamlit.app</b></font>", styles['Normal'])],
+        [Paragraph(f"<font color='white' size=8>REPORTE OFICIAL DE COTEJO | GENERADO: {ahora}</font>", styles['Normal'])]
     ]
     header_table = Table(data_header, colWidths=[500])
     header_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.black),
-        ('BACKGROUND', (0, 1), (-1, 3), colors.HexColor("#1a1a1a")),
+        ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
     ]))
     elements.append(header_table)
     elements.append(Spacer(1, 20))
@@ -217,7 +216,7 @@ def generar_pdf(partidos, n_gallos):
     elements.append(t_firmas)
     
     elements.append(Spacer(1, 30))
-    elements.append(Paragraph(f"<font color='grey' size=8>Generado por DerbySystem. Consulta resultados en https://tuderby.streamlit.app</font>", styles['Normal']))
+    elements.append(Paragraph(f"<font color='grey' size=8>Generado por DerbySystem. Consulta resultados en vivo en https://tuderby.streamlit.app</font>", styles['Normal']))
     doc.build(elements)
     return buffer.getvalue()
 
