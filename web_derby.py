@@ -18,7 +18,7 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA (OPCIÓN 4 SELECCIONADA) ---
+# --- PANTALLA DE ENTRADA ---
 if st.session_state.id_usuario == "":
     html_bienvenida = (
         "<div style='text-align:center; background-color:#E67E22; padding:25px; border-radius:15px; color:white; font-family:sans-serif;'>"
@@ -30,7 +30,7 @@ if st.session_state.id_usuario == "":
         "Plataforma de <b>sorteo digital.</b> Garantiza transparencia total, orden y combates gallisticos 100% justos mediante tecnología de emparejamiento inteligente."
         "</div>"
         "<hr style='border:0.5px solid #333; margin:15px 0;'>"
-        "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Esta clave es tu llave de acceso privada. Evita nombres comunes. Si alguien más la usa podrá visualizar tu información. Usa una combinación compleja para proteger tus registros. Si sales de la página escribe la misma clave para acceder a tus registros.</div>"
+        "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Esta clave es tu llave de acceso privada. Evita nombres comunes. Si alguien más la usa podrá visualizar tu información. Usa una combinación compleja para proteger tus registros.</div>"
         "</div></div>"
     )
     
@@ -77,7 +77,7 @@ st.markdown("""
     }
     .nombre-partido { 
         font-weight: bold; font-size: 10px; line-height: 1.2;
-        white-space: normal; word-wrap: break-word; /* Ajuste para nombres largos */
+        white-space: normal; word-wrap: break-word;
         display: block; width: 100%; color: black !important;
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; margin-top: 2px;}
@@ -97,7 +97,6 @@ st.markdown("""
         border-radius: 8px !important;
         border: none !important;
     }
-    div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -124,34 +123,76 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
+# --- NUEVA FUNCIÓN DE PDF CON ENCABEZADO NEGRO ---
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
     elements = []
     styles = getSampleStyleSheet()
-    elements.append(Paragraph(f"<b>COTEJO OFICIAL: {st.session_state.id_usuario}</b>", styles['Title']))
-    elements.append(Spacer(1, 12))
+    
+    data_header = [
+        [Paragraph("<font color='white' size=16><b>DERBYsystem</b></font>", styles['Title'])],
+        [Paragraph(f"<font color='#E67E22' size=10>REPORTE OFICIAL DE COTEJO: {st.session_state.id_usuario}</font>", styles['Normal'])]
+    ]
+    header_table = Table(data_header, colWidths=[500])
+    header_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+        ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor("#1a1a1a")),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 20))
+
     for r in range(1, n_gallos + 1):
         elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
+        elements.append(Spacer(1, 8))
+        
         col_g = f"G{r}"
         lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
-        data = [["#", "G", "ROJO", "AN.", "E", "DIF.", "AN.", "VERDE", "G"]]
+        data = [["#", "G", "PARTIDO (ROJO)", "AN.", "E", "DIF.", "AN.", "PARTIDO (VERDE)", "G"]]
+        
         pelea_n = 1
         while len(lista) >= 2:
             rojo = lista.pop(0)
             v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
+            
             if v_idx is not None:
                 verde = lista.pop(v_idx)
                 d = abs(rojo[col_g] - verde[col_g])
                 idx_r = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                 idx_v = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==verde["PARTIDO"])
                 an_r, an_v = (idx_r * n_gallos) + r, (idx_v * n_gallos) + r
-                data.append([pelea_n, " ", f"{rojo['PARTIDO']}\n({rojo[col_g]:.3f})", f"{an_r:03}", " ", f"{d:.3f}", f"{an_v:03}", f"{verde['PARTIDO']}\n({verde[col_g]:.3f})", " "])
+                
+                data.append([
+                    pelea_n, " ", 
+                    Paragraph(f"<b>{rojo['PARTIDO']}</b><br/><font size=8>({rojo[col_g]:.3f})</font>", styles['Normal']),
+                    f"{an_r:03}", " ", f"{d:.3f}", f"{an_v:03}", 
+                    Paragraph(f"<b>{verde['PARTIDO']}</b><br/><font size=8>({verde[col_g]:.3f})</font>", styles['Normal']),
+                    " "
+                ])
                 pelea_n += 1
             else: break
-        t = Table(data, colWidths=[22, 25, 140, 35, 25, 45, 35, 140, 25])
-        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,-1), 8), ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
-        elements.append(t); elements.append(Spacer(1, 20))
+        
+        t = Table(data, colWidths=[20, 25, 145, 30, 25, 40, 30, 145, 25])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 8),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('LINEBEFORE', (2,1), (2,-1), 2, colors.red),
+            ('LINEAFTER', (7,1), (7,-1), 2, colors.green),
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 20))
+    
+    elements.append(Spacer(1, 30))
+    elements.append(Paragraph("<font color='grey' size=8>Generado automáticamente por DERBYsystem - La transparencia es nuestra prioridad.</font>", styles['Normal']))
     doc.build(elements)
     return buffer.getvalue()
 
@@ -172,7 +213,6 @@ with t_reg:
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            st.caption("Solo se aceptan pesos de 1.800 a 2.600")
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
@@ -207,18 +247,14 @@ with t_reg:
                     for i in range(1, st.session_state.n_gallos + 1): p_upd[f"G{i}"] = float(r[f"G{i}"])
                     nuevos.append(p_upd)
             st.session_state.partidos = nuevos; guardar(nuevos); st.rerun()
-        if st.button("🚨 LIMPIAR TODO EL EVENTO"):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.session_state.partidos = []; st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
             st.download_button(label="📥 DESCARGAR COTEJO (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True)
-        except Exception as e: st.error(f"Error al generar PDF: {e}")
+        except Exception as e: st.error(f"Error: {e}")
         st.divider()
-        # CORRECCIÓN: Usar st.session_state.n_gallos para evitar NameError
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g = f"G{r}"
@@ -233,8 +269,6 @@ with t_cot:
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    
-                    # AJUSTE: Se eliminó el truncado [:15] para que los nombres largos se vean completos
                     html += f"<tr><td>{pelea_n}</td><td class='cuadro'>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td><td class='cuadro'>□</td></tr>"
                     pelea_n += 1
                 else: break
@@ -250,7 +284,6 @@ with st.sidebar:
 
 if acceso == "28days":
     st.divider()
-    st.subheader("🕵️ Gestión de Archivos")
     archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
     for arch in archivos:
         with st.expander(f"Ver: {arch}"):
