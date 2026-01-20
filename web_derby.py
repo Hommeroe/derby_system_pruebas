@@ -18,34 +18,27 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- SOLUCIÓN DEFINITIVA AL CUADRO BLANCO ---
+# --- ELIMINACIÓN TOTAL DEL CUADRO BLANCO ---
 st.markdown("""
     <style>
-    /* 1. Forzar color oscuro en todas las capas posibles de la aplicación */
-    .stApp, 
-    [data-testid="stAppViewContainer"], 
-    [data-testid="stHeader"], 
-    [data-testid="stAppViewMain"],
-    .main {
+    /* Forzar el fondo oscuro en la raíz absoluta de la página */
+    html, body, [data-testid="stAppViewContainer"], .main {
         background-color: #0e1117 !important;
     }
 
-    /* 2. Eliminar específicamente el fondo blanco del contenedor de scroll */
+    /* Eliminar el fondo blanco del bloque de contenido y el espacio extra */
     [data-testid="stAppViewBlockContainer"] {
         background-color: #0e1117 !important;
-        padding-bottom: 0px !important;
+        padding-bottom: 50px !important; /* Espacio de seguridad oscuro */
     }
 
-    /* 3. Asegurar que el body y html no tengan rastro blanco */
-    html, body {
-        background-color: #0e1117 !important;
+    /* Quitar el encabezado y pie de página que a veces se vuelven blancos */
+    [data-testid="stHeader"], footer {
+        background-color: rgba(0,0,0,0) !important;
+        visibility: hidden !important;
     }
 
-    /* 4. Ocultar el footer y elementos que empujan el diseño */
-    footer {visibility: hidden !important;}
-    [data-testid="stManageAppView"] {display: none !important;}
-    
-    /* 5. Diseño de la tarjeta (Manteniendo tu estilo preferido) */
+    /* Estilo de la tarjeta de bienvenida (Tu diseño actual) */
     .welcome-card {
         text-align: center; 
         padding: 20px; 
@@ -53,16 +46,15 @@ st.markdown("""
         border-radius: 15px; 
         color: white; 
         max-width: 400px;
-        margin: 10px auto;
+        margin: 20px auto 10px auto;
         box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
     .welcome-card h2 { font-size: 1.1rem !important; margin: 0 !important; opacity: 0.8; }
     .welcome-card h1 { font-size: 1.8rem !important; margin: 5px 0 15px 0 !important; letter-spacing: 1px; }
     .welcome-card p { font-size: 0.85rem !important; line-height: 1.3; }
     
-    .block-container {
-        padding-top: 2rem !important;
-    }
+    /* Ajuste de los inputs para que no se peguen */
+    .stTextInput { margin-top: 10px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -90,7 +82,7 @@ if st.session_state.id_usuario == "":
                 st.warning("⚠️ Escribe una clave.")
     st.stop()
 
-# --- EL RESTO DEL CÓDIGO PERMANECE IGUAL ---
+# --- CÓDIGO INTERNO (DB Y LÓGICA) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
