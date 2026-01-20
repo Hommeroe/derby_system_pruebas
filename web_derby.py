@@ -41,7 +41,8 @@ if st.session_state.id_usuario == "":
     
     col_a, col_b, col_c = st.columns([0.05, 0.9, 0.05])
     with col_b:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí").upper().strip()
+        # CAMBIO: type="password" para que no se vea la clave al escribirla
+        nombre_acceso = st.text_input("CLAVE DE MESA:", placeholder="••••••••", type="password").upper().strip()
         
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
@@ -68,10 +69,8 @@ st.markdown("""
     }
 
     /* ESTILO EXCLUSIVO PARA EL BOTÓN DE REPORTE (PDF) */
-    /* Lo identificamos por el icono de descarga o el texto si Streamlit lo permite, 
-       pero la mejor forma es inyectar un estilo que detecte el label específico */
     button[description="generar_reporte_pdf"] {
-        background-color: #27ae60 !important; /* Verde Llamativo */
+        background-color: #27ae60 !important;
         color: white !important;
         font-size: 20px !important;
         height: 60px !important;
@@ -120,7 +119,6 @@ st.markdown("""
     .col-dif { width: 45px; }
     .col-partido { width: auto; }
 
-    /* Estilo para el Manual Corporativo */
     .manual-card {
         background-color: #f8f9fa;
         padding: 20px;
@@ -258,7 +256,9 @@ def generar_pdf(partidos, n_gallos):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-st.title(f"🏆 {st.session_state.id_usuario}")
+# CAMBIO: Se quita la clave del título grande y se pone un texto genérico
+st.title("🏆 PANEL DE CONTROL")
+st.markdown(f"<small style='color:gray;'>ID de Mesa: {st.session_state.id_usuario}</small>", unsafe_allow_html=True)
 
 t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
 
@@ -314,7 +314,6 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-            # BOTÓN LLAMATIVO CON IDENTIFICADOR DE AYUDA
             st.download_button(
                 label="📥 GENERAR REPORTE OFICIAL (PDF)", 
                 data=pdf_bytes, 
@@ -322,9 +321,8 @@ with t_cot:
                 mime="application/pdf", 
                 use_container_width=True,
                 help="Haz clic aquí para finalizar el sorteo e imprimir el reporte oficial.",
-                type="primary" # Streamlit aplica un estilo base, el CSS hace el resto
+                type="primary"
             )
-            # Nota: Streamlit no permite IDs directos fácilmente, usamos el CSS para 'primary' si es necesario
         except Exception as e: st.error(f"Error: {e}")
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
@@ -346,48 +344,13 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- MANUAL CON DISEÑO CORPORATIVO ---
 with t_ayu:
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
     col_1, col_2 = st.columns(2)
     with col_1:
-        st.markdown("""
-        <div class="manual-card">
-            <div class="manual-header">01. INICIALIZACIÓN DE DATOS</div>
-            <p style='color:#333; font-size:0.85rem;'>
-            <b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos). El sistema requiere esta definición para establecer los rangos de identificación.
-            <br><br>
-            <b>Ingreso:</b> Capture el nombre oficial del partido y asigne pesos con 3 decimales para máxima precisión en el cotejo.
-            </p>
-        </div>
-        <div class="manual-card">
-            <div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div>
-            <p style='color:#333; font-size:0.85rem;'>
-            <b>Folios de Anillo:</b> El motor de DerbySystem genera automáticamente el ID de anillo según el índice de registro global. 
-            <br><br>
-            <i>Este proceso es inalterable para garantizar la trazabilidad del evento.</i>
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Registro:</b> Modalidad de combate (2-6 gallos).<br><br><b>Ingreso:</b> Capture nombre y pesos con 3 decimales.</p></div>""", unsafe_allow_html=True)
     with col_2:
-        st.markdown("""
-        <div class="manual-card">
-            <div class="manual-header">03. PROCESAMIENTO DE SORTEO</div>
-            <p style='color:#333; font-size:0.85rem;'>
-            <b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa. 
-            <br><br>
-            <b>Restricción de Seguridad:</b> Bloqueo automático de enfrentamientos intragrupales (partido vs mismo partido).
-            </p>
-        </div>
-        <div class="manual-card">
-            <div class="manual-header">04. CERTIFICACIÓN PDF</div>
-            <p style='color:#333; font-size:0.85rem;'>
-            <b>Emisión:</b> La descarga del PDF genera el documento legal del evento.
-            <br><br>
-            <b>Validación:</b> El reporte incluye marca de tiempo (Timestamp) y URL de auditoría para respaldo de la mesa de control.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Cotejo:</b> Emparejamiento por proximidad de masa.<br><br><b>Seguridad:</b> Bloqueo de enfrentamientos intragrupales.</p></div>""", unsafe_allow_html=True)
     st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
     st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
