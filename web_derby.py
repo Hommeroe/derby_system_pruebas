@@ -4,7 +4,7 @@ import os
 import uuid
 import re
 from datetime import datetime
-import pytz  # Librería para manejar zonas horarias
+import pytz  
 from io import BytesIO
 
 # Importamos reportlab
@@ -25,7 +25,7 @@ if st.session_state.id_usuario == "":
     html_bienvenida = (
         "<div style='text-align:center; background-color:#E67E22; padding:25px; border-radius:15px; color:white; font-family:sans-serif;'>"
         "<div style='font-size:1.1rem; letter-spacing:2px; margin-bottom:5px;'>BIENVENIDOS A</div>"
-        "<div style='font-size:2.2rem; font-weight:900; line-height:1; margin-bottom:20px;'>DERBYsystem</div>"
+        "<div style='font-size:2.2rem; font-weight:900; line-height:1; margin-bottom:20px;'>DerbySystem</div>"
         "<div style='background-color:#1a1a1a; padding:20px; border-radius:12px; margin:0 auto; max-width:500px; border:1px solid #D35400; text-align:left;'>"
         "<div style='color:#E67E22; font-weight:bold; font-size:1.2rem; margin-bottom:10px; text-align:center;'>¿Qué es este sistema?</div>"
         "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.5; text-align:center;'>"
@@ -125,7 +125,7 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- FUNCIÓN DE PDF CON FECHA Y HORA LOCAL ---
+# --- FUNCIÓN DE PDF CON URL Y MARCA DERBYSYSTEM ---
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
@@ -133,24 +133,24 @@ def generar_pdf(partidos, n_gallos):
     styles = getSampleStyleSheet()
     
     # AJUSTE DE HORA LOCAL (MÉXICO)
-    # Si estás en otro país, cambia 'America/Mexico_City' por tu zona horaria
     zona_horaria = pytz.timezone('America/Mexico_City')
     ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
     
-    # Encabezado Negro con Fecha y Hora Local
+    # Encabezado Negro Personalizado
     data_header = [
-        [Paragraph("<font color='white' size=16><b>DERBYsystem</b></font>", styles['Title'])],
-        [Paragraph(f"<font color='#E67E22' size=10>EVENTO: {st.session_state.id_usuario}</font>", styles['Normal'])],
-        [Paragraph(f"<font color='white' size=8>FECHA DE COTEJO: {ahora}</font>", styles['Normal'])]
+        [Paragraph("<font color='white' size=18><b>DerbySystem</b></font>", styles['Title'])],
+        [Paragraph("<font color='#E67E22' size=9>https://tuderby.streamlit.app</font>", styles['Normal'])],
+        [Paragraph(f"<font color='white' size=10>EVENTO: {st.session_state.id_usuario}</font>", styles['Normal'])],
+        [Paragraph(f"<font color='white' size=7>GENERADO: {ahora}</font>", styles['Normal'])]
     ]
     header_table = Table(data_header, colWidths=[500])
     header_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.black),
-        ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")),
+        ('BACKGROUND', (0, 1), (-1, 3), colors.HexColor("#1a1a1a")),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
     ]))
     elements.append(header_table)
     elements.append(Spacer(1, 20))
@@ -217,7 +217,7 @@ def generar_pdf(partidos, n_gallos):
     elements.append(t_firmas)
     
     elements.append(Spacer(1, 30))
-    elements.append(Paragraph(f"<font color='grey' size=8>Documento emitido el {ahora}. La transparencia es nuestra prioridad.</font>", styles['Normal']))
+    elements.append(Paragraph(f"<font color='grey' size=8>Generado por DerbySystem. Consulta resultados en https://tuderby.streamlit.app</font>", styles['Normal']))
     doc.build(elements)
     return buffer.getvalue()
 
