@@ -238,4 +238,4 @@ if acceso == "28days":
         with st.expander(f"Ver: {arch}"):
             with open(arch, "r") as f: st.text(f.read())
             if st.button("Eliminar", key=arch):
-                os.remove(arch); st.rerun(
+                os.remove(arch); st.rerun()
