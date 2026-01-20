@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import uuid
 import re
+from datetime import datetime
 from io import BytesIO
 
 # Importamos reportlab
@@ -123,26 +124,30 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- FUNCIÓN DE PDF PROFESIONAL CON MARCAS DE PLUMA ---
+# --- FUNCIÓN DE PDF CON FECHA Y HORA AUTOMÁTICA ---
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
     elements = []
     styles = getSampleStyleSheet()
     
-    # Encabezado Negro
+    # Obtener fecha y hora actual
+    ahora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    
+    # Encabezado Negro con Fecha y Hora
     data_header = [
         [Paragraph("<font color='white' size=16><b>DERBYsystem</b></font>", styles['Title'])],
-        [Paragraph(f"<font color='#E67E22' size=10>REPORTE OFICIAL DE COTEJO: {st.session_state.id_usuario}</font>", styles['Normal'])]
+        [Paragraph(f"<font color='#E67E22' size=10>EVENTO: {st.session_state.id_usuario}</font>", styles['Normal'])],
+        [Paragraph(f"<font color='white' size=8>FECHA DE COTEJO: {ahora}</font>", styles['Normal'])]
     ]
     header_table = Table(data_header, colWidths=[500])
     header_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.black),
-        ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor("#1a1a1a")),
+        ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
     ]))
     elements.append(header_table)
     elements.append(Spacer(1, 20))
@@ -167,17 +172,12 @@ def generar_pdf(partidos, n_gallos):
                 idx_v = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==verde["PARTIDO"])
                 an_r, an_v = (idx_r * n_gallos) + r, (idx_v * n_gallos) + r
                 
-                # Celdas con [ ] para rayar con pluma
                 data.append([
-                    pelea_n, 
-                    "[  ]", # G Rojo
+                    pelea_n, "[  ]", 
                     Paragraph(f"<b>{rojo['PARTIDO']}</b><br/><font size=8>({rojo[col_g]:.3f})</font>", styles['Normal']),
-                    f"{an_r:03}", 
-                    "[  ]", # Empate
-                    f"{d:.3f}", 
-                    f"{an_v:03}", 
+                    f"{an_r:03}", "[  ]", f"{d:.3f}", f"{an_v:03}", 
                     Paragraph(f"<b>{verde['PARTIDO']}</b><br/><font size=8>({verde[col_g]:.3f})</font>", styles['Normal']),
-                    "[  ]"  # G Verde
+                    "[  ]"
                 ])
                 pelea_n += 1
             else: break
@@ -214,7 +214,7 @@ def generar_pdf(partidos, n_gallos):
     elements.append(t_firmas)
     
     elements.append(Spacer(1, 30))
-    elements.append(Paragraph("<font color='grey' size=8>Documento generado para uso físico. Marque con [X] el resultado de cada combate.</font>", styles['Normal']))
+    elements.append(Paragraph(f"<font color='grey' size=8>Documento emitido el {ahora}. La transparencia es nuestra prioridad.</font>", styles['Normal']))
     doc.build(elements)
     return buffer.getvalue()
 
