@@ -18,21 +18,24 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# Pantalla de entrada para que no se pierdan los datos
+# Pantalla de entrada corregida y centrada
 if st.session_state.id_usuario == "":
     st.markdown("""
-        <div style='text-align: center; padding: 30px; background-color: #2c3e50; border-radius: 15px; color: white;'>
-            <h2 style='margin-bottom: 15px;'>BIENVENIDO A <span style='font-family: "Courier New", Courier, monospace; letter-spacing: 2px; color: #ecf0f1;'>DERBYsystem</span></h2>
-            <p style='font-size: 1.1em; margin-bottom: 10px;'>Escribe una clave única para tu evento o mesa.</p>
-            <p style='font-size: 0.9em; opacity: 0.8; line-height: 1.4;'>
-                <b>Seguridad:</b> Esta clave es tu llave de acceso. Evita nombres comunes; <br>
-                si alguien más la usa, podrá ver tu información. <br>
-                Usa una combinación difícil para proteger tus datos.
-            </p>
+        <div style='text-align: center; padding: 40px 20px; background-color: #2c3e50; border-radius: 15px; color: white; margin-bottom: 20px;'>
+            <h1 style='margin: 0; font-size: 28px;'>BIENVENIDO A</h1>
+            <h1 style='margin: 0; font-size: 36px; font-family: "Courier New", Courier, monospace; letter-spacing: 4px; color: #ffffff;'>DERBYsystem</h1>
+            <div style='margin-top: 25px;'>
+                <p style='font-size: 18px; margin-bottom: 8px;'>Escribe una clave única para tu evento o mesa.</p>
+                <p style='font-size: 14px; opacity: 0.8; line-height: 1.6; max-width: 80%; margin: 0 auto;'>
+                    <b>Seguridad:</b> Esta clave es tu llave de acceso. Evita nombres comunes; 
+                    si alguien más la usa, podrá ver tu información. 
+                    Usa una combinación difícil para proteger tus datos.
+                </p>
+            </div>
         </div>
     """, unsafe_allow_html=True)
     
-    # Placeholder eliminado y texto centrado visualmente por la estructura superior
+    # Campo de texto sin placeholder
     nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="").upper().strip()
     
     if st.button("ENTRAR AL SISTEMA", use_container_width=True):
