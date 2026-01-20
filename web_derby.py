@@ -125,7 +125,7 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- FUNCIÓN DE PDF ACTUALIZADA ---
+# --- FUNCIÓN DE PDF ---
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
@@ -135,7 +135,6 @@ def generar_pdf(partidos, n_gallos):
     zona_horaria = pytz.timezone('America/Mexico_City')
     ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
     
-    # Encabezado - Diseño Profesional y Creíble
     data_header = [
         [Paragraph("<font color='white' size=22><b>DerbySystem</b></font>", styles['Title'])],
         [Paragraph("<font color='#E67E22' size=14><b>https://tuderby.streamlit.app</b></font>", styles['Normal'])],
@@ -201,7 +200,6 @@ def generar_pdf(partidos, n_gallos):
         elements.append(t)
         elements.append(Spacer(1, 20))
     
-    # Sección de Firmas
     elements.append(Spacer(1, 40))
     data_firmas = [
         ["__________________________", " ", "__________________________"],
@@ -215,7 +213,6 @@ def generar_pdf(partidos, n_gallos):
     elements.append(t_firmas)
     
     elements.append(Spacer(1, 30))
-    # FRASE CORREGIDA: Sin prometer resultados
     elements.append(Paragraph(f"<font color='grey' size=8>SISTEMA DE GESTIÓN DIGITAL - DerbySystem v2.0</font>", styles['Normal']))
     doc.build(elements)
     return buffer.getvalue()
@@ -301,12 +298,36 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- ACCESO ADMIN ---
+# --- ACCESO ADMIN Y MANUAL ---
 with st.sidebar:
-    st.write(f"Sesión activa: {st.session_state.id_usuario}")
-    if st.button("🚪 CERRAR SESIÓN"):
+    st.write(f"Sesión activa: **{st.session_state.id_usuario}**")
+    if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
         st.session_state.id_usuario = ""
         st.rerun()
+    
+    st.divider()
+    
+    # MANUAL DE USUARIO INTEGRADO
+    with st.expander("📖 MANUAL DE OPERACIÓN"):
+        st.markdown("""
+        ### Guía Rápida
+        **1. Configuración**
+        Define los 'Gallos por partido' antes de registrar. Se bloquea tras el primer registro por seguridad.
+        
+        **2. Registro de Pesos**
+        Ingresa el nombre y pesos. El sistema asigna el **anillo automático** por orden de llegada.
+        
+        **3. Edición**
+        Haz doble clic en la tabla para corregir. Usa la casilla ❌ para borrar un partido.
+        
+        **4. Cotejo (Sorteo)**
+        El sistema empareja por peso evitando peleas entre el mismo partido. Diferencias > 80g resaltan en **rojo**.
+        
+        **5. Impresión**
+        Descarga el PDF. Incluye folios de anillos y espacios para firmas legales.
+        """)
+
+    st.divider()
     acceso = st.text_input("Acceso Admin:", type="password")
 
 if acceso == "28days":
