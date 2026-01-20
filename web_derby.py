@@ -21,15 +21,20 @@ if "id_usuario" not in st.session_state:
 # Pantalla de entrada para que no se pierdan los datos
 if st.session_state.id_usuario == "":
     st.markdown("""
-        <div style='text-align: center; padding: 20px; background-color: #2c3e50; border-radius: 10px; color: white;'>
-            <h2>BIENVENIDO  DERBYsystem</h2>
-            <p> Escribe una clave única para tu evento o mesa.<br>
-                Seguridad: Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
-                Usa una combinación difícil para proteger tus datos.</p>
+        <div style='text-align: center; padding: 30px; background-color: #2c3e50; border-radius: 15px; color: white;'>
+            <h2 style='margin-bottom: 10px;'>🏟️ BIENVENIDO A DERBYsystem</h2>
+            <p style='font-size: 18px; margin-bottom: 15px;'>
+                Ingresa tu clave de acceso personalizada.
+            </p>
+            <p style='font-size: 14px; opacity: 0.9;'>
+                <strong>Nota de seguridad:</strong> El nombre del evento funciona como tu llave de recuperación. 
+                Usa un nombre complejo y privado para evitar que otros usuarios coincidan con tu clave y vean tus datos.
+            </p>
         </div>
     """, unsafe_allow_html=True)
     
-    nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
+    # Se eliminó el placeholder para mayor seguridad
+    nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="").upper().strip()
     
     if st.button("ENTRAR AL SISTEMA", use_container_width=True):
         if nombre_acceso:
@@ -122,7 +127,6 @@ def generar_pdf(partidos, n_gallos):
         pelea_n = 1
         while len(lista) >= 2:
             rojo = lista.pop(0)
-            # Lógica: No pelear contra el mismo dueño (ignora números al final)
             v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
             if v_idx is not None:
                 verde = lista.pop(v_idx)
