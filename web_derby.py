@@ -41,7 +41,7 @@ if st.session_state.id_usuario == "":
     
     col_a, col_b, col_c = st.columns([0.05, 0.9, 0.05])
     with col_b:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí", type="password").upper().strip()
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí").upper().strip()
         
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
@@ -58,21 +58,32 @@ TOLERANCIA = 0.080
 # --- ESTILOS DE INTERFAZ INTERNA ---
 st.markdown("""
     <style>
-    /* Ajuste para que el título quepa en celulares */
-    h1 {
-        font-size: clamp(1.4rem, 7vw, 2.5rem) !important;
-        white-space: nowrap !important;
-        overflow: visible !important;
-        line-height: 1.1 !important;
-        padding-top: 5px !important;
-    }
-
+    /* Estilo General de Botones Naranjas */
     div.stButton > button {
         background-color: #E67E22 !important;
         color: white !important;
         font-weight: bold !important;
         border-radius: 8px !important;
         border: none !important;
+    }
+
+    /* ESTILO EXCLUSIVO PARA EL BOTÓN DE REPORTE (PDF) */
+    /* Lo identificamos por el icono de descarga o el texto si Streamlit lo permite, 
+       pero la mejor forma es inyectar un estilo que detecte el label específico */
+    button[description="generar_reporte_pdf"] {
+        background-color: #27ae60 !important; /* Verde Llamativo */
+        color: white !important;
+        font-size: 20px !important;
+        height: 60px !important;
+        border: 2px solid #1e8449 !important;
+        box-shadow: 0px 4px 15px rgba(39, 174, 96, 0.4) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    button[description="generar_reporte_pdf"]:hover {
+        background-color: #2ecc71 !important;
+        box-shadow: 0px 6px 20px rgba(46, 204, 113, 0.6) !important;
+        transform: translateY(-2px);
     }
 
     .caja-anillo {
@@ -100,26 +111,30 @@ st.markdown("""
         display: block; width: 100%; color: black !important;
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; margin-top: 2px;}
+    .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
     
-    /* Ajustes Pestaña Ayuda para Celular */
+    .col-num { width: 22px; }
+    .col-g { width: 25px; }
+    .col-an { width: 35px; }
+    .col-e { width: 22px; background-color: #f1f2f6; }
+    .col-dif { width: 45px; }
+    .col-partido { width: auto; }
+
+    /* Estilo para el Manual Corporativo */
     .manual-card {
         background-color: #f8f9fa;
-        padding: 15px;
+        padding: 20px;
         border-left: 5px solid #E67E22;
         border-radius: 5px;
-        margin-bottom: 10px;
+        margin-bottom: 20px;
     }
     .manual-header {
         color: #1a1a1a;
         font-weight: bold;
         text-transform: uppercase;
-        font-size: 0.85rem;
-        margin-bottom: 5px;
-    }
-    .manual-body {
-        color: #333;
-        font-size: 0.8rem;
-        line-height: 1.3;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -153,48 +168,89 @@ def generar_pdf(partidos, n_gallos):
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
     elements = []
     styles = getSampleStyleSheet()
+    
     zona_horaria = pytz.timezone('America/Mexico_City')
     ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
-    data_header = [[Paragraph("<font color='white' size=22><b>DerbySystem</b></font>", styles['Title'])],
-                   [Paragraph("<font color='#E67E22' size=14><b>https://tuderby.streamlit.app</b></font>", styles['Normal'])],
-                   [Paragraph(f"<font color='white' size=9>REPORTE TÉCNICO DE COTEJO | {ahora}</font>", styles['Normal'])]]
+    
+    data_header = [
+        [Paragraph("<font color='white' size=22><b>DerbySystem</b></font>", styles['Title'])],
+        [Paragraph("<font color='#E67E22' size=14><b>https://tuderby.streamlit.app</b></font>", styles['Normal'])],
+        [Paragraph(f"<font color='white' size=9>REPORTE TÉCNICO DE COTEJO | {ahora}</font>", styles['Normal'])]
+    ]
     header_table = Table(data_header, colWidths=[500])
-    header_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.black),
-                                      ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")),
-                                      ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                      ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                                      ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-                                      ('TOPPADDING', (0, 0), (-1, -1), 10)]))
-    elements.append(header_table); elements.append(Spacer(1, 20))
+    header_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+        ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 20))
+
     for r in range(1, n_gallos + 1):
-        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2'])); elements.append(Spacer(1, 8))
+        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
+        elements.append(Spacer(1, 8))
+        
         col_g = f"G{r}"
         lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
         data = [["#", "G", "PARTIDO (ROJO)", "AN.", "E", "DIF.", "AN.", "PARTIDO (VERDE)", "G"]]
+        
         pelea_n = 1
         while len(lista) >= 2:
             rojo = lista.pop(0)
             v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
+            
             if v_idx is not None:
-                verde = lista.pop(v_idx); d = abs(rojo[col_g] - verde[col_g])
+                verde = lista.pop(v_idx)
+                d = abs(rojo[col_g] - verde[col_g])
                 idx_r = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                 idx_v = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==verde["PARTIDO"])
                 an_r, an_v = (idx_r * n_gallos) + r, (idx_v * n_gallos) + r
-                data.append([pelea_n, "[  ]", Paragraph(f"<b>{rojo['PARTIDO']}</b><br/><font size=8>({rojo[col_g]:.3f})</font>", styles['Normal']),
-                             f"{an_r:03}", "[  ]", f"{d:.3f}", f"{an_v:03}", Paragraph(f"<b>{verde['PARTIDO']}</b><br/><font size=8>({verde[col_g]:.3f})</font>", styles['Normal']), "[  ]"])
+                
+                data.append([
+                    pelea_n, "[  ]", 
+                    Paragraph(f"<b>{rojo['PARTIDO']}</b><br/><font size=8>({rojo[col_g]:.3f})</font>", styles['Normal']),
+                    f"{an_r:03}", "[  ]", f"{d:.3f}", f"{an_v:03}", 
+                    Paragraph(f"<b>{verde['PARTIDO']}</b><br/><font size=8>({verde[col_g]:.3f})</font>", styles['Normal']),
+                    "[  ]"
+                ])
                 pelea_n += 1
             else: break
+        
         t = Table(data, colWidths=[20, 30, 140, 30, 30, 40, 30, 140, 30])
-        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")),
-                               ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,-1), 8),
-                               ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('LINEBEFORE', (2,1), (2,-1), 2, colors.red),
-                               ('LINEAFTER', (7,1), (7,-1), 2, colors.green), ('BACKGROUND', (1,1), (1,-1), colors.whitesmoke)]))
-        elements.append(t); elements.append(Spacer(1, 20))
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")),
+            ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0,0), (-1,-1), 8),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.grey),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('LINEBEFORE', (2,1), (2,-1), 2, colors.red),
+            ('LINEAFTER', (7,1), (7,-1), 2, colors.green),
+            ('BACKGROUND', (1,1), (1,-1), colors.whitesmoke),
+            ('BACKGROUND', (4,1), (4,-1), colors.whitesmoke),
+            ('BACKGROUND', (8,1), (8,-1), colors.whitesmoke),
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 20))
+    
     elements.append(Spacer(1, 40))
-    t_firmas = Table([["__________________________", " ", "__________________________"], ["FIRMA JUEZ DE PLAZA", " ", "FIRMA MESA DE CONTROL"]], colWidths=[200, 100, 200])
-    t_firmas.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTSIZE', (0,0), (-1,-1), 9)]))
-    elements.append(t_firmas); elements.append(Spacer(1, 30))
-    elements.append(Paragraph("<font color='grey' size=8>SISTEMA DE GESTIÓN DIGITAL - DerbySystem v2.0</font>", styles['Normal']))
+    data_firmas = [
+        ["__________________________", " ", "__________________________"],
+        ["FIRMA JUEZ DE PLAZA", " ", "FIRMA MESA DE CONTROL"]
+    ]
+    t_firmas = Table(data_firmas, colWidths=[200, 100, 200])
+    t_firmas.setStyle(TableStyle([
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('FONTSIZE', (0,0), (-1,-1), 9),
+    ]))
+    elements.append(t_firmas)
+    
+    elements.append(Spacer(1, 30))
+    elements.append(Paragraph(f"<font color='grey' size=8>SISTEMA DE GESTIÓN DIGITAL - DerbySystem v2.0</font>", styles['Normal']))
     doc.build(elements)
     return buffer.getvalue()
 
@@ -202,16 +258,16 @@ def generar_pdf(partidos, n_gallos):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-# TÍTULO AJUSTADO
-st.title("🏆 MESA DE CONTROL")
+st.title(f"🏆 {st.session_state.id_usuario}")
 
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO", "🏆 COTEJO", "📑 PROTOCOLO"])
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g = st.columns([2,1])
-    g_sel = col_g.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
+    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
+
     with st.form("f_nuevo", clear_on_submit=True):
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
@@ -223,7 +279,10 @@ with t_reg:
             if nombre:
                 nuevo = {"PARTIDO": nombre}
                 for i in range(g_sel): nuevo[f"G{i+1}"] = st.session_state[f"p_{i}"]
-                st.session_state.partidos.append(nuevo); guardar(st.session_state.partidos); st.rerun()
+                st.session_state.partidos.append(nuevo)
+                guardar(st.session_state.partidos)
+                st.rerun()
+
     if st.session_state.partidos:
         st.markdown("### ✏️ Tabla de Edición")
         display_data = []
@@ -255,7 +314,17 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-            st.download_button(label="📥 GENERAR REPORTE OFICIAL (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True, type="primary")
+            # BOTÓN LLAMATIVO CON IDENTIFICADOR DE AYUDA
+            st.download_button(
+                label="📥 GENERAR REPORTE OFICIAL (PDF)", 
+                data=pdf_bytes, 
+                file_name=f"cotejo_{st.session_state.id_usuario}.pdf", 
+                mime="application/pdf", 
+                use_container_width=True,
+                help="Haz clic aquí para finalizar el sorteo e imprimir el reporte oficial.",
+                type="primary" # Streamlit aplica un estilo base, el CSS hace el resto
+            )
+            # Nota: Streamlit no permite IDs directos fácilmente, usamos el CSS para 'primary' si es necesario
         except Exception as e: st.error(f"Error: {e}")
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
@@ -277,33 +346,65 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
+# --- MANUAL CON DISEÑO CORPORATIVO ---
 with t_ayu:
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
-    
-    # Punto 01
-    st.markdown('<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><div class="manual-body"><b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos).<br><b>Ingreso:</b> Capture nombre del partido y pesos con 3 decimales.</div></div>', unsafe_allow_html=True)
-    
-    # Punto 02 (Restaurado)
-    st.markdown('<div class="manual-card"><div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div><div class="manual-body"><b>Folios de Anillo:</b> El sistema genera automáticamente el ID de anillo según el orden de registro global para evitar duplicados.</div></div>', unsafe_allow_html=True)
-    
-    # Punto 03
-    st.markdown('<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><div class="manual-body"><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa.<br><b>Seguridad:</b> Bloqueo automático de peleas entre gallos del mismo partido.</div></div>', unsafe_allow_html=True)
-    
-    # Punto 04 (Restaurado)
-    st.markdown('<div class="manual-card"><div class="manual-header">04. CERTIFICACIÓN PDF</div><div class="manual-body"><b>Emisión:</b> Genera el documento legal del evento con marca de tiempo y URL de auditoría para firmas oficiales.</div></div>', unsafe_allow_html=True)
-
+    col_1, col_2 = st.columns(2)
+    with col_1:
+        st.markdown("""
+        <div class="manual-card">
+            <div class="manual-header">01. INICIALIZACIÓN DE DATOS</div>
+            <p style='color:#333; font-size:0.85rem;'>
+            <b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos). El sistema requiere esta definición para establecer los rangos de identificación.
+            <br><br>
+            <b>Ingreso:</b> Capture el nombre oficial del partido y asigne pesos con 3 decimales para máxima precisión en el cotejo.
+            </p>
+        </div>
+        <div class="manual-card">
+            <div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div>
+            <p style='color:#333; font-size:0.85rem;'>
+            <b>Folios de Anillo:</b> El motor de DerbySystem genera automáticamente el ID de anillo según el índice de registro global. 
+            <br><br>
+            <i>Este proceso es inalterable para garantizar la trazabilidad del evento.</i>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_2:
+        st.markdown("""
+        <div class="manual-card">
+            <div class="manual-header">03. PROCESAMIENTO DE SORTEO</div>
+            <p style='color:#333; font-size:0.85rem;'>
+            <b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa. 
+            <br><br>
+            <b>Restricción de Seguridad:</b> Bloqueo automático de enfrentamientos intragrupales (partido vs mismo partido).
+            </p>
+        </div>
+        <div class="manual-card">
+            <div class="manual-header">04. CERTIFICACIÓN PDF</div>
+            <p style='color:#333; font-size:0.85rem;'>
+            <b>Emisión:</b> La descarga del PDF genera el documento legal del evento.
+            <br><br>
+            <b>Validación:</b> El reporte incluye marca de tiempo (Timestamp) y URL de auditoría para respaldo de la mesa de control.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
+    st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
+# --- BARRA LATERAL ---
 with st.sidebar:
     st.write(f"Sesión activa: **{st.session_state.id_usuario}**")
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
-        st.session_state.id_usuario = ""; st.rerun()
+        st.session_state.id_usuario = ""
+        st.rerun()
     st.divider()
     acceso = st.text_input("Acceso Admin:", type="password")
+
 if acceso == "28days":
     st.divider()
     archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
     for arch in archivos:
         with st.expander(f"Ver: {arch}"):
             with open(arch, "r") as f: st.text(f.read())
-            if st.button("Eliminar", key=arch): os.remove(arch); st.rerun()
+            if st.button("Eliminar", key=arch):
+                os.remove(arch); st.rerun()
