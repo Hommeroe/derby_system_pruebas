@@ -254,7 +254,7 @@ if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
 # Cambio solicitado: Título genérico y clave en pequeño debajo
-st.title("🏆 Panel de Control")
+st.title("Panel de Control")
 st.markdown(f"<small style='color:gray;'>ID de Mesa: {st.session_state.id_usuario}</small>", unsafe_allow_html=True)
 
 t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
