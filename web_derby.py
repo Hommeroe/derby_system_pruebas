@@ -31,6 +31,8 @@ if st.session_state.id_usuario == "":
         "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.5; text-align:center;'>"
         "Plataforma de <b>sorteo digital.</b> Garantiza transparencia total, orden y combates gallisticos 100% justos mediante tecnología de emparejamiento inteligente."
         "</div>"
+        "<hr style='border:0.5px solid #333; margin:15px 0;'>"
+        "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Esta clave es tu llave de acceso privada. Evita nombres comunes. Si alguien más la usa podrá visualizar tu información. Usa una combinación compleja para proteger tus registros.</div>"
         "</div></div>"
     )
     
@@ -39,7 +41,8 @@ if st.session_state.id_usuario == "":
     
     col_a, col_b, col_c = st.columns([0.05, 0.9, 0.05])
     with col_b:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí").upper().strip()
+        # SE AÑADE type="password" PARA OCULTAR LA CLAVE MIENTRAS SE ESCRIBE
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí", type="password").upper().strip()
         
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
@@ -66,8 +69,10 @@ st.markdown("""
     }
 
     /* ESTILO EXCLUSIVO PARA EL BOTÓN DE REPORTE (PDF) */
+    /* Lo identificamos por el icono de descarga o el texto si Streamlit lo permite, 
+       pero la mejor forma es inyectar un estilo que detecte el label específico */
     button[description="generar_reporte_pdf"] {
-        background-color: #27ae60 !important;
+        background-color: #27ae60 !important; /* Verde Llamativo */
         color: white !important;
         font-size: 20px !important;
         height: 60px !important;
@@ -116,6 +121,7 @@ st.markdown("""
     .col-dif { width: 45px; }
     .col-partido { width: auto; }
 
+    /* Estilo para el Manual Corporativo */
     .manual-card {
         background-color: #f8f9fa;
         padding: 20px;
@@ -309,6 +315,7 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
+            # BOTÓN LLAMATIVO CON IDENTIFICADOR DE AYUDA
             st.download_button(
                 label="📥 GENERAR REPORTE OFICIAL (PDF)", 
                 data=pdf_bytes, 
@@ -316,8 +323,9 @@ with t_cot:
                 mime="application/pdf", 
                 use_container_width=True,
                 help="Haz clic aquí para finalizar el sorteo e imprimir el reporte oficial.",
-                type="primary"
+                type="primary" # Streamlit aplica un estilo base, el CSS hace el resto
             )
+            # Nota: Streamlit no permite IDs directos fácilmente, usamos el CSS para 'primary' si es necesario
         except Exception as e: st.error(f"Error: {e}")
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
@@ -339,6 +347,7 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
+# --- MANUAL CON DISEÑO CORPORATIVO ---
 with t_ayu:
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
     col_1, col_2 = st.columns(2)
@@ -376,13 +385,14 @@ with t_ayu:
             <p style='color:#333; font-size:0.85rem;'>
             <b>Emisión:</b> La descarga del PDF genera el documento legal del evento.
             <br><br>
-            <b>Validación:</b> El reporte incluye marca de tiempo (Timestamp) y URL de auditoría para respaldo de la mesa de control.
+            <b>Validation:</b> El reporte incluye marca de tiempo (Timestamp) y URL de auditoría para respaldo de la mesa de control.
             </p>
         </div>
         """, unsafe_allow_html=True)
     st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
     st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
+# --- BARRA LATERAL ---
 with st.sidebar:
     st.write(f"Sesión activa: **{st.session_state.id_usuario}**")
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
