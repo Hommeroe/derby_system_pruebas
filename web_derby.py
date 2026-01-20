@@ -18,27 +18,29 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- ELIMINACIÓN TOTAL DEL CUADRO BLANCO ---
+# --- SOLUCIÓN RADICAL AL CUADRO BLANCO ---
 st.markdown("""
     <style>
-    /* Forzar el fondo oscuro en la raíz absoluta de la página */
-    html, body, [data-testid="stAppViewContainer"], .main {
+    /* 1. Pintar el fondo raíz del navegador */
+    html, body {
         background-color: #0e1117 !important;
     }
 
-    /* Eliminar el fondo blanco del bloque de contenido y el espacio extra */
-    [data-testid="stAppViewBlockContainer"] {
+    /* 2. Forzar oscuridad en todos los contenedores de Streamlit */
+    .stApp, 
+    [data-testid="stAppViewContainer"], 
+    [data-testid="stHeader"], 
+    [data-testid="stMainViewContainer"],
+    [data-testid="stAppViewBlockContainer"],
+    [data-testid="stCanvas"] {
         background-color: #0e1117 !important;
-        padding-bottom: 50px !important; /* Espacio de seguridad oscuro */
     }
 
-    /* Quitar el encabezado y pie de página que a veces se vuelven blancos */
-    [data-testid="stHeader"], footer {
-        background-color: rgba(0,0,0,0) !important;
-        visibility: hidden !important;
-    }
-
-    /* Estilo de la tarjeta de bienvenida (Tu diseño actual) */
+    /* 3. Eliminar el espacio blanco al final (fugas de color) */
+    footer {visibility: hidden !important;}
+    [data-testid="stActionButtonIcon"] { display: none !important; }
+    
+    /* 4. Estilo de la tarjeta de bienvenida */
     .welcome-card {
         text-align: center; 
         padding: 20px; 
@@ -46,15 +48,17 @@ st.markdown("""
         border-radius: 15px; 
         color: white; 
         max-width: 400px;
-        margin: 20px auto 10px auto;
+        margin: 10px auto;
         box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
-    .welcome-card h2 { font-size: 1.1rem !important; margin: 0 !important; opacity: 0.8; }
-    .welcome-card h1 { font-size: 1.8rem !important; margin: 5px 0 15px 0 !important; letter-spacing: 1px; }
-    .welcome-card p { font-size: 0.85rem !important; line-height: 1.3; }
+
+    .welcome-card h1 { font-size: 1.8rem !important; margin: 10px 0 !important; }
+    .welcome-card p { font-size: 0.9rem !important; opacity: 0.9; }
     
-    /* Ajuste de los inputs para que no se peguen */
-    .stTextInput { margin-top: 10px; }
+    /* 5. Ajuste para que los inputs se vean bien sobre el fondo oscuro */
+    .stTextInput label, .stNumberInput label {
+        color: white !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -62,12 +66,12 @@ st.markdown("""
 if st.session_state.id_usuario == "":
     st.markdown("""
         <div class="welcome-card">
-            <h2>BIENVENIDO A</h2>
+            <h2 style='font-size: 1rem; opacity: 0.7; margin:0;'>BIENVENIDO A</h2>
             <h1>DERBYsystem</h1>
-            <p>Escribe una clave única para tu evento o mesa.<br><br>
-            <span style='color: #bdc3c7; font-size: 0.75rem;'>
-            <b>Seguridad:</b> Esta clave es tu llave de acceso. Evita nombres comunes para proteger tus datos.
-            </span></p>
+            <p>Escribe una clave única para tu evento o mesa.</p>
+            <p style='font-size: 0.75rem; color: #bdc3c7; margin-top: 15px;'>
+            <b>Seguridad:</b> Evita nombres comunes para proteger tus datos.
+            </p>
         </div>
     """, unsafe_allow_html=True)
     
@@ -82,10 +86,11 @@ if st.session_state.id_usuario == "":
                 st.warning("⚠️ Escribe una clave.")
     st.stop()
 
-# --- CÓDIGO INTERNO (DB Y LÓGICA) ---
+# --- EL RESTO DEL CÓDIGO (NO SE CAMBIA EL DISEÑO, SOLO EL FONDO) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
+# Re-aplicamos el estilo de las tablas y anillos para que no se pierda
 st.markdown("""
     <style>
     .caja-anillo {
@@ -114,13 +119,6 @@ st.markdown("""
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
     .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
-    
-    .col-num { width: 20px; }
-    .col-g { width: 22px; }
-    .col-an { width: 32px; }
-    .col-e { width: 22px; background-color: #f1f2f6; }
-    .col-dif { width: 42px; }
-    div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -256,7 +254,6 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- ACCESO ADMIN ---
 with st.sidebar:
     st.write(f"Sesión: {st.session_state.id_usuario}")
     if st.button("🚪 CERRAR SESIÓN"):
