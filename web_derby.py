@@ -73,23 +73,21 @@ st.markdown("""
     }
     .tabla-final td, .tabla-final th { 
         border: 1px solid #bdc3c7; text-align: center; 
-        padding: 2px; height: auto; min-height: 38px; color: black !important;
+        padding: 5px 2px; height: auto; color: black !important;
     }
     .nombre-partido { 
-        font-weight: bold; font-size: 10px; line-height: 1.1;
-        white-space: normal; /* Cambiado para permitir salto de línea */
-        word-wrap: break-word;
+        font-weight: bold; font-size: 10px; line-height: 1.2;
+        white-space: normal; word-wrap: break-word; /* Ajuste para nombres largos */
         display: block; width: 100%; color: black !important;
-        padding: 2px 0;
     }
-    .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
+    .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; margin-top: 2px;}
     .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
     
-    .col-num { width: 20px; }
-    .col-g { width: 22px; }
-    .col-an { width: 32px; }
+    .col-num { width: 22px; }
+    .col-g { width: 25px; }
+    .col-an { width: 35px; }
     .col-e { width: 22px; background-color: #f1f2f6; }
-    .col-dif { width: 42px; }
+    .col-dif { width: 45px; }
     .col-partido { width: auto; }
 
     div.stButton > button {
@@ -103,7 +101,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- LÓGICA DE FUNCIONAMIENTO (SIN CAMBIOS) ---
+# --- LÓGICA DE FUNCIONAMIENTO ---
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -151,7 +149,7 @@ def generar_pdf(partidos, n_gallos):
                 data.append([pelea_n, " ", f"{rojo['PARTIDO']}\n({rojo[col_g]:.3f})", f"{an_r:03}", " ", f"{d:.3f}", f"{an_v:03}", f"{verde['PARTIDO']}\n({verde[col_g]:.3f})", " "])
                 pelea_n += 1
             else: break
-        t = Table(data, colWidths=[20, 25, 140, 35, 25, 45, 35, 140, 25])
+        t = Table(data, colWidths=[22, 25, 140, 35, 25, 45, 35, 140, 25])
         t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,-1), 8), ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
         elements.append(t); elements.append(Spacer(1, 20))
     doc.build(elements)
@@ -220,7 +218,8 @@ with t_cot:
             st.download_button(label="📥 DESCARGAR COTEJO (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True)
         except Exception as e: st.error(f"Error al generar PDF: {e}")
         st.divider()
-        for r in range(1, n_gallos + 1): # Usamos n_gallos cargado al inicio
+        # CORRECCIÓN: Usar st.session_state.n_gallos para evitar NameError
+        for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g = f"G{r}"
             lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g])
@@ -235,7 +234,7 @@ with t_cot:
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
                     
-                    # Ahora usamos el nombre completo sin recortar
+                    # AJUSTE: Se eliminó el truncado [:15] para que los nombres largos se vean completos
                     html += f"<tr><td>{pelea_n}</td><td class='cuadro'>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td><td class='cuadro'>□</td></tr>"
                     pelea_n += 1
                 else: break
