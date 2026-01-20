@@ -75,22 +75,6 @@ st.markdown("""
         border: none !important;
     }
 
-    button[description="generar_reporte_pdf"] {
-        background-color: #27ae60 !important;
-        color: white !important;
-        font-size: 20px !important;
-        height: 60px !important;
-        border: 2px solid #1e8449 !important;
-        box-shadow: 0px 4px 15px rgba(39, 174, 96, 0.4) !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    button[description="generar_reporte_pdf"]:hover {
-        background-color: #2ecc71 !important;
-        box-shadow: 0px 6px 20px rgba(46, 204, 113, 0.6) !important;
-        transform: translateY(-2px);
-    }
-
     .caja-anillo {
         background-color: #1a1a1a; color: #E67E22; padding: 2px;
         border-radius: 0px 0px 5px 5px; font-weight: bold; 
@@ -116,29 +100,26 @@ st.markdown("""
         display: block; width: 100%; color: black !important;
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; margin-top: 2px;}
-    .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
     
-    .col-num { width: 22px; }
-    .col-g { width: 25px; }
-    .col-an { width: 35px; }
-    .col-e { width: 22px; background-color: #f1f2f6; }
-    .col-dif { width: 45px; }
-    .col-partido { width: auto; }
-
+    /* Ajustes Pestaña Ayuda para Celular */
     .manual-card {
         background-color: #f8f9fa;
-        padding: 20px;
+        padding: 15px;
         border-left: 5px solid #E67E22;
         border-radius: 5px;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
     .manual-header {
         color: #1a1a1a;
         font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        font-size: 0.9rem;
-        margin-bottom: 10px;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+    .manual-body {
+        color: #333;
+        font-size: 0.8rem;
+        line-height: 1.3;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -221,15 +202,15 @@ def generar_pdf(partidos, n_gallos):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-# TÍTULO AJUSTADO PARA QUE QUEPA SIEMPRE
+# TÍTULO AJUSTADO
 st.title("🏆 MESA DE CONTROL")
 
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO", "🏆 COTEJO", "📑 PROTOCOLO"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g = st.columns([2,1])
-    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
+    g_sel = col_g.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
     with st.form("f_nuevo", clear_on_submit=True):
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
@@ -298,11 +279,19 @@ with t_cot:
 
 with t_ayu:
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
-    col_1, col_2 = st.columns(2)
-    with col_1:
-        st.markdown('<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><p style="color:#333; font-size:0.85rem;"><b>Pestaña Registro:</b> Configure modalidad de combate.<br><br><b>Ingreso:</b> Capture nombre y pesos con 3 decimales.</p></div>', unsafe_allow_html=True)
-    with col_2:
-        st.markdown('<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><p style="color:#333; font-size:0.85rem;"><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital.<br><br><b>Seguridad:</b> Bloqueo automático intragrupal.</p></div>', unsafe_allow_html=True)
+    
+    # Punto 01
+    st.markdown('<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><div class="manual-body"><b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos).<br><b>Ingreso:</b> Capture nombre del partido y pesos con 3 decimales.</div></div>', unsafe_allow_html=True)
+    
+    # Punto 02 (Restaurado)
+    st.markdown('<div class="manual-card"><div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div><div class="manual-body"><b>Folios de Anillo:</b> El sistema genera automáticamente el ID de anillo según el orden de registro global para evitar duplicados.</div></div>', unsafe_allow_html=True)
+    
+    # Punto 03
+    st.markdown('<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><div class="manual-body"><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa.<br><b>Seguridad:</b> Bloqueo automático de peleas entre gallos del mismo partido.</div></div>', unsafe_allow_html=True)
+    
+    # Punto 04 (Restaurado)
+    st.markdown('<div class="manual-card"><div class="manual-header">04. CERTIFICACIÓN PDF</div><div class="manual-body"><b>Emisión:</b> Genera el documento legal del evento con marca de tiempo y URL de auditoría para firmas oficiales.</div></div>', unsafe_allow_html=True)
+
     st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
 
 with st.sidebar:
