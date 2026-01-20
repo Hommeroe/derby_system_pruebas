@@ -73,12 +73,14 @@ st.markdown("""
     }
     .tabla-final td, .tabla-final th { 
         border: 1px solid #bdc3c7; text-align: center; 
-        padding: 2px; height: 38px; color: black !important;
+        padding: 2px; height: auto; min-height: 38px; color: black !important;
     }
     .nombre-partido { 
-        font-weight: bold; font-size: 10px; line-height: 1;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        font-weight: bold; font-size: 10px; line-height: 1.1;
+        white-space: normal; /* Cambiado para permitir salto de línea */
+        word-wrap: break-word;
         display: block; width: 100%; color: black !important;
+        padding: 2px 0;
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
     .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
@@ -218,7 +220,7 @@ with t_cot:
             st.download_button(label="📥 DESCARGAR COTEJO (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True)
         except Exception as e: st.error(f"Error al generar PDF: {e}")
         st.divider()
-        for r in range(1, st.session_state.n_gallos + 1):
+        for r in range(1, n_gallos + 1): # Usamos n_gallos cargado al inicio
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g = f"G{r}"
             lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g])
@@ -232,9 +234,9 @@ with t_cot:
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    n_rojo = (rojo['PARTIDO'][:15] + '..') if len(rojo['PARTIDO']) > 15 else rojo['PARTIDO']
-                    n_verde = (verde['PARTIDO'][:15] + '..') if len(verde['PARTIDO']) > 15 else verde['PARTIDO']
-                    html += f"<tr><td>{pelea_n}</td><td class='cuadro'>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{n_rojo}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{n_verde}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td><td class='cuadro'>□</td></tr>"
+                    
+                    # Ahora usamos el nombre completo sin recortar
+                    html += f"<tr><td>{pelea_n}</td><td class='cuadro'>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td><td class='cuadro'>□</td></tr>"
                     pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
