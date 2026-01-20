@@ -20,33 +20,34 @@ if "id_usuario" not in st.session_state:
 
 # Pantalla de entrada
 if st.session_state.id_usuario == "":
-    # CSS para centrar todo de forma profesional y responsiva
+    # CSS para subir el contenido y eliminar el scroll
     st.markdown("""
         <style>
+        /* Eliminar espacio superior de Streamlit */
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 0rem !important;
+        }
         .login-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             width: 100%;
             text-align: center;
-            padding-top: 20px;
         }
         .welcome-card {
             background-color: #2c3e50; 
-            padding: 30px; 
+            padding: 15px 20px; 
             border-radius: 15px; 
             color: white; 
-            width: 90%;
-            max-width: 500px; 
-            margin-bottom: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            width: 95%;
+            max-width: 450px; 
+            margin-bottom: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        /* Ajuste para que el input y botón no se desparramen */
-        .stTextInput, .stButton {
-            width: 90% !important;
-            max-width: 500px !important;
-            margin: 0 auto;
+        /* Ajuste de inputs para que estén más arriba */
+        div[data-testid="stVerticalBlock"] > div:has(div.stTextInput) {
+            gap: 0rem !important;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -54,28 +55,26 @@ if st.session_state.id_usuario == "":
     st.markdown("""
         <div class="login-container">
             <div class="welcome-card">
-                <h1 style='margin: 0; font-size: 1.8rem;'>BIENVENIDOS</h1>
-                <h2 style='margin: 0; font-size: 2.2rem; letter-spacing: 2px;'>DERBYsystem</h2>
-                <hr style='border: 0.5px solid #34495e; margin: 20px 0;'>
-                <p style='font-size: 1rem; line-height: 1.5; opacity: 0.9;'>
-                    Escribe una clave única para tu evento o mesa.<br><br>
-                    <b>Seguridad:</b> Esta clave es tu llave de acceso privada. Evita nombres comunes para proteger tus datos.
+                <h2 style='margin: 0; font-size: 1.4rem;'>BIENVENIDOS</h2>
+                <h1 style='margin: 0; font-size: 1.8rem; letter-spacing: 1px;'>DERBYsystem</h1>
+                <p style='font-size: 0.85rem; line-height: 1.2; margin-top: 10px; opacity: 0.9;'>
+                    Escribe una clave única para tu evento o mesa.
+                    Esta es tu llave privada para proteger tus registros.
                 </p>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
-    # Contenedor centrado para los controles de Streamlit
-    with st.container():
-        _, center_col, _ = st.columns([0.1, 0.8, 0.1]) # Margen mínimo para móvil
-        with center_col:
-            nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
-            if st.button("ENTRAR AL SISTEMA", use_container_width=True):
-                if nombre_acceso:
-                    st.session_state.id_usuario = nombre_acceso
-                    st.rerun()
-                else:
-                    st.warning("⚠️ Por favor, escribe un nombre para entrar.")
+    # Contenedor para el input y botón
+    _, center_col, _ = st.columns([0.05, 0.9, 0.05])
+    with center_col:
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
+        if st.button("ENTRAR AL SISTEMA", use_container_width=True):
+            if nombre_acceso:
+                st.session_state.id_usuario = nombre_acceso
+                st.rerun()
+            else:
+                st.warning("⚠️ Escribe un nombre.")
     st.stop()
 
 # --- EL RESTO DEL CÓDIGO (SE MANTIENE IGUAL) ---
