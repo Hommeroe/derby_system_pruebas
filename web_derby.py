@@ -67,23 +67,6 @@ st.markdown("""
         border: none !important;
     }
 
-    /* ESTILO EXCLUSIVO PARA EL BOTÓN DE REPORTE (PDF) */
-    .stDownloadButton > button {
-        background-color: #27ae60 !important; /* Verde Llamativo */
-        color: white !important;
-        font-size: 20px !important;
-        height: 60px !important;
-        border: 2px solid #1e8449 !important;
-        box-shadow: 0px 4px 15px rgba(39, 174, 96, 0.4) !important;
-        transition: all 0.3s ease !important;
-    }
-    
-    .stDownloadButton > button:hover {
-        background-color: #2ecc71 !important;
-        box-shadow: 0px 6px 20px rgba(46, 204, 113, 0.6) !important;
-        transform: translateY(-2px);
-    }
-
     .caja-anillo {
         background-color: #1a1a1a; color: #E67E22; padding: 2px;
         border-radius: 0px 0px 5px 5px; font-weight: bold; 
@@ -159,7 +142,7 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- FUNCIÓN DE PDF ACTUALIZADA ---
+# --- FUNCIÓN DE PDF (SOLO CAMBIO DE ENCABEZADO SOLICITADO) ---
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
@@ -169,7 +152,7 @@ def generar_pdf(partidos, n_gallos):
     zona_horaria = pytz.timezone('America/Mexico_City')
     ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
     
-    # Encabezado Blanco con Logo Bicolor (DERBY en negro, System en naranja)
+    # Encabezado Blanco con Logo Bicolor
     data_header = [
         [Paragraph("<font color='black' size=24><b>DERBY</b></font><font color='#E67E22' size=24><b>System</b></font>", styles['Title'])],
         [Paragraph("<font color='#555' size=14><b>Reporte Oficial de Cotejo</b></font>", styles['Normal'])],
@@ -177,7 +160,7 @@ def generar_pdf(partidos, n_gallos):
     ]
     header_table = Table(data_header, colWidths=[500])
     header_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.white), # Fondo blanco solicitado
+        ('BACKGROUND', (0, 0), (-1, -1), colors.white),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
@@ -234,15 +217,9 @@ def generar_pdf(partidos, n_gallos):
         elements.append(Spacer(1, 20))
     
     elements.append(Spacer(1, 40))
-    data_firmas = [
-        ["__________________________", " ", "__________________________"],
-        ["FIRMA JUEZ DE PLAZA", " ", "FIRMA MESA DE CONTROL"]
-    ]
+    data_firmas = [["__________________________", " ", "__________________________"], ["FIRMA JUEZ DE PLAZA", " ", "FIRMA MESA DE CONTROL"]]
     t_firmas = Table(data_firmas, colWidths=[200, 100, 200])
-    t_firmas.setStyle(TableStyle([
-        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
-        ('FONTSIZE', (0,0), (-1,-1), 9),
-    ]))
+    t_firmas.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTSIZE', (0,0), (-1,-1), 9)]))
     elements.append(t_firmas)
     
     elements.append(Spacer(1, 30))
@@ -255,7 +232,6 @@ if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
 st.title(f"🏆 {st.session_state.id_usuario}")
-
 t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
 
 with t_reg:
@@ -275,9 +251,7 @@ with t_reg:
             if nombre:
                 nuevo = {"PARTIDO": nombre}
                 for i in range(g_sel): nuevo[f"G{i+1}"] = st.session_state[f"p_{i}"]
-                st.session_state.partidos.append(nuevo)
-                guardar(st.session_state.partidos)
-                st.rerun()
+                st.session_state.partidos.append(nuevo); guardar(st.session_state.partidos); st.rerun()
 
     if st.session_state.partidos:
         st.markdown("### ✏️ Tabla de Edición")
@@ -310,13 +284,7 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-            st.download_button(
-                label="📥 GENERAR REPORTE OFICIAL (PDF)", 
-                data=pdf_bytes, 
-                file_name=f"cotejo_{st.session_state.id_usuario}.pdf", 
-                mime="application/pdf", 
-                use_container_width=True
-            )
+            st.download_button(label="📥 GENERAR REPORTE OFICIAL (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True)
         except Exception as e: st.error(f"Error: {e}")
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
@@ -342,27 +310,11 @@ with t_ayu:
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
     col_1, col_2 = st.columns(2)
     with col_1:
-        st.markdown("""
-        <div class="manual-card">
-            <div class="manual-header">01. INICIALIZACIÓN DE DATOS</div>
-            <p style='color:#333; font-size:0.85rem;'>
-            <b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos). El sistema requiere esta definición para establecer los rangos de identificación.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos). El sistema requiere esta definición para establecer los rangos de identificación.<br><br><b>Ingreso:</b> Capture el nombre oficial del partido y asigne pesos con 3 decimales para máxima precisión en el cotejo.</p></div><div class="manual-card"><div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div><p style='color:#333; font-size:0.85rem;'><b>Folios de Anillo:</b> El motor de DerbySystem genera automáticamente el ID de anillo según el índice de registro global.<br><br><i>Este proceso es inalterable para garantizar la trazabilidad del evento.</i></p></div>""", unsafe_allow_html=True)
     with col_2:
-        st.markdown("""
-        <div class="manual-card">
-            <div class="manual-header">03. PROCESAMIENTO DE SORTEO</div>
-            <p style='color:#333; font-size:0.85rem;'>
-            <b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa. 
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("""<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa.<br><br><b>Restricción de Seguridad:</b> Bloqueo automático de enfrentamientos intragrupales (partido vs mismo partido).</p></div><div class="manual-card"><div class="manual-header">04. CERTIFICACIÓN PDF</div><p style='color:#333; font-size:0.85rem;'><b>Emisión:</b> La descarga del PDF genera el documento legal del evento.<br><br><b>Validación:</b> El reporte incluye marca de tiempo (Timestamp) y URL de auditoría para respaldo de la mesa de control.</p></div>""", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
 with st.sidebar:
     st.write(f"Sesión activa: **{st.session_state.id_usuario}**")
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
-        st.session_state.id_usuario = ""
-        st.rerun()
+        st.session_state.id_usuario = ""; st.rerun()
