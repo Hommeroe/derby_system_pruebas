@@ -27,7 +27,7 @@ if st.session_state.id_usuario == "":
         "<div style='background-color:#1a1a1a; padding:20px; border-radius:12px; margin:0 auto; max-width:500px; border:1px solid #D35400; text-align:left;'>"
         "<div style='color:#E67E22; font-weight:bold; font-size:1.2rem; margin-bottom:10px; text-align:center;'>¿Qué es este sistema?</div>"
         "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.5; text-align:center;'>"
-        "Plataforma de <b>sorteo digital </b>. Garantiza transparencia total, orden y combates gallisticos 100% justos mediante tecnología de emparejamiento inteligente."
+        "Plataforma de <b>sorteo digital.</b>Garantiza transparencia total, orden y combates gallisticos 100% justos mediante tecnología de emparejamiento inteligente."
         "</div>"
         "<hr style='border:0.5px solid #333; margin:15px 0;'>"
         "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Esta clave es tu llave de acceso privada. Evita nombres comunes. Si alguien más la usa podrá visualizar tu información. Usa una combinación compleja para proteger tus registros. Si sales de la página escribe la misma clave para acceder a tus registros.</div>"
