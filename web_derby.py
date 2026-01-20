@@ -22,18 +22,17 @@ if "id_usuario" not in st.session_state:
 if st.session_state.id_usuario == "":
     st.markdown("""
         <div style='text-align: center; padding: 30px; background-color: #2c3e50; border-radius: 15px; color: white;'>
-            <h2 style='margin-bottom: 10px;'>BIENVENIDO A DERBYsystem</h2>
-            <p style='font-size: 18px; margin-bottom: 15px;'>
-                Ingresa tu clave de acceso personalizada.
-            </p>
-            <p style='font-size: 14px; opacity: 0.9;'>
-                <strong>Nota de seguridad:</strong> El nombre del evento funciona como tu llave de recuperación. 
-                Usa un nombre complejo y privado para evitar que otros usuarios coincidan con tu clave y vean tus datos.
+            <h2 style='margin-bottom: 15px;'>BIENVENIDO A <span style='font-family: "Courier New", Courier, monospace; letter-spacing: 2px; color: #ecf0f1;'>DERBYsystem</span></h2>
+            <p style='font-size: 1.1em; margin-bottom: 10px;'>Escribe una clave única para tu evento o mesa.</p>
+            <p style='font-size: 0.9em; opacity: 0.8; line-height: 1.4;'>
+                <b>Seguridad:</b> Esta clave es tu llave de acceso. Evita nombres comunes; <br>
+                si alguien más la usa, podrá ver tu información. <br>
+                Usa una combinación difícil para proteger tus datos.
             </p>
         </div>
     """, unsafe_allow_html=True)
     
-    # Se eliminó el placeholder para mayor seguridad
+    # Placeholder eliminado y texto centrado visualmente por la estructura superior
     nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="").upper().strip()
     
     if st.button("ENTRAR AL SISTEMA", use_container_width=True):
