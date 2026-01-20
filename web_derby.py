@@ -18,20 +18,16 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA (DISEÑO SOLICITADO) ---
+# --- PANTALLA DE ENTRADA (OPCIÓN 4 SELECCIONADA) ---
 if st.session_state.id_usuario == "":
-    # HTML para recrear la interfaz de la imagen
     html_bienvenida = (
         "<div style='text-align:center; background-color:#E67E22; padding:25px; border-radius:15px; color:white; font-family:sans-serif;'>"
         "<div style='font-size:1.1rem; letter-spacing:2px; margin-bottom:5px;'>BIENVENIDOS A</div>"
         "<div style='font-size:2.2rem; font-weight:900; line-height:1; margin-bottom:20px;'>DERBYsystem</div>"
         "<div style='background-color:#1a1a1a; padding:20px; border-radius:12px; margin:0 auto; max-width:500px; border:1px solid #D35400; text-align:left;'>"
         "<div style='color:#E67E22; font-weight:bold; font-size:1.2rem; margin-bottom:10px; text-align:center;'>¿Qué es este sistema?</div>"
-        "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.4;'>"
-        "Es una plataforma profesional que <b>automatiza el pesaje</b> y asegura transparencia absoluta mediante un <b>sorteo digital</b> avanzado."
-        "</div><br>"
-        "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.4;'>"
-        "Garantiza combates <b>justos y equitativos</b>, eliminando errores manuales y facilitando el control de mesa."
+        "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.5; text-align:center;'>"
+        "Plataforma de <b>sorteo digital y pesaje oficial</b>. Garantiza transparencia total, orden en el anillado y combates 100% justos mediante tecnología de emparejamiento inteligente."
         "</div>"
         "<hr style='border:0.5px solid #333; margin:15px 0;'>"
         "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Escribe la clave única de tu evento para ingresar.</div>"
@@ -41,7 +37,6 @@ if st.session_state.id_usuario == "":
     st.markdown(html_bienvenida, unsafe_allow_html=True)
     st.write("") 
     
-    # Contenedor del input
     col_a, col_b, col_c = st.columns([0.05, 0.9, 0.05])
     with col_b:
         nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí").upper().strip()
@@ -95,7 +90,6 @@ st.markdown("""
     .col-dif { width: 42px; }
     .col-partido { width: auto; }
 
-    /* Personalización de botones */
     div.stButton > button {
         background-color: #E67E22 !important;
         color: white !important;
