@@ -20,58 +20,68 @@ if "id_usuario" not in st.session_state:
 
 # Pantalla de entrada
 if st.session_state.id_usuario == "":
-    # CSS específico para centrar la bienvenida sin afectar el fondo de la app
+    # CSS para centrar todo de forma profesional y responsiva
     st.markdown("""
         <style>
-        .main-welcome {
+        .login-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            width: 100%;
             text-align: center;
+            padding-top: 20px;
         }
         .welcome-card {
             background-color: #2c3e50; 
-            padding: 25px; 
+            padding: 30px; 
             border-radius: 15px; 
             color: white; 
-            max-width: 450px; 
-            margin: 20px auto;
+            width: 90%;
+            max-width: 500px; 
+            margin-bottom: 25px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        /* Ajuste para que el input y botón no se desparramen */
+        .stTextInput, .stButton {
+            width: 90% !important;
+            max-width: 500px !important;
+            margin: 0 auto;
         }
         </style>
     """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div class="main-welcome">
+        <div class="login-container">
             <div class="welcome-card">
-                <h2 style='margin-bottom: 10px;'>BIENVENIDO A DERBYsystem</h2>
-                <p style='font-size: 0.95rem; line-height: 1.4;'>
+                <h1 style='margin: 0; font-size: 1.8rem;'>BIENVENIDOS</h1>
+                <h2 style='margin: 0; font-size: 2.2rem; letter-spacing: 2px;'>DERBYsystem</h2>
+                <hr style='border: 0.5px solid #34495e; margin: 20px 0;'>
+                <p style='font-size: 1rem; line-height: 1.5; opacity: 0.9;'>
                     Escribe una clave única para tu evento o mesa.<br><br>
-                    <b>Seguridad:</b> Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
-                    Usa una combinación difícil para proteger tus datos.
+                    <b>Seguridad:</b> Esta clave es tu llave de acceso privada. Evita nombres comunes para proteger tus datos.
                 </p>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
-    # Columnas para centrar el input y el botón
-    col_esp, col_input, col_esp2 = st.columns([1, 2, 1])
-    with col_input:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
-        if st.button("ENTRAR AL SISTEMA", use_container_width=True):
-            if nombre_acceso:
-                st.session_state.id_usuario = nombre_acceso
-                st.rerun()
-            else:
-                st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+    # Contenedor centrado para los controles de Streamlit
+    with st.container():
+        _, center_col, _ = st.columns([0.1, 0.8, 0.1]) # Margen mínimo para móvil
+        with center_col:
+            nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
+            if st.button("ENTRAR AL SISTEMA", use_container_width=True):
+                if nombre_acceso:
+                    st.session_state.id_usuario = nombre_acceso
+                    st.rerun()
+                else:
+                    st.warning("⚠️ Por favor, escribe un nombre para entrar.")
     st.stop()
 
-# El archivo ahora es fijo según el nombre elegido por el usuario
+# --- EL RESTO DEL CÓDIGO (SE MANTIENE IGUAL) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS ORIGINALES (INTACTOS) ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -112,7 +122,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Lógica interna para que no peleen socios (Homero 1 vs Homero 2)
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -182,7 +191,6 @@ with t_reg:
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            st.caption("Solo se aceptan pesos de 1.800 a 2.600")
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
@@ -249,7 +257,6 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- ACCESO ADMIN ---
 with st.sidebar:
     st.write(f"Sesión: {st.session_state.id_usuario}")
     if st.button("🚪 CERRAR SESIÓN"):
