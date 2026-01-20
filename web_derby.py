@@ -18,21 +18,37 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- ESTILO PARA ELIMINAR CUADRO BLANCO Y CENTRAR TODO ---
+# --- ESTILOS PARA CENTRADO PERFECTO Y ELIMINAR CUADRO BLANCO ---
 st.markdown("""
     <style>
-    /* Elimina el fondo blanco de raíz */
-    .stApp, [data-testid="stAppViewContainer"] {
+    /* 1. Elimina el fondo blanco y el pie de página de Streamlit */
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
         background-color: #0e1117 !important;
     }
-    /* Centrado vertical y horizontal de la tarjeta */
-    .welcome-container {
+    footer {visibility: hidden !important;}
+    
+    /* 2. Centrado de la tarjeta de bienvenida */
+    .main-welcome-container {
         display: flex;
-        flex-direction: column;
-        align-items: center;
         justify-content: center;
+        align-items: center;
         width: 100%;
-        margin: 0 auto;
+        padding: 40px 10px 10px 10px;
+    }
+    
+    .welcome-card {
+        text-align: center; 
+        padding: 30px; 
+        background-color: #2c3e50; 
+        border-radius: 15px; 
+        color: white; 
+        max-width: 500px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    
+    /* Ajuste para que el input no se vea desalineado */
+    .stTextInput {
+        margin-top: 20px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -40,19 +56,18 @@ st.markdown("""
 # Pantalla de entrada para que no se pierdan los datos
 if st.session_state.id_usuario == "":
     st.markdown("""
-        <div class="welcome-container">
-            <div style='text-align: center; padding: 30px; background-color: #2c3e50; border-radius: 15px; color: white; max-width: 500px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);'>
-                <h2 style='margin-bottom: 10px;'>BIENVENIDO A DERBYsystem</h2>
-                <p style='font-size: 0.95em; line-height: 1.4;'> Escribe una clave única para tu evento o mesa.<br><br>
-                    <strong>Seguridad:</strong> Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
-                    Usa una combinación difícil para proteger tus datos.</p>
+        <div class="main-welcome-container">
+            <div class="welcome-card">
+                <h2 style='margin:0;'>BIENVENIDO A</h2>
+                <h1 style='margin:0; font-size: 2.5em;'>DERBYsystem</h1>
+                <p style='margin-top:15px;'> Escribe una clave única para tu evento o mesa.<br><br>
+                <small><strong>Seguridad:</strong> Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
+                Usa una combinación difícil para proteger tus datos.</small></p>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
-    st.write("") # Espacio visual
-    
-    # Centrado del input y botón usando columnas
+    # Contenedor para el input y el botón
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
