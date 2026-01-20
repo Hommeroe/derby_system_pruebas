@@ -1,5 +1,5 @@
 import streamlit as st
-import pd as pd
+import pandas as pd
 import os
 import uuid
 import re
@@ -58,14 +58,13 @@ TOLERANCIA = 0.080
 # --- ESTILOS DE INTERFAZ INTERNA ---
 st.markdown("""
     <style>
-    /* Ajuste responsivo para el título principal */
+    /* Ajuste para que el título quepa en celulares */
     h1 {
-        font-size: clamp(1.5rem, 8vw, 2.8rem) !important;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        line-height: 1.2 !important;
-        padding-bottom: 10px;
+        font-size: clamp(1.4rem, 7vw, 2.5rem) !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        line-height: 1.1 !important;
+        padding-top: 5px !important;
     }
 
     div.stButton > button {
@@ -222,7 +221,7 @@ def generar_pdf(partidos, n_gallos):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-# TÍTULO AJUSTADO
+# TÍTULO AJUSTADO PARA QUE QUEPA SIEMPRE
 st.title("🏆 MESA DE CONTROL")
 
 t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
@@ -301,13 +300,10 @@ with t_ayu:
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
     col_1, col_2 = st.columns(2)
     with col_1:
-        st.markdown('<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><p style="color:#333; font-size:0.85rem;"><b>Pestaña Registro:</b> Configure modalidad de combate (2-6 gallos).<br><br><b>Ingreso:</b> Capture nombre y pesos con 3 decimales.</p></div>', unsafe_allow_html=True)
-        st.markdown('<div class="manual-card"><div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div><p style="color:#333; font-size:0.85rem;"><b>Folios de Anillo:</b> Motor DerbySystem genera automáticamente el ID de anillo según el índice global.</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><p style="color:#333; font-size:0.85rem;"><b>Pestaña Registro:</b> Configure modalidad de combate.<br><br><b>Ingreso:</b> Capture nombre y pesos con 3 decimales.</p></div>', unsafe_allow_html=True)
     with col_2:
-        st.markdown('<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><p style="color:#333; font-size:0.85rem;"><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital por proximidad de masa.<br><br><b>Seguridad:</b> Bloqueo automático de enfrentamientos intragrupales.</p></div>', unsafe_allow_html=True)
-        st.markdown('<div class="manual-card"><div class="manual-header">04. CERTIFICACIÓN PDF</div><p style="color:#333; font-size:0.85rem;"><b>Emisión:</b> La descarga genera el documento legal del evento.<br><br><b>Validación:</b> Incluye marca de tiempo y URL de auditoría.</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><p style="color:#333; font-size:0.85rem;"><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital.<br><br><b>Seguridad:</b> Bloqueo automático intragrupal.</p></div>', unsafe_allow_html=True)
     st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
-    st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
 with st.sidebar:
     st.write(f"Sesión activa: **{st.session_state.id_usuario}**")
