@@ -18,14 +18,21 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# Pantalla de entrada Corregida (Sin cortes y sin espacios blancos)
+# Pantalla de entrada Corregida (Sin espacios blancos y responsiva)
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        /* Ajuste para eliminar espacios en blanco y centrar */
+        /* ELIMINAR CUADRO BLANCO Y FOOTER DE STREAMLIT */
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        #MainMenu {visibility: hidden;}
+        
+        /* Ajuste de contenedor principal para evitar scroll innecesario */
         .block-container {
-            padding-top: 2rem !important;
+            padding-top: 1rem !important;
+            padding-bottom: 0rem !important;
         }
+        
         .main-container {
             display: flex;
             flex-direction: column;
@@ -34,45 +41,48 @@ if st.session_state.id_usuario == "":
             color: white;
             width: 100%;
         }
+        
         .login-card {
             background-color: #2c3e50;
-            padding: 30px 15px;
+            padding: 25px 15px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             margin: 0 auto;
         }
+        
         .digital-title {
             font-family: 'Courier New', Courier, monospace;
-            /* Tamaño responsivo para que no se corte en móviles */
-            font-size: clamp(24px, 8vw, 40px);
+            /* Tamaño dinámico para evitar que se corte */
+            font-size: clamp(20px, 7vw, 35px);
             font-weight: bold;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             color: #ffffff;
             margin: 10px 0;
-            white-space: nowrap; /* Evita que se divida en dos líneas */
+            white-space: nowrap;
         }
+        
         .subtitle {
-            font-size: 16px;
-            margin-bottom: 20px;
+            font-size: 15px;
+            margin-bottom: 15px;
             opacity: 0.9;
         }
+        
         .security-box {
-            font-size: 13px;
+            font-size: 12px;
             background-color: rgba(0,0,0,0.2);
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             line-height: 1.4;
             border-left: 4px solid #e74c3c;
             text-align: left;
-            margin-top: 10px;
         }
         </style>
         
         <div class="main-container">
             <div class="login-card">
-                <h2 style='margin:0; font-size: 20px; opacity: 0.8;'>BIENVENIDO A</h2>
+                <h2 style='margin:0; font-size: 18px; opacity: 0.8;'>BIENVENIDO A</h2>
                 <div class="digital-title">DERBYsystem</div>
                 <p class="subtitle">Escribe una clave única para tu evento.</p>
                 <div class="security-box">
@@ -84,10 +94,10 @@ if st.session_state.id_usuario == "":
         </div>
     """, unsafe_allow_html=True)
     
-    # Espaciado manual para separar el cuadro del input
     st.write("")
     
-    col1, col2, col3 = st.columns([0.1, 0.8, 0.1])
+    # Columnas para centrar el input y el botón
+    col1, col2, col3 = st.columns([0.05, 0.9, 0.05])
     with col2:
         nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="").upper().strip()
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
@@ -98,7 +108,7 @@ if st.session_state.id_usuario == "":
                 st.error("⚠️ Debes ingresar una clave.")
     st.stop()
 
-# --- EL RESTO DEL CÓDIGO PERMANECE IGUAL (SIN CAMBIOS EN DISEÑO NI COLORES) ---
+# --- CONTINUACIÓN DEL SISTEMA (DISEÑO ORIGINAL MANTENIDO) ---
 # [cite: 2026-01-17, 2026-01-14]
 
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
@@ -201,6 +211,9 @@ if 'partidos' not in st.session_state:
 
 st.title(f"DERBYsystem - {st.session_state.id_usuario}")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO"])
+
+# El código continúa igual con la funcionalidad de registro y cotejo...
+# (Omitido por brevedad, pero manteniendo toda la lógica original)
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
