@@ -14,48 +14,62 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- LÓGICA DE ACCESO SEGURO (NUEVO) ---
+# --- LÓGICA DE ACCESO SEGURO ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# Pantalla de entrada para que no se pierdan los datos
+# Pantalla de entrada con diseño Naranja y Explicación
 if st.session_state.id_usuario == "":
     st.markdown("""
-        <div style='text-align: center; padding: 20px; background-color: #2c3e50; border-radius: 10px; color: white;'>
-            <h2>BIENVENIDO  DERBYsystem</h2>
-            <p> Escribe una clave única para tu evento o mesa.<br>
-                Seguridad: Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
-                Usa una combinación difícil para proteger tus datos.</p>
+        <div style='text-align: center; padding: 35px; background-color: #E67E22; border-radius: 15px; color: white; font-family: sans-serif; box-shadow: 0px 4px 15px rgba(0,0,0,0.2);'>
+            <h3 style='margin-bottom: 0px; letter-spacing: 3px; font-weight: 300;'>BIENVENIDOS</h3>
+            <h1 style='margin-top: 0px; font-size: 3.5rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);'>DERBYsystem</h1>
+            
+            <div style='background-color: #1a1a1a; padding: 25px; border-radius: 12px; margin: 25px auto; max-width: 650px; text-align: center; border: 1px solid #D35400;'>
+                <h4 style='color: #E67E22; margin-top: 0; font-size: 1.4rem;'>¿Qué es DERBYsystem PRO?</h4>
+                <p style='font-size: 1.1rem; line-height: 1.6; color: #f2f2f2;'>
+                    Es una plataforma de <b>tecnología avanzada</b> diseñada para la gestión profesional de eventos. 
+                    El sistema <b>automatiza el pesaje</b> y asegura la integridad del evento mediante un <b>sorteo digital</b> auditado.
+                </p>
+                <p style='font-size: 1.1rem; line-height: 1.6; color: #f2f2f2;'>
+                    Nuestra solución garantiza que cada cotejo sea <b>justo, equitativo y transparente</b>, eliminando el error humano y optimizando el tiempo en mesa.
+                </p>
+                <p style='font-size: 0.9rem; margin-top: 15px; color: #E67E22; font-style: italic;'>
+                    Escribe la clave de tu evento para ingresar a la base de datos segura.
+                </p>
+            </div>
         </div>
+        <br>
     """, unsafe_allow_html=True)
     
-    nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
-    
-    if st.button("ENTRAR AL SISTEMA", use_container_width=True):
-        if nombre_acceso:
-            st.session_state.id_usuario = nombre_acceso
-            st.rerun()
-        else:
-            st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+    col_a, col_b, col_c = st.columns([1, 2, 1])
+    with col_b:
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ej: DERBY_ESTATAL_2026").upper().strip()
+        if st.button("ENTRAR AL SISTEMA", use_container_width=True):
+            if nombre_acceso:
+                st.session_state.id_usuario = nombre_acceso
+                st.rerun()
+            else:
+                st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
     st.stop()
 
-# El archivo ahora es fijo según el nombre elegido por el usuario
+# Base de datos basada en el usuario
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS ORIGINALES (INTACTOS) ---
+# --- ESTILOS VISUALES (Naranja y Gris Oscuro) ---
 st.markdown("""
     <style>
     .caja-anillo {
-        background-color: #2c3e50; color: white; padding: 2px;
+        background-color: #D35400; color: white; padding: 2px;
         border-radius: 0px 0px 5px 5px; font-weight: bold; 
-        text-align: center; margin-top: -15px; border: 1px solid #34495e;
+        text-align: center; margin-top: -15px; border: 1px solid #E67E22;
         font-size: 0.8em;
     }
     .header-azul { 
-        background-color: #2c3e50; color: white; padding: 8px; 
+        background-color: #1a1a1a; color: #E67E22; padding: 10px; 
         text-align: center; font-weight: bold; border-radius: 5px;
-        font-size: 12px; margin-bottom: 5px;
+        font-size: 14px; margin-bottom: 5px; border-bottom: 2px solid #E67E22;
     }
     .tabla-final { 
         width: 100%; border-collapse: collapse; background-color: white; 
@@ -70,21 +84,23 @@ st.markdown("""
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
         display: block; width: 100%; color: black !important;
     }
-    .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
-    .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
+    .peso-texto { font-size: 10px; color: #D35400 !important; display: block; }
     
-    .col-num { width: 20px; }
-    .col-g { width: 22px; }
-    .col-an { width: 32px; }
-    .col-e { width: 22px; background-color: #f1f2f6; }
-    .col-dif { width: 42px; }
-    .col-partido { width: auto; }
-
-    div[data-testid="stNumberInput"] { margin-bottom: 0px; }
+    /* Botones Naranjas */
+    div.stButton > button {
+        background-color: #E67E22;
+        color: white;
+        border: none;
+        font-weight: bold;
+    }
+    div.stButton > button:hover {
+        background-color: #D35400;
+        color: white;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Lógica interna para que no peleen socios (Homero 1 vs Homero 2)
+# Lógica de funciones
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -122,7 +138,6 @@ def generar_pdf(partidos, n_gallos):
         pelea_n = 1
         while len(lista) >= 2:
             rojo = lista.pop(0)
-            # Lógica: No pelear contra el mismo dueño (ignora números al final)
             v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
             if v_idx is not None:
                 verde = lista.pop(v_idx)
@@ -134,7 +149,7 @@ def generar_pdf(partidos, n_gallos):
                 pelea_n += 1
             else: break
         t = Table(data, colWidths=[20, 25, 140, 35, 25, 45, 35, 140, 25])
-        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#2c3e50")), ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,-1), 8), ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
+        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,-1), 8), ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
         elements.append(t); elements.append(Spacer(1, 20))
     doc.build(elements)
     return buffer.getvalue()
@@ -142,8 +157,8 @@ def generar_pdf(partidos, n_gallos):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-st.title(f"DERBYsystem - {st.session_state.id_usuario}")
-t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO"])
+st.title(f"🏆 DERBYsystem - {st.session_state.id_usuario}")
+t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "📊 COTEJO DIGITAL"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -155,8 +170,9 @@ with t_reg:
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            st.caption("Solo se aceptan pesos de 1.800 a 2.600")
+            st.caption(f"Peso Gallo {i+1}")
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            # El anillo se genera automático aquí
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -222,20 +238,9 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- ACCESO ADMIN ---
+# --- SIDEBAR ---
 with st.sidebar:
     st.write(f"Sesión: {st.session_state.id_usuario}")
     if st.button("🚪 CERRAR SESIÓN"):
         st.session_state.id_usuario = ""
         st.rerun()
-    acceso = st.text_input("Acceso Admin:", type="password")
-
-if acceso == "28days":
-    st.divider()
-    st.subheader("🕵️ Archivos en Servidor")
-    archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
-    for arch in archivos:
-        with st.expander(f"Ver: {arch}"):
-            with open(arch, "r") as f: st.text(f.read())
-            if st.button("Eliminar", key=arch):
-                os.remove(arch); st.rerun()
