@@ -45,9 +45,8 @@ if st.session_state.id_usuario == "":
         
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
-                # CORRECCIÓN: Limpiar datos previos antes de entrar con la nueva llave
-                if "partidos" in st.session_state:
-                    del st.session_state["partidos"]
+                # CORRECCIÓN DE MEMORIA: Limpia datos previos para que no se mezclen las llaves
+                if "partidos" in st.session_state: del st.session_state["partidos"]
                 st.session_state.id_usuario = nombre_acceso
                 st.rerun()
             else:
@@ -141,7 +140,6 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- FUNCIÓN DE PDF ---
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
@@ -149,18 +147,23 @@ def generar_pdf(partidos, n_gallos):
     styles = getSampleStyleSheet()
     zona_horaria = pytz.timezone('America/Mexico_City')
     ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
-    data_header = [[Paragraph("<font color='white' size=22><b>DerbySystem</b></font>", styles['Title'])],
-                   [Paragraph("<font color='#E67E22' size=14><b>https://tuderby.streamlit.app</b></font>", styles['Normal'])],
-                   [Paragraph(f"<font color='white' size=9>REPORTE TÉCNICO DE COTEJO | {ahora}</font>", styles['Normal'])]]
+    data_header = [
+        [Paragraph("<font color='white' size=22><b>DerbySystem</b></font>", styles['Title'])],
+        [Paragraph("<font color='#E67E22' size=14><b>https://tuderby.streamlit.app</b></font>", styles['Normal'])],
+        [Paragraph(f"<font color='white' size=9>REPORTE TÉCNICO DE COTEJO | {ahora}</font>", styles['Normal'])]
+    ]
     header_table = Table(data_header, colWidths=[500])
-    header_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.black),
-                                      ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")),
-                                      ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                                      ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
-    elements.append(header_table)
-    elements.append(Spacer(1, 20))
+    header_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.black),
+        ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(header_table); elements.append(Spacer(1, 20))
     for r in range(1, n_gallos + 1):
-        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
+        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2'])); elements.append(Spacer(1, 8))
         col_g = f"G{r}"
         lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
         data = [["#", "G", "PARTIDO (ROJO)", "AN.", "E", "DIF.", "AN.", "PARTIDO (VERDE)", "G"]]
@@ -178,14 +181,22 @@ def generar_pdf(partidos, n_gallos):
                 pelea_n += 1
             else: break
         t = Table(data, colWidths=[20, 30, 140, 30, 30, 40, 30, 140, 30])
-        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('GRID', (0,0), (-1,-1), 0.5, colors.grey)]))
+        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTSIZE', (0,0), (-1,-1), 8), ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
         elements.append(t); elements.append(Spacer(1, 20))
+    
+    elements.append(Spacer(1, 40))
+    data_firmas = [["__________________________", " ", "__________________________"], ["FIRMA JUEZ DE PLAZA", " ", "FIRMA MESA DE CONTROL"]]
+    t_firmas = Table(data_firmas, colWidths=[200, 100, 200])
+    t_firmas.setStyle(TableStyle([('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTSIZE', (0,0), (-1,-1), 9)]))
+    elements.append(t_firmas); elements.append(Spacer(1, 30))
+    elements.append(Paragraph(f"<font color='grey' size=8>SISTEMA DE GESTIÓN DIGITAL - DerbySystem v2.0</font>", styles['Normal']))
     doc.build(elements)
     return buffer.getvalue()
 
 # --- INTERFAZ ---
-# CARGA SIEMPRE BASADA EN EL ID_USUARIO ACTUAL
-st.session_state.partidos, st.session_state.n_gallos = cargar()
+# Se cargan los datos siempre al inicio del área protegida
+if 'partidos' not in st.session_state:
+    st.session_state.partidos, st.session_state.n_gallos = cargar()
 
 st.title("DerbySystem ")
 
@@ -208,9 +219,7 @@ with t_reg:
             if nombre:
                 nuevo = {"PARTIDO": nombre}
                 for i in range(g_sel): nuevo[f"G{i+1}"] = st.session_state[f"p_{i}"]
-                st.session_state.partidos.append(nuevo)
-                guardar(st.session_state.partidos)
-                st.rerun()
+                st.session_state.partidos.append(nuevo); guardar(st.session_state.partidos); st.rerun()
 
     if st.session_state.partidos:
         st.markdown("### ✏️ Tabla de Edición")
@@ -235,6 +244,11 @@ with t_reg:
                     for i in range(1, st.session_state.n_gallos + 1): p_upd[f"G{i}"] = float(r[f"G{i}"])
                     nuevos.append(p_upd)
             st.session_state.partidos = nuevos; guardar(nuevos); st.rerun()
+        
+        # RESTAURADO: Botón de Limpiar Todo el Evento
+        if st.button("🚨 LIMPIAR TODO EL EVENTO", use_container_width=True):
+            if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.session_state.partidos = []; st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) >= 2:
@@ -263,13 +277,33 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
+    # RESTAURADO: Ficha técnica y Protocolo de operación completa
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
+    col_1, col_2 = st.columns(2)
+    with col_1:
+        st.markdown("""<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos).</p></div>
+        <div class="manual-card"><div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div><p style='color:#333; font-size:0.85rem;'><b>Folios de Anillo:</b> El motor de DerbySystem genera automáticamente el ID de anillo.</p></div>""", unsafe_allow_html=True)
+    with col_2:
+        st.markdown("""<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital.</p></div>
+        <div class="manual-card"><div class="manual-header">04. CERTIFICACIÓN PDF</div><p style='color:#333; font-size:0.85rem;'><b>Emisión:</b> La descarga del PDF genera el documento legal.</p></div>""", unsafe_allow_html=True)
+    st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
     st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL ---
 with st.sidebar:
     st.write("Sesión activa: **SISTEMA PROTEGIDO**")
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
-        # CORRECCIÓN: Limpiar absolutamente todo al salir
         st.session_state.clear()
         st.rerun()
+    st.divider()
+    # RESTAURADO: Acceso Admin
+    acceso = st.text_input("Acceso Admin:", type="password")
+
+if acceso == "28days":
+    st.divider()
+    archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
+    for arch in archivos:
+        with st.expander(f"Ver: {arch}"):
+            with open(arch, "r") as f: st.text(f.read())
+            if st.button("Eliminar", key=arch):
+                os.remove(arch); st.rerun()
