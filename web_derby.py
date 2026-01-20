@@ -4,6 +4,7 @@ import os
 import uuid
 import re
 from datetime import datetime
+import pytz  # Librería para manejar zonas horarias
 from io import BytesIO
 
 # Importamos reportlab
@@ -124,17 +125,19 @@ def guardar(lista):
             pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
             f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
 
-# --- FUNCIÓN DE PDF CON FECHA Y HORA AUTOMÁTICA ---
+# --- FUNCIÓN DE PDF CON FECHA Y HORA LOCAL ---
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
     elements = []
     styles = getSampleStyleSheet()
     
-    # Obtener fecha y hora actual
-    ahora = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    # AJUSTE DE HORA LOCAL (MÉXICO)
+    # Si estás en otro país, cambia 'America/Mexico_City' por tu zona horaria
+    zona_horaria = pytz.timezone('America/Mexico_City')
+    ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
     
-    # Encabezado Negro con Fecha y Hora
+    # Encabezado Negro con Fecha y Hora Local
     data_header = [
         [Paragraph("<font color='white' size=16><b>DERBYsystem</b></font>", styles['Title'])],
         [Paragraph(f"<font color='#E67E22' size=10>EVENTO: {st.session_state.id_usuario}</font>", styles['Normal'])],
