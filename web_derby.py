@@ -25,8 +25,7 @@ if st.session_state.id_usuario == "":
             <h2>BIENVENIDO A DERBYsystem</h2>
             <p>Escribe una clave única para tu evento o mesa.<br>
                Seguridad: Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
-                Usa una combinación difícil para proteger tus datos.
-sales</p>
+                Usa una combinación difícil para proteger tus datos.</p>
         </div>
     """, unsafe_allow_html=True)
     
