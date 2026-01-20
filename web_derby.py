@@ -58,6 +58,34 @@ TOLERANCIA = 0.080
 # --- ESTILOS DE INTERFAZ INTERNA ---
 st.markdown("""
     <style>
+    /* Estilo General de Botones Naranjas */
+    div.stButton > button {
+        background-color: #E67E22 !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+        border: none !important;
+    }
+
+    /* ESTILO EXCLUSIVO PARA EL BOTÓN DE REPORTE (PDF) */
+    /* Lo identificamos por el icono de descarga o el texto si Streamlit lo permite, 
+       pero la mejor forma es inyectar un estilo que detecte el label específico */
+    button[description="generar_reporte_pdf"] {
+        background-color: #27ae60 !important; /* Verde Llamativo */
+        color: white !important;
+        font-size: 20px !important;
+        height: 60px !important;
+        border: 2px solid #1e8449 !important;
+        box-shadow: 0px 4px 15px rgba(39, 174, 96, 0.4) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    button[description="generar_reporte_pdf"]:hover {
+        background-color: #2ecc71 !important;
+        box-shadow: 0px 6px 20px rgba(46, 204, 113, 0.6) !important;
+        transform: translateY(-2px);
+    }
+
     .caja-anillo {
         background-color: #1a1a1a; color: #E67E22; padding: 2px;
         border-radius: 0px 0px 5px 5px; font-weight: bold; 
@@ -92,14 +120,6 @@ st.markdown("""
     .col-dif { width: 45px; }
     .col-partido { width: auto; }
 
-    div.stButton > button {
-        background-color: #E67E22 !important;
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 8px !important;
-        border: none !important;
-    }
-    
     /* Estilo para el Manual Corporativo */
     .manual-card {
         background-color: #f8f9fa;
@@ -294,7 +314,17 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-            st.download_button(label="📥 GENERAR REPORTE OFICIAL (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True)
+            # BOTÓN LLAMATIVO CON IDENTIFICADOR DE AYUDA
+            st.download_button(
+                label="📥 GENERAR REPORTE OFICIAL (PDF)", 
+                data=pdf_bytes, 
+                file_name=f"cotejo_{st.session_state.id_usuario}.pdf", 
+                mime="application/pdf", 
+                use_container_width=True,
+                help="Haz clic aquí para finalizar el sorteo e imprimir el reporte oficial.",
+                type="primary" # Streamlit aplica un estilo base, el CSS hace el resto
+            )
+            # Nota: Streamlit no permite IDs directos fácilmente, usamos el CSS para 'primary' si es necesario
         except Exception as e: st.error(f"Error: {e}")
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
@@ -316,12 +346,10 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- MANUAL CON DISEÑO CORPORATIVO (REDISEÑADO) ---
+# --- MANUAL CON DISEÑO CORPORATIVO ---
 with t_ayu:
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
-    
     col_1, col_2 = st.columns(2)
-    
     with col_1:
         st.markdown("""
         <div class="manual-card">
@@ -341,7 +369,6 @@ with t_ayu:
             </p>
         </div>
         """, unsafe_allow_html=True)
-        
     with col_2:
         st.markdown("""
         <div class="manual-card">
@@ -361,9 +388,7 @@ with t_ayu:
             </p>
         </div>
         """, unsafe_allow_html=True)
-
     st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
-    
     st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
 # --- BARRA LATERAL ---
@@ -372,7 +397,6 @@ with st.sidebar:
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
         st.session_state.id_usuario = ""
         st.rerun()
-    
     st.divider()
     acceso = st.text_input("Acceso Admin:", type="password")
 
