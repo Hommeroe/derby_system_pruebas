@@ -18,9 +18,9 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# PANTALLA DE ENTRADA CORREGIDA (Aquí estaba el error de las capturas)
+# --- PANTALLA DE ENTRADA CORREGIDA ---
 if st.session_state.id_usuario == "":
-    # Usamos st.markdown con unsafe_allow_html=True para que se vea el diseño naranja
+    # IMPORTANTE: Aquí se añade 'unsafe_allow_html=True' para que no salga el código escrito
     st.markdown("""
         <div style='text-align: center; padding: 30px; background-color: #E67E22; border-radius: 15px; color: white; font-family: sans-serif;'>
             <h2 style='margin-bottom: 10px;'>BIENVENIDO A DERBYsystem PRO</h2>
@@ -28,8 +28,8 @@ if st.session_state.id_usuario == "":
             <div style='background-color: #D35400; padding: 25px; border-radius: 12px; margin: 20px auto; max-width: 600px; text-align: center; line-height: 1.6;'>
                 <h4 style='margin-top: 0;'>¿Qué es este sistema?</h4>
                 <p style='font-size: 1.05rem;'>
-                    <b>DERBYsystem PRO</b> es una plataforma integral diseñada para la gestión profesional de eventos de competencia. 
-                    El sistema <b>automatiza el registro de pesos</b> y asegura transparencia absoluta mediante un motor de <b>sorteo digital</b>.
+                    <b>DERBYsystem PRO</b> es una plataforma profesional diseñada para la gestión de eventos. 
+                    El sistema <b>automatiza el registro de pesos</b> y asegura transparencia total mediante un motor de <b>sorteo digital</b>.
                 </p>
                 <p style='font-size: 1.05rem;'>
                     Garantiza combates <b>justos y equitativos</b>, eliminando errores manuales y facilitando el control de mesa en tiempo real.
@@ -101,7 +101,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE LÓGICA ---
+# --- SIGUE EL RESTO DE TU LÓGICA DE FUNCIONES IGUAL ---
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -173,6 +173,7 @@ with t_reg:
         for i in range(g_sel):
             st.caption("Solo se aceptan pesos de 1.800 a 2.600")
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            # El anillo se genera automático según tus instrucciones
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -233,7 +234,7 @@ with t_cot:
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
                     n_rojo = (rojo['PARTIDO'][:15] + '..') if len(rojo['PARTIDO']) > 15 else rojo['PARTIDO']
                     n_verde = (verde['PARTIDO'][:15] + '..') if len(verde['PARTIDO']) > 15 else verde['PARTIDO']
-                    html += f"<tr><td>{pelea_n}</td><td class='cuadro'>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{n_rojo}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{n_verde}</span><span class='peso-texto'>{verde[verde[col_g]]:.3f}</span></td><td class='cuadro'>□</td></tr>"
+                    html += f"<tr><td>{pelea_n}</td><td class='cuadro'>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{n_rojo}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='cuadro col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{n_verde}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td><td class='cuadro'>□</td></tr>"
                     pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
