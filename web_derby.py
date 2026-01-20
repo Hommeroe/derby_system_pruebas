@@ -23,8 +23,8 @@ if st.session_state.id_usuario == "":
     st.markdown("""
         <div style='text-align: center; padding: 20px; background-color: #2c3e50; border-radius: 10px; color: white;'>
             <h2>BIENVENIDO A DERBYsystem</h2>
-            <p>Escribe una clave única para tu evento o mesa.<br>
-               Seguridad: Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
+            <p> Escribe una clave única para tu evento o mesa.<br>
+                Seguridad: Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
                 Usa una combinación difícil para proteger tus datos.</p>
         </div>
     """, unsafe_allow_html=True)
