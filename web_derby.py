@@ -20,10 +20,9 @@ if "id_usuario" not in st.session_state:
 
 # Pantalla de entrada
 if st.session_state.id_usuario == "":
-    # CSS Ajustado para margen interno cómodo y posición superior
+    # CSS Ajustado con color NARANJA y margen cómodo
     st.markdown("""
         <style>
-        /* Eliminar espacio superior de la app */
         .block-container {
             padding-top: 1.5rem !important;
             padding-bottom: 0rem !important;
@@ -36,17 +35,15 @@ if st.session_state.id_usuario == "":
             text-align: center;
         }
         .welcome-card {
-            background-color: #2c3e50; 
-            /* Padding ajustado para comodidad visual: 30px arriba/abajo */
+            background-color: #E67E22; 
             padding: 30px 20px; 
             border-radius: 15px; 
             color: white; 
             width: 95%;
             max-width: 450px; 
             margin-bottom: 5px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        /* Pegar el input a la tarjeta */
         div[data-testid="stVerticalBlock"] > div:has(div.stTextInput) {
             gap: 0.5rem !important;
         }
@@ -56,10 +53,10 @@ if st.session_state.id_usuario == "":
     st.markdown("""
         <div class="login-container">
             <div class="welcome-card">
-                <h2 style='margin: 0; font-size: 1.3rem; opacity: 0.8;'>BIENVENIDOS</h2>
+                <h2 style='margin: 0; font-size: 1.3rem; opacity: 0.9;'>BIENVENIDOS</h2>
                 <h1 style='margin: 0; font-size: 2.2rem; letter-spacing: 2px; font-weight: 800;'>DERBYsystem</h1>
-                <div style='height: 2px; background: #34495e; width: 60%; margin: 15px auto;'></div>
-                <p style='font-size: 0.95rem; line-height: 1.3; margin-top: 10px; opacity: 0.9;'>
+                <div style='height: 2px; background: rgba(255,255,255,0.3); width: 60%; margin: 15px auto;'></div>
+                <p style='font-size: 0.95rem; line-height: 1.3; margin-top: 10px; opacity: 0.95;'>
                     Escribe una clave única para tu evento o mesa. 
                     Esta es tu llave privada para proteger tus registros.
                 </p>
@@ -67,7 +64,6 @@ if st.session_state.id_usuario == "":
         </div>
     """, unsafe_allow_html=True)
     
-    # Contenedor para el input y botón
     _, center_col, _ = st.columns([0.05, 0.9, 0.05])
     with center_col:
         nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
@@ -79,20 +75,20 @@ if st.session_state.id_usuario == "":
                 st.warning("⚠️ Escribe un nombre.")
     st.stop()
 
-# --- EL RESTO DEL CÓDIGO (SE MANTIENE IGUAL) ---
+# --- EL RESTO DEL CÓDIGO (COLORES DE TABLA TAMBIÉN AJUSTADOS A NARANJA) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
 st.markdown("""
     <style>
     .caja-anillo {
-        background-color: #2c3e50; color: white; padding: 2px;
+        background-color: #E67E22; color: white; padding: 2px;
         border-radius: 0px 0px 5px 5px; font-weight: bold; 
-        text-align: center; margin-top: -15px; border: 1px solid #34495e;
+        text-align: center; margin-top: -15px; border: 1px solid #D35400;
         font-size: 0.8em;
     }
     .header-azul { 
-        background-color: #2c3e50; color: white; padding: 8px; 
+        background-color: #E67E22; color: white; padding: 8px; 
         text-align: center; font-weight: bold; border-radius: 5px;
         font-size: 12px; margin-bottom: 5px;
     }
@@ -109,7 +105,7 @@ st.markdown("""
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
         display: block; width: 100%; color: black !important;
     }
-    .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
+    .peso-texto { font-size: 10px; color: #E67E22 !important; display: block; }
     .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
     
     .col-num { width: 20px; }
@@ -171,7 +167,8 @@ def generar_pdf(partidos, n_gallos):
                 pelea_n += 1
             else: break
         t = Table(data, colWidths=[20, 25, 140, 35, 25, 45, 35, 140, 25])
-        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#2c3e50")), ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,-1), 8), ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
+        # PDF también con encabezado naranja
+        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#E67E22")), ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'), ('FONTSIZE', (0,0), (-1,-1), 8), ('GRID', (0,0), (-1,-1), 0.5, colors.grey), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
         elements.append(t); elements.append(Spacer(1, 20))
     doc.build(elements)
     return buffer.getvalue()
@@ -263,14 +260,3 @@ with st.sidebar:
     if st.button("🚪 CERRAR SESIÓN"):
         st.session_state.id_usuario = ""
         st.rerun()
-    acceso = st.text_input("Acceso Admin:", type="password")
-
-if acceso == "28days":
-    st.divider()
-    st.subheader("🕵️ Archivos en Servidor")
-    archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
-    for arch in archivos:
-        with st.expander(f"Ver: {arch}"):
-            with open(arch, "r") as f: st.text(f.read())
-            if st.button("Eliminar", key=arch):
-                os.remove(arch); st.rerun()
