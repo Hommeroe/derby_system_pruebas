@@ -22,7 +22,7 @@ if "id_usuario" not in st.session_state:
 if st.session_state.id_usuario == "":
     st.markdown("""
         <div style='text-align: center; padding: 30px; background-color: #2c3e50; border-radius: 15px; color: white;'>
-            <h2 style='margin-bottom: 10px;'>🏟️ BIENVENIDO A DERBYsystem</h2>
+            <h2 style='margin-bottom: 10px;'>BIENVENIDO A DERBYsystem</h2>
             <p style='font-size: 18px; margin-bottom: 15px;'>
                 Ingresa tu clave de acceso personalizada.
             </p>
