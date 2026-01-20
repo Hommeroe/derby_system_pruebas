@@ -22,7 +22,7 @@ if "id_usuario" not in st.session_state:
 if st.session_state.id_usuario == "":
     st.markdown("""
         <div style='text-align: center; padding: 40px 20px; background-color: #2c3e50; border-radius: 15px; color: white; margin-bottom: 20px;'>
-            <h1 style='margin: 0; font-size: 28px;'>BIENVENIDO A</h1>
+            <h1 style='margin: 0; font-size: 28px;'>BIENVENIDO </h1>
             <h1 style='margin: 0; font-size: 36px; font-family: "Courier New", Courier, monospace; letter-spacing: 4px; color: #ffffff;'>DERBYsystem</h1>
             <div style='margin-top: 25px;'>
                 <p style='font-size: 18px; margin-bottom: 8px;'>Escribe una clave única para tu evento o mesa.</p>
