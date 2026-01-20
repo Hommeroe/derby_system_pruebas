@@ -5,7 +5,7 @@ import uuid
 import re
 from io import BytesIO
 
-# Importamos reportlab
+# Importamos reportlab para los PDFs
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib import colors
@@ -18,46 +18,46 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# Pantalla de entrada con diseño Naranja y Explicación
+# --- PANTALLA DE ENTRADA (ARREGLADA PARA CELULAR) ---
 if st.session_state.id_usuario == "":
     st.markdown("""
-        <div style='text-align: center; padding: 35px; background-color: #E67E22; border-radius: 15px; color: white; font-family: sans-serif; box-shadow: 0px 4px 15px rgba(0,0,0,0.2);'>
-            <h3 style='margin-bottom: 0px; letter-spacing: 3px; font-weight: 300;'>BIENVENIDOS</h3>
-            <h1 style='margin-top: 0px; font-size: 3.5rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);'>DERBYsystem</h1>
+        <div style='text-align: center; padding: 25px; background-color: #E67E22; border-radius: 15px; color: white; font-family: sans-serif; box-shadow: 0px 4px 10px rgba(0,0,0,0.2);'>
+            <h3 style='margin-bottom: 0px; font-weight: 300; font-size: 1.1rem; letter-spacing: 2px;'>BIENVENIDOS A</h3>
+            <h1 style='margin-top: 0px; font-size: 2.3rem; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); line-height: 1.1;'>DERBYsystem</h1>
             
-            <div style='background-color: #1a1a1a; padding: 25px; border-radius: 12px; margin: 25px auto; max-width: 650px; text-align: center; border: 1px solid #D35400;'>
-                <h4 style='color: #E67E22; margin-top: 0; font-size: 1.4rem;'>¿Qué es DERBYsystem PRO?</h4>
-                <p style='font-size: 1.1rem; line-height: 1.6; color: #f2f2f2;'>
-                    Es una plataforma de <b>tecnología avanzada</b> diseñada para la gestión profesional de eventos. 
-                    El sistema <b>automatiza el pesaje</b> y asegura la integridad del evento mediante un <b>sorteo digital</b> auditado.
+            <div style='background-color: #1a1a1a; padding: 20px; border-radius: 12px; margin: 20px auto; max-width: 600px; text-align: center; border: 1px solid #D35400;'>
+                <h4 style='color: #E67E22; margin-top: 0; font-size: 1.2rem; margin-bottom: 10px;'>¿Qué es este sistema?</h4>
+                <p style='font-size: 0.95rem; line-height: 1.5; color: #f2f2f2; margin-bottom: 12px;'>
+                    Es una plataforma profesional que <b>automatiza el pesaje</b> y asegura transparencia absoluta mediante un <b>sorteo digital</b> avanzado.
                 </p>
-                <p style='font-size: 1.1rem; line-height: 1.6; color: #f2f2f2;'>
-                    Nuestra solución garantiza que cada cotejo sea <b>justo, equitativo y transparente</b>, eliminando el error humano y optimizando el tiempo en mesa.
+                <p style='font-size: 0.95rem; line-height: 1.5; color: #f2f2f2;'>
+                    Garantiza combates <b>justos y equitativos</b>, eliminando errores manuales y facilitando el control de mesa en tiempo real.
                 </p>
-                <p style='font-size: 0.9rem; margin-top: 15px; color: #E67E22; font-style: italic;'>
-                    Escribe la clave de tu evento para ingresar a la base de datos segura.
+                <hr style='border: 0.5px solid #333; margin: 15px 0;'>
+                <p style='font-size: 0.85rem; color: #E67E22; font-style: italic;'>
+                    Escribe la clave única de tu evento para ingresar.
                 </p>
             </div>
         </div>
         <br>
     """, unsafe_allow_html=True)
     
-    col_a, col_b, col_c = st.columns([1, 2, 1])
+    col_a, col_b, col_c = st.columns([0.05, 0.9, 0.05])
     with col_b:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ej: DERBY_ESTATAL_2026").upper().strip()
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí").upper().strip()
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
                 st.session_state.id_usuario = nombre_acceso
                 st.rerun()
             else:
-                st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+                st.warning("⚠️ Por favor, ingresa una clave para acceder.")
     st.stop()
 
-# Base de datos basada en el usuario
+# Archivo de datos por usuario
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS VISUALES (Naranja y Gris Oscuro) ---
+# --- ESTILOS INTERNOS (NARANJA) ---
 st.markdown("""
     <style>
     .caja-anillo {
@@ -100,7 +100,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Lógica de funciones
+# --- FUNCIONES DE LÓGICA ---
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -157,6 +157,7 @@ def generar_pdf(partidos, n_gallos):
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
+# Título Principal
 st.title(f"🏆 DERBYsystem - {st.session_state.id_usuario}")
 t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "📊 COTEJO DIGITAL"])
 
@@ -172,7 +173,7 @@ with t_reg:
         for i in range(g_sel):
             st.caption(f"Peso Gallo {i+1}")
             p_val = st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-            # El anillo se genera automático aquí
+            # Anillo automático
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True)
             st.write("") 
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
@@ -238,7 +239,7 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- SIDEBAR ---
+# Menú lateral para cerrar sesión
 with st.sidebar:
     st.write(f"Sesión: {st.session_state.id_usuario}")
     if st.button("🚪 CERRAR SESIÓN"):
