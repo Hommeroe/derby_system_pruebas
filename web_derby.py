@@ -223,8 +223,7 @@ if 'partidos' not in st.session_state:
 
 st.title(f"🏆 {st.session_state.id_usuario}")
 
-# --- PESTAÑAS (TABS) ACTUALIZADAS ---
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📖 AYUDA / MANUAL"])
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "⚙️ ESPECIFICACIONES TÉCNICAS"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -278,7 +277,7 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         try:
             pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-            st.download_button(label="📥 DESCARGAR COTEJO (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True)
+            st.download_button(label="📥 GENERAR REPORTE OFICIAL (PDF)", data=pdf_bytes, file_name=f"cotejo_{st.session_state.id_usuario}.pdf", mime="application/pdf", use_container_width=True)
         except Exception as e: st.error(f"Error: {e}")
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
@@ -300,36 +299,45 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- CONTENIDO DE LA PESTAÑA DE AYUDA ---
+# --- RECURSOS Y PROTOCOLOS TÉCNICOS (MANUAL REDISEÑADO) ---
 with t_ayu:
-    st.markdown("""
-    ## 📖 Manual de Operación DerbySystem PRO
+    st.header("⚙️ PROTOCOLOS TÉCNICOS Y OPERACIÓN")
     
-    ### 1. Configuración Inicial
-    * Antes de capturar, selecciona cuántos gallos tiene cada partido en el menú desplegable. 
-    * **Ojo:** Una vez guardado el primer partido, la cantidad de gallos se bloquea para evitar errores.
-
-    ### 2. Registro de Pesos
-    * Escribe el nombre del partido y el peso de cada gallo.
-    * El sistema asigna el **número de anillo automáticamente** siguiendo el orden de entrada.
-    * Haz clic en **Guardar Partido** para registrarlo.
-
-    ### 3. Edición y Correcciones
-    * Si cometiste un error, puedes cambiar el nombre o el peso directamente en la tabla de edición y presionar 'Enter'.
-    * Para borrar un partido completo, marca la casilla con la **❌** roja.
-
-    ### 4. Generación del Cotejo (Sorteo)
-    * Ve a la pestaña **Cotejo**. El sistema ordenará los gallos por peso y buscará el oponente más justo.
-    * El sistema **garantiza** que ningún partido pelee contra sí mismo.
-    * Si la diferencia de peso supera los **80 gramos**, se resaltará en **ROJO**.
-
-    ### 5. Impresión de Reporte
-    * Usa el botón de **Descarga PDF** para obtener el documento oficial.
-    * El reporte incluye folios de anillos, fecha, hora y espacios para firmas del juez y mesa de control.
+    st.info("""
+    **PROTOCOLO DE CONFIGURACIÓN DEL EVENTO**
+    1.  **Selección de Modalidad:** Establezca la métrica de 'Gallos por Partido' previo a cualquier ingreso de datos. 
+    2.  **Validación de Clave:** Verifique que el identificador del evento en la barra lateral sea el correcto para asegurar el almacenamiento en el servidor asignado.
     """)
-    st.info("💡 Consejo: Asegúrate de tener conexión a internet al momento de guardar cada partido.")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("📋 Gestión de Registros")
+        st.markdown("""
+        * **Ingreso Nominal:** Utilice nombres estandarizados para los partidos.
+        * **Captura Gravimétrica:** Ingrese el peso con precisión de tres decimales (ej. 2.250).
+        * **Asignación de ID:** El sistema genera folios de identificación (Anillos) de forma secuencial y automática según el orden de entrada.
+        """)
+        
+    with col2:
+        st.subheader("⚖️ Algoritmo de Cotejo")
+        st.markdown("""
+        * **Criterio de Ordenamiento:** Clasificación por masa (peso) ascendente.
+        * **Filtro de Exclusión:** Algoritmo programado para evitar emparejamientos intragrupales (mismo partido).
+        * **Margen Crítico:** Diferencias superiores a **0.080 kg** activan la alerta visual de sistema (celda roja).
+        """)
 
-# --- BARRA LATERAL (LIMPIA) ---
+    st.divider()
+    
+    st.warning("""
+    **RECOMENDACIONES DE INTEGRIDAD DE DATOS**
+    * **Edición Directa:** Cualquier modificación en la tabla de edición se sincroniza en tiempo real con la base de datos local.
+    * **Certificación PDF:** El reporte oficial es el único documento válido para firmas de conformidad. Se recomienda generar el reporte final únicamente al concluir el pesaje de todos los participantes.
+    """)
+    
+    st.markdown("<p style='text-align: center; color: gray;'>DerbySystem v2.0 | Control de Calidad y Transparencia Digital</p>", unsafe_allow_html=True)
+
+# --- BARRA LATERAL ---
 with st.sidebar:
     st.write(f"Sesión activa: **{st.session_state.id_usuario}**")
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
