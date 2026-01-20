@@ -18,64 +18,62 @@ st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- SOLUCIÓN DEFINITIVA AL CUADRO BLANCO Y DISEÑO COMPACTO ---
+# --- SOLUCIÓN AL CUADRO BLANCO Y CENTRADO COMPACTO ---
 st.markdown("""
     <style>
-    /* Forzar fondo oscuro en toda la pantalla para eliminar el cuadro blanco */
+    /* Forzar fondo oscuro en todos los contenedores de Streamlit */
     .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"], .main {
         background-color: #0e1117 !important;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        top: 0;
-        left: 0;
     }
     
-    /* Ocultar elementos que causan el espacio blanco abajo */
+    /* Eliminar el espacio blanco inferior asegurando altura mínima del 100% */
+    [data-testid="stAppViewContainer"] {
+        min-height: 100vh !important;
+    }
+
+    /* Ocultar elementos innecesarios */
     footer {visibility: hidden !important;}
-    [data-testid="stManageAppView"] {display: none !important;}
     
-    /* Contenedor compacto para que todo suba y quepa en el móvil */
+    /* Diseño de la tarjeta de bienvenida ultra-compacto */
     .welcome-card {
         text-align: center; 
-        padding: 15px; 
+        padding: 20px; 
         background-color: #2c3e50; 
-        border-radius: 12px; 
+        border-radius: 15px; 
         color: white; 
-        max-width: 380px;
-        margin: 5px auto;
+        max-width: 400px;
+        margin: 10px auto;
         box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
 
-    h2 { font-size: 1.2rem !important; margin-bottom: 5px !important; }
-    h1 { font-size: 1.8rem !important; margin-top: 0px !important; }
-    p { font-size: 0.85rem !important; margin-bottom: 10px !important; }
+    .welcome-card h2 { font-size: 1.1rem !important; margin: 0 !important; opacity: 0.8; }
+    .welcome-card h1 { font-size: 1.8rem !important; margin: 5px 0 15px 0 !important; letter-spacing: 1px; }
+    .welcome-card p { font-size: 0.85rem !important; line-height: 1.3; }
     
-    /* Reducir márgenes de Streamlit */
+    /* Ajuste de margen superior para móviles */
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
+        padding-top: 2rem !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Pantalla de entrada compacta
+# Pantalla de entrada
 if st.session_state.id_usuario == "":
     st.markdown("""
         <div class="welcome-card">
-            <h2 style='opacity: 0.8;'>BIENVENIDO A</h2>
-            <h1 style='letter-spacing: 2px;'>DERBYsystem</h1>
-            <p>Escribe la clave única de tu evento.<br>
-            <span style='font-size: 0.75rem; color: #bdc3c7;'>
-            <b>Seguridad:</b> Evita nombres comunes para proteger tus datos.
+            <h2>BIENVENIDO A</h2>
+            <h1>DERBYsystem</h1>
+            <p>Escribe una clave única para tu evento o mesa.<br><br>
+            <span style='color: #bdc3c7; font-size: 0.75rem;'>
+            <b>Seguridad:</b> Esta clave es tu llave de acceso. Evita nombres comunes para proteger tus datos.
             </span></p>
         </div>
     """, unsafe_allow_html=True)
     
-    # Input y Botón más pegados arriba
+    # Input y Botón centrados
     col1, col2, col3 = st.columns([0.1, 0.8, 0.1])
     with col2:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE:", placeholder="Ingresa tus palabras claves").upper().strip()
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
         if st.button("ENTRAR AL SISTEMA", use_container_width=True):
             if nombre_acceso:
                 st.session_state.id_usuario = nombre_acceso
@@ -84,7 +82,7 @@ if st.session_state.id_usuario == "":
                 st.warning("⚠️ Escribe una clave.")
     st.stop()
 
-# --- EL RESTO DEL CÓDIGO PERMANECE FIJO ---
+# --- EL RESTO DEL CÓDIGO (SIN EDITAR NADA MÁS) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -116,11 +114,14 @@ st.markdown("""
     }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
     .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
+    
     .col-num { width: 20px; }
     .col-g { width: 22px; }
     .col-an { width: 32px; }
     .col-e { width: 22px; background-color: #f1f2f6; }
     .col-dif { width: 42px; }
+    .col-partido { width: auto; }
+
     div[data-testid="stNumberInput"] { margin-bottom: 0px; }
     </style>
 """, unsafe_allow_html=True)
