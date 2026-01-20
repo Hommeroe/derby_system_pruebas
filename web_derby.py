@@ -14,36 +14,81 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- LÓGICA DE ACCESO SEGURO (NUEVO) ---
+# --- LÓGICA DE ACCESO SEGURO ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# Pantalla de entrada corregida y centrada
+# Pantalla de entrada Profesional y Centrada
 if st.session_state.id_usuario == "":
+    # Contenedor principal para centrar todo en la pantalla
     st.markdown("""
-        <div style='text-align: center; padding: 40px 20px; background-color: #2c3e50; border-radius: 15px; color: white; margin-bottom: 20px;'>
-            <h1 style='margin: 0; font-size: 28px;'>BIENVENIDO A</h1>
-            <h1 style='margin: 0; font-size: 36px; font-family: "Courier New", Courier, monospace; letter-spacing: 4px; color: #ffffff;'>DERBYsystem</h1>
-            <div style='margin-top: 25px;'>
-                <p style='font-size: 18px; margin-bottom: 8px;'>Escribe una clave única para tu evento o mesa.</p>
-                <p style='font-size: 14px; opacity: 0.8; line-height: 1.6; max-width: 80%; margin: 0 auto;'>
-                    <b>Seguridad:</b> Esta clave es tu llave de acceso. Evita nombres comunes; 
-                    si alguien más la usa, podrá ver tu información. 
-                    Usa una combinación difícil para proteger tus datos.
-                </p>
+        <style>
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-card {
+            background-color: #2c3e50;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+        }
+        .digital-title {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 42px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: #ffffff;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .subtitle {
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: 300;
+        }
+        .security-note {
+            font-size: 14px;
+            background-color: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            line-height: 1.5;
+            border-left: 4px solid #e74c3c;
+        }
+        </style>
+        
+        <div class="main-container">
+            <div class="login-card">
+                <h2 style='margin:0; opacity: 0.9;'>BIENVENIDO A</h2>
+                <div class="digital-title">DERBYsystem</div>
+                <p class="subtitle">Escribe una clave única para tu evento o mesa.</p>
+                <div class="security-note">
+                    <strong>SEGURIDAD:</strong> Esta clave es tu llave de acceso privada. 
+                    Evita nombres comunes. Si alguien más la usa, podrá visualizar tu información. 
+                    Usa una combinación compleja para proteger tus registros.
+                </div>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
-    # Campo de texto sin placeholder
-    nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="").upper().strip()
-    
-    if st.button("ENTRAR AL SISTEMA", use_container_width=True):
-        if nombre_acceso:
-            st.session_state.id_usuario = nombre_acceso
-            st.rerun()
-        else:
-            st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+    # Campo de entrada y botón fuera del bloque HTML para evitar errores de Streamlit
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="").upper().strip()
+        if st.button("ENTRAR AL SISTEMA", use_container_width=True):
+            if nombre_acceso:
+                st.session_state.id_usuario = nombre_acceso
+                st.rerun()
+            else:
+                st.error("⚠️ Debes ingresar una clave para continuar.")
     st.stop()
 
 # El archivo ahora es fijo según el nombre elegido por el usuario
@@ -91,7 +136,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Lógica interna para que no peleen socios (Homero 1 vs Homero 2)
+# Lógica interna de socios y carga de archivos (SIN CAMBIOS)
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
