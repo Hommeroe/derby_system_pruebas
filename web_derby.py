@@ -14,29 +14,57 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- LÓGICA DE ACCESO SEGURO (NUEVO) ---
+# --- LÓGICA DE ACCESO SEGURO ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# Pantalla de entrada para que no se pierdan los datos
+# Pantalla de entrada
 if st.session_state.id_usuario == "":
+    # CSS específico para centrar la bienvenida sin afectar el fondo de la app
     st.markdown("""
-        <div style='text-align: center; padding: 20px; background-color: #2c3e50; border-radius: 10px; color: white;'>
-            <h2>BIENVENIDO  DERBYsystem</h2>
-            <p> Escribe una clave única para tu evento o mesa.<br>
-                Seguridad: Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
-                Usa una combinación difícil para proteger tus datos.</p>
+        <style>
+        .main-welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .welcome-card {
+            background-color: #2c3e50; 
+            padding: 25px; 
+            border-radius: 15px; 
+            color: white; 
+            max-width: 450px; 
+            margin: 20px auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div class="main-welcome">
+            <div class="welcome-card">
+                <h2 style='margin-bottom: 10px;'>BIENVENIDO A DERBYsystem</h2>
+                <p style='font-size: 0.95rem; line-height: 1.4;'>
+                    Escribe una clave única para tu evento o mesa.<br><br>
+                    <b>Seguridad:</b> Esta clave es tu llave de acceso. Evita nombres comunes; si alguien más la usa, podrá ver tu información. 
+                    Usa una combinación difícil para proteger tus datos.
+                </p>
+            </div>
         </div>
     """, unsafe_allow_html=True)
     
-    nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
-    
-    if st.button("ENTRAR AL SISTEMA", use_container_width=True):
-        if nombre_acceso:
-            st.session_state.id_usuario = nombre_acceso
-            st.rerun()
-        else:
-            st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+    # Columnas para centrar el input y el botón
+    col_esp, col_input, col_esp2 = st.columns([1, 2, 1])
+    with col_input:
+        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tus palabras claves").upper().strip()
+        if st.button("ENTRAR AL SISTEMA", use_container_width=True):
+            if nombre_acceso:
+                st.session_state.id_usuario = nombre_acceso
+                st.rerun()
+            else:
+                st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
     st.stop()
 
 # El archivo ahora es fijo según el nombre elegido por el usuario
@@ -122,7 +150,6 @@ def generar_pdf(partidos, n_gallos):
         pelea_n = 1
         while len(lista) >= 2:
             rojo = lista.pop(0)
-            # Lógica: No pelear contra el mismo dueño (ignora números al final)
             v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
             if v_idx is not None:
                 verde = lista.pop(v_idx)
