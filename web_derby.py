@@ -222,7 +222,9 @@ if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
 st.title(f"🏆 {st.session_state.id_usuario}")
-t_reg, t_cot = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO"])
+
+# --- PESTAÑAS (TABS) ACTUALIZADAS ---
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📖 AYUDA / MANUAL"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -298,35 +300,42 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-# --- ACCESO ADMIN Y MANUAL ---
+# --- CONTENIDO DE LA PESTAÑA DE AYUDA ---
+with t_ayu:
+    st.markdown("""
+    ## 📖 Manual de Operación DerbySystem PRO
+    
+    ### 1. Configuración Inicial
+    * Antes de capturar, selecciona cuántos gallos tiene cada partido en el menú desplegable. 
+    * **Ojo:** Una vez guardado el primer partido, la cantidad de gallos se bloquea para evitar errores.
+
+    ### 2. Registro de Pesos
+    * Escribe el nombre del partido y el peso de cada gallo.
+    * El sistema asigna el **número de anillo automáticamente** siguiendo el orden de entrada.
+    * Haz clic en **Guardar Partido** para registrarlo.
+
+    ### 3. Edición y Correcciones
+    * Si cometiste un error, puedes cambiar el nombre o el peso directamente en la tabla de edición y presionar 'Enter'.
+    * Para borrar un partido completo, marca la casilla con la **❌** roja.
+
+    ### 4. Generación del Cotejo (Sorteo)
+    * Ve a la pestaña **Cotejo**. El sistema ordenará los gallos por peso y buscará el oponente más justo.
+    * El sistema **garantiza** que ningún partido pelee contra sí mismo.
+    * Si la diferencia de peso supera los **80 gramos**, se resaltará en **ROJO**.
+
+    ### 5. Impresión de Reporte
+    * Usa el botón de **Descarga PDF** para obtener el documento oficial.
+    * El reporte incluye folios de anillos, fecha, hora y espacios para firmas del juez y mesa de control.
+    """)
+    st.info("💡 Consejo: Asegúrate de tener conexión a internet al momento de guardar cada partido.")
+
+# --- BARRA LATERAL (LIMPIA) ---
 with st.sidebar:
     st.write(f"Sesión activa: **{st.session_state.id_usuario}**")
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
         st.session_state.id_usuario = ""
         st.rerun()
     
-    st.divider()
-    
-    # MANUAL DE USUARIO INTEGRADO
-    with st.expander("📖 MANUAL DE OPERACIÓN"):
-        st.markdown("""
-        ### Guía Rápida
-        **1. Configuración**
-        Define los 'Gallos por partido' antes de registrar. Se bloquea tras el primer registro por seguridad.
-        
-        **2. Registro de Pesos**
-        Ingresa el nombre y pesos. El sistema asigna el **anillo automático** por orden de llegada.
-        
-        **3. Edición**
-        Haz doble clic en la tabla para corregir. Usa la casilla ❌ para borrar un partido.
-        
-        **4. Cotejo (Sorteo)**
-        El sistema empareja por peso evitando peleas entre el mismo partido. Diferencias > 80g resaltan en **rojo**.
-        
-        **5. Impresión**
-        Descarga el PDF. Incluye folios de anillos y espacios para firmas legales.
-        """)
-
     st.divider()
     acceso = st.text_input("Acceso Admin:", type="password")
 
