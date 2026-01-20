@@ -255,7 +255,7 @@ if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
 # MODIFICACIÓN: EL TÍTULO YA NO MUESTRA LA LLAVE (ID_USUARIO)
-st.title("🏆 EVENTO PRIVADO")
+st.title("DERBYSystem")
 
 t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
 
