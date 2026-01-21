@@ -90,7 +90,7 @@ if st.session_state.id_usuario == "":
             <h3 style='color: #E67E22; letter-spacing: 5px; font-size: 1rem; margin-bottom: 5px; text-transform: uppercase;'>Bienvenido a</h3>
             <h1 style='color: white; font-size: 3.5rem; font-weight: 900; margin: 0; line-height: 1;'>Derby<span style='color:#E67E22'>System</span></h1>
             <p style='color: #bdc3c7; font-size: 1.1rem; margin-top: 15px; max-width: 600px; margin-left: auto; margin-right: auto;'>
-                Gestión técnica de sorteos y cotejos. Transparencia digital para una competencia justa.
+                Gestión técnica de sorteos y cotejos gallisticos. Transparencia digital para una competencia justa.
             </p>
             <div style='display: flex; justify-content: center; gap: 20px; margin-top: 25px;'>
                 <div style='background: rgba(230, 126, 34, 0.1); padding: 10px 20px; border-radius: 50px; border: 1px solid #E67E22; color: #E67E22; font-size: 0.8rem;'>
