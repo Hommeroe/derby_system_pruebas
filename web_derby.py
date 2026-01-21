@@ -337,7 +337,7 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
-    st.markdown("## 📖 Guía Rápida de Operación")
+    st.markdown("##Guía Rápida de Operación")
     
     col_a, col_b = st.columns(2)
     
