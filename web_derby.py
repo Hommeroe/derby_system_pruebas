@@ -261,7 +261,7 @@ if 'partidos' not in st.session_state:
 
 st.title("DerbySystem ")
 
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 MANUAL DE USUARIOS"])
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PASOS A SEGUIR"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -337,7 +337,7 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
-    st.markdown("##   Guía Rápida de Operación")
+    st.markdown("## 📖 Guía Rápida de Operación")
     
     col_a, col_b = st.columns(2)
     
