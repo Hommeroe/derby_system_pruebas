@@ -46,7 +46,7 @@ def verificar_credenciales(usuario, password):
 def registrar_usuario(usuario, password):
     users = cargar_usuarios()
     if usuario in users:
-        return False # Usuario ya existe
+        return False 
     users[usuario] = hash_password(password)
     guardar_usuario_db(users)
     return True
@@ -79,7 +79,6 @@ if st.session_state.id_usuario == "":
     with col_center:
         tab_login, tab_registro = st.tabs(["🔐 INICIAR SESIÓN", "📝 CREAR CUENTA"])
         
-        # --- LOGIN ---
         with tab_login:
             usuario_login = st.text_input("USUARIO:", key="login_user").upper().strip()
             pass_login = st.text_input("CONTRASEÑA:", type="password", key="login_pass")
@@ -92,7 +91,6 @@ if st.session_state.id_usuario == "":
                 else:
                     st.error("⚠️ Usuario o contraseña incorrectos.")
 
-        # --- REGISTRO ---
         with tab_registro:
             st.info("Crea un usuario nuevo para guardar tus registros independientemente.")
             nuevo_usuario = st.text_input("NUEVO USUARIO:", key="reg_user").upper().strip()
@@ -120,7 +118,6 @@ TOLERANCIA = 0.080
 # --- ESTILOS DE INTERFAZ INTERNA ---
 st.markdown("""
     <style>
-    /* MODIFICACIÓN: Se agrega stFormSubmitButton para que el botón de Guardar sea naranja */
     div.stButton > button, 
     div.stDownloadButton > button, 
     div.stFormSubmitButton > button {
@@ -156,38 +153,33 @@ st.markdown("""
         border: 1px solid #bdc3c7; text-align: center; 
         padding: 5px 2px; height: auto; color: black !important;
     }
-    .nombre-partido { 
-        font-weight: bold; font-size: 10px; line-height: 1.2;
-        white-space: normal; word-wrap: break-word;
-        display: block; width: 100%; color: black !important;
-    }
-    .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; margin-top: 2px;}
-    .cuadro { font-size: 11px; font-weight: bold; color: black !important; }
-    .col-num { width: 22px; }
-    .col-g { width: 25px; }
-    .col-an { width: 35px; }
-    .col-e { width: 22px; background-color: #f1f2f6; }
-    .col-dif { width: 45px; }
-    .col-partido { width: auto; }
-    .manual-card {
-        background-color: #f8f9fa;
-        padding: 20px;
+    /* Estilos del nuevo protocolo */
+    .step-card {
+        background-color: #ffffff;
+        border: 1px solid #e0e0e0;
         border-left: 5px solid #E67E22;
-        border-radius: 5px;
-        margin-bottom: 20px;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
     }
-    .manual-header {
+    .step-num {
+        background-color: #E67E22;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 50%;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    .step-title {
         color: #1a1a1a;
         font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        font-size: 0.9rem;
-        margin-bottom: 10px;
+        font-size: 1.05rem;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- LÓGICA DE FUNCIONAMIENTO ---
+# --- FUNCIONES DE LÓGICA ---
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -269,7 +261,7 @@ if 'partidos' not in st.session_state:
 
 st.title("DerbySystem ")
 
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PASOS A SEGUIR"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -345,16 +337,42 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
-    st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
-    col_1, col_2 = st.columns(2)
-    with col_1:
-        st.markdown("""<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos).</p></div>
-        <div class="manual-card"><div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div><p style='color:#333; font-size:0.85rem;'><b>Folios de Anillo:</b> El motor de DerbySystem genera automáticamente el ID de anillo.</p></div>""", unsafe_allow_html=True)
-    with col_2:
-        st.markdown("""<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital.</p></div>
-        <div class="manual-card"><div class="manual-header">04. CERTIFICACIÓN PDF</div><p style='color:#333; font-size:0.85rem;'><b>Emisión:</b> La descarga del PDF genera el documento legal.</p></div>""", unsafe_allow_html=True)
-    st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
-    st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
+    st.markdown("## 📖 Guía Rápida de Operación")
+    
+    col_a, col_b = st.columns(2)
+    
+    with col_a:
+        st.markdown("""
+        <div class="step-card">
+            <span class="step-num">1</span><span class="step-title">Configurar Derby</span>
+            <p style='color:#555; margin-top:10px;'>En la pestaña <b>Registro</b>, selecciona cuántos gallos por partido participan (2 a 6). Una vez que registres el primer partido, este número quedará fijo.</p>
+        </div>
+        <div class="step-card">
+            <span class="step-num">2</span><span class="step-title">Inscribir Pesos</span>
+            <p style='color:#555; margin-top:10px;'>Ingresa el nombre del partido y los pesos exactos. El sistema asignará <b>automáticamente</b> el número de anillo para cada gallo.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    with col_b:
+        st.markdown("""
+        <div class="step-card">
+            <span class="step-num">3</span><span class="step-title">Cotejo Automático</span>
+            <p style='color:#555; margin-top:10px;'>Ve a la pestaña <b>Cotejo</b>. El sistema ordenará las peleas buscando la menor diferencia de peso y evitando que un partido pelee contra sí mismo.</p>
+        </div>
+        <div class="step-card">
+            <span class="step-num">4</span><span class="step-title">Imprimir Reporte</span>
+            <p style='color:#555; margin-top:10px;'>Haz clic en el botón naranja <b>"Generar Reporte"</b> para obtener el PDF oficial con espacio para firmas, listo para el juez de plaza.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.info("💡 **Nota Importante:** Si hay una diferencia de peso mayor a **0.080 kg**, el sistema la resaltará en rojo en la tabla de cotejo para alertar a la mesa de control.")
+    
+    with st.expander("🛠️ Detalles Técnicos"):
+        st.code("""
+        - Tolerancia Máxima: 80 gramos.
+        - Identificación: Anillos secuenciales automáticos.
+        - Base de Datos: Almacenamiento independiente por usuario.
+        """, language="text")
 
 with st.sidebar:
     st.write("Sesión activa: **SISTEMA PROTEGIDO**")
