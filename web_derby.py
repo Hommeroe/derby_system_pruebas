@@ -120,7 +120,6 @@ TOLERANCIA = 0.080
 # --- ESTILOS DE INTERFAZ INTERNA ---
 st.markdown("""
     <style>
-    /* MODIFICACIÓN: Se agrega stFormSubmitButton para que el botón de Guardar sea naranja */
     div.stButton > button, 
     div.stDownloadButton > button, 
     div.stFormSubmitButton > button {
@@ -169,20 +168,33 @@ st.markdown("""
     .col-e { width: 22px; background-color: #f1f2f6; }
     .col-dif { width: 45px; }
     .col-partido { width: auto; }
-    .manual-card {
-        background-color: #f8f9fa;
+
+    /* Estilos específicos para el nuevo Protocolo */
+    .protocol-step {
+        background-color: white;
         padding: 20px;
-        border-left: 5px solid #E67E22;
-        border-radius: 5px;
-        margin-bottom: 20px;
+        border-radius: 10px;
+        border-left: 6px solid #E67E22;
+        margin-bottom: 15px;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
     }
-    .manual-header {
-        color: #1a1a1a;
+    .protocol-number {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #E67E22;
+        margin-right: 10px;
+    }
+    .protocol-title {
+        font-size: 1.1rem;
         font-weight: bold;
+        color: #1a1a1a;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        font-size: 0.9rem;
-        margin-bottom: 10px;
+    }
+    .protocol-text {
+        color: #444;
+        margin-top: 8px;
+        font-size: 0.95rem;
+        line-height: 1.4;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -345,16 +357,55 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
-    st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
-    col_1, col_2 = st.columns(2)
-    with col_1:
-        st.markdown("""<div class="manual-card"><div class="manual-header">01. INICIALIZACIÓN DE DATOS</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Registro:</b> Configure la modalidad de combate (2-6 gallos).</p></div>
-        <div class="manual-card"><div class="manual-header">02. IDENTIFICACIÓN AUTOMATIZADA</div><p style='color:#333; font-size:0.85rem;'><b>Folios de Anillo:</b> El motor de DerbySystem genera automáticamente el ID de anillo.</p></div>""", unsafe_allow_html=True)
-    with col_2:
-        st.markdown("""<div class="manual-card"><div class="manual-header">03. PROCESAMIENTO DE SORTEO</div><p style='color:#333; font-size:0.85rem;'><b>Pestaña Cotejo:</b> Algoritmo de emparejamiento digital.</p></div>
-        <div class="manual-card"><div class="manual-header">04. CERTIFICACIÓN PDF</div><p style='color:#333; font-size:0.85rem;'><b>Emisión:</b> La descarga del PDF genera el documento legal.</p></div>""", unsafe_allow_html=True)
-    st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
-    st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
+    st.markdown("## 📖 Guía del Operador - DerbySystem")
+    st.info("Siga estos pasos en orden cronológico para garantizar la integridad del sorteo.")
+
+    col_izq, col_der = st.columns(2)
+
+    with col_izq:
+        st.markdown("""
+        <div class="protocol-step">
+            <span class="protocol-number">01</span><span class="protocol-title">Configuración Inicial</span>
+            <div class="protocol-text">
+                En la pestaña <b>REGISTRO</b>, defina la modalidad (cuántos gallos por partido). 
+                <i>Atención: Una vez guardado el primer partido, la modalidad se bloquea para evitar errores.</i>
+            </div>
+        </div>
+        <div class="protocol-step">
+            <span class="protocol-number">02</span><span class="protocol-title">Captura de Pesos</span>
+            <div class="protocol-text">
+                Ingrese el nombre del partido y el peso de cada ejemplar. 
+                El sistema asignará el <b>número de anillo automático</b> correlativo. Revise bien antes de presionar "GUARDAR PARTIDO".
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_der:
+        st.markdown("""
+        <div class="protocol-step">
+            <span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span>
+            <div class="protocol-text">
+                Diríjase a <b>COTEJO</b>. El sistema empareja por peso similar y evita que un partido pelee contra sí mismo. 
+                Las diferencias mayores a 80g aparecerán en <b>rojo</b>.
+            </div>
+        </div>
+        <div class="protocol-step">
+            <span class="protocol-number">04</span><span class="protocol-title">Reporte y Cierre</span>
+            <div class="protocol-text">
+                Descargue el <b>PDF</b> con el botón naranja. Este es el documento oficial para el juez de plaza. 
+                Si necesita borrar todo para un nuevo evento, use el botón de "Limpiar Todo".
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.subheader("⚠️ Parámetros Críticos del Sistema")
+    st.table(pd.DataFrame({
+        "Parámetro": ["Tolerancia Máxima", "Asignación de Anillos", "Seguridad de Datos"],
+        "Valor": ["0.080 kg (80 gramos)", "Automática Secuencial", "Encriptación AES-256"],
+        "Descripción": ["Alerta visual en celdas rojas si se excede.", "Garantiza transparencia y orden físico.", "Datos protegidos por usuario."]
+    }))
+
+    st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - Soporte: mesa_control@derby.app</div>", unsafe_allow_html=True)
 
 with st.sidebar:
     st.write("Sesión activa: **SISTEMA PROTEGIDO**")
