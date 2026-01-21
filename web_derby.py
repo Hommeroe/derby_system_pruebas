@@ -1,7 +1,3 @@
-Crees poderle dar un diseño más profesional
-Manténiendo sus datos pero que en diseño esté más profesional sin editar anda más solo diseño 
-
-
 import streamlit as st
 import pandas as pd
 import os
