@@ -3,6 +3,8 @@ import pandas as pd
 import os
 import uuid
 import re
+import json
+import hashlib
 from datetime import datetime
 import pytz  
 from io import BytesIO
@@ -16,11 +18,44 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
+# --- GESTIÓN DE USUARIOS (NUEVO) ---
+USER_DB_FILE = "usuarios_db.json"
+
+def cargar_usuarios():
+    if not os.path.exists(USER_DB_FILE):
+        return {}
+    try:
+        with open(USER_DB_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def guardar_usuario_db(users):
+    with open(USER_DB_FILE, "w") as f:
+        json.dump(users, f)
+
+def hash_password(password):
+    return hashlib.sha256(str.encode(password)).hexdigest()
+
+def verificar_credenciales(usuario, password):
+    users = cargar_usuarios()
+    if usuario in users and users[usuario] == hash_password(password):
+        return True
+    return False
+
+def registrar_usuario(usuario, password):
+    users = cargar_usuarios()
+    if usuario in users:
+        return False # Usuario ya existe
+    users[usuario] = hash_password(password)
+    guardar_usuario_db(users)
+    return True
+
 # --- LÓGICA DE ACCESO SEGURO ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA ---
+# --- PANTALLA DE ENTRADA (MODIFICADA PARA LOGIN/REGISTRO) ---
 if st.session_state.id_usuario == "":
     html_bienvenida = (
         "<div style='text-align:center; background-color:#E67E22; padding:25px; border-radius:15px; color:white; font-family:sans-serif;'>"
@@ -32,25 +67,50 @@ if st.session_state.id_usuario == "":
         "Plataforma de <b>sorteo digital.</b> Garantiza transparencia total, orden y combates gallisticos 100% justos mediante tecnología de emparejamiento inteligente."
         "</div>"
         "<hr style='border:0.5px solid #333; margin:15px 0;'>"
-        "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Esta clave es tu llave de acceso privada. Evita nombres comunes. Si alguien más la usa podrá visualizar tu información. Usa una combinación compleja para proteger tus registros.</div>"
+        "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Sistema seguro. Por favor inicia sesión o crea una cuenta nueva para gestionar tus eventos.</div>"
         "</div></div>"
     )
     
     st.markdown(html_bienvenida, unsafe_allow_html=True)
     st.write("") 
     
-    col_a, col_b, col_c = st.columns([0.05, 0.9, 0.05])
-    with col_b:
-        nombre_acceso = st.text_input("NOMBRE DEL EVENTO / CLAVE DE MESA:", placeholder="Ingresa tu clave aquí", type="password").upper().strip()
+    col_spacer_L, col_center, col_spacer_R = st.columns([0.2, 0.6, 0.2])
+    
+    with col_center:
+        tab_login, tab_registro = st.tabs(["🔐 INICIAR SESIÓN", "📝 CREAR CUENTA"])
         
-        if st.button("ENTRAR AL SISTEMA", use_container_width=True):
-            if nombre_acceso:
-                # CORRECCIÓN DE MEMORIA: Limpia datos previos para que no se mezclen las llaves
-                if "partidos" in st.session_state: del st.session_state["partidos"]
-                st.session_state.id_usuario = nombre_acceso
-                st.rerun()
-            else:
-                st.warning("⚠️ Por favor, escribe un nombre para proteger tus registros.")
+        # --- LOGIN ---
+        with tab_login:
+            usuario_login = st.text_input("USUARIO:", key="login_user").upper().strip()
+            pass_login = st.text_input("CONTRASEÑA:", type="password", key="login_pass")
+            
+            if st.button("ENTRAR AL SISTEMA", use_container_width=True, key="btn_login"):
+                if verificar_credenciales(usuario_login, pass_login):
+                    if "partidos" in st.session_state: del st.session_state["partidos"]
+                    st.session_state.id_usuario = usuario_login
+                    st.rerun()
+                else:
+                    st.error("⚠️ Usuario o contraseña incorrectos.")
+
+        # --- REGISTRO ---
+        with tab_registro:
+            st.info("Crea un usuario nuevo para guardar tus registros independientemente.")
+            nuevo_usuario = st.text_input("NUEVO USUARIO:", key="reg_user").upper().strip()
+            nueva_pass = st.text_input("CONTRASEÑA:", type="password", key="reg_pass")
+            confirmar_pass = st.text_input("CONFIRMAR CONTRASEÑA:", type="password", key="reg_pass_conf")
+            
+            if st.button("REGISTRARME", use_container_width=True, key="btn_registro"):
+                if nuevo_usuario and nueva_pass:
+                    if nueva_pass == confirmar_pass:
+                        if registrar_usuario(nuevo_usuario, nueva_pass):
+                            st.success("✅ ¡Usuario creado con éxito! Ahora ve a la pestaña 'INICIAR SESIÓN'.")
+                        else:
+                            st.warning("⚠️ El usuario ya existe. Intenta con otro nombre.")
+                    else:
+                        st.warning("⚠️ Las contraseñas no coinciden.")
+                else:
+                    st.warning("⚠️ Debes llenar todos los campos.")
+
     st.stop()
 
 # --- CONSTANTES ---
