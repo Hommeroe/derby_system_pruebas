@@ -18,7 +18,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- GESTIÓN DE USUARIOS (NUEVO) ---
+# --- GESTIÓN DE USUARIOS (DATABASE JSON) ---
 USER_DB_FILE = "usuarios_db.json"
 
 def cargar_usuarios():
@@ -55,7 +55,7 @@ def registrar_usuario(usuario, password):
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA (MODIFICADA PARA LOGIN/REGISTRO) ---
+# --- PANTALLA DE ENTRADA ---
 if st.session_state.id_usuario == "":
     html_bienvenida = (
         "<div style='text-align:center; background-color:#E67E22; padding:25px; border-radius:15px; color:white; font-family:sans-serif;'>"
@@ -120,13 +120,19 @@ TOLERANCIA = 0.080
 # --- ESTILOS DE INTERFAZ INTERNA ---
 st.markdown("""
     <style>
-    div.stButton > button {
+    /* MODIFICACIÓN: Se agrega selector para botones de descarga y botones normales */
+    div.stButton > button, div.stDownloadButton > button {
         background-color: #E67E22 !important;
         color: white !important;
         font-weight: bold !important;
         border-radius: 8px !important;
         border: none !important;
     }
+    div.stButton > button:hover, div.stDownloadButton > button:hover {
+        background-color: #D35400 !important;
+        color: white !important;
+    }
+    
     .caja-anillo {
         background-color: #1a1a1a; color: #E67E22; padding: 2px;
         border-radius: 0px 0px 5px 5px; font-weight: bold; 
@@ -337,7 +343,6 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
-    # RESTAURADO: Ficha técnica y Protocolo de operación completa
     st.write("### DERBYSYSTEM v2.0 | DOCUMENTACIÓN TÉCNICA")
     col_1, col_2 = st.columns(2)
     with col_1:
@@ -356,7 +361,6 @@ with st.sidebar:
         st.session_state.clear()
         st.rerun()
     st.divider()
-    # RESTAURADO: Acceso Admin
     acceso = st.text_input("Acceso Admin:", type="password")
 
 if acceso == "28days":
