@@ -120,15 +120,19 @@ TOLERANCIA = 0.080
 # --- ESTILOS DE INTERFAZ INTERNA ---
 st.markdown("""
     <style>
-    /* MODIFICACIÓN: Se agrega selector para botones de descarga y botones normales */
-    div.stButton > button, div.stDownloadButton > button {
+    /* MODIFICACIÓN: Se agrega stFormSubmitButton para que el botón de Guardar sea naranja */
+    div.stButton > button, 
+    div.stDownloadButton > button, 
+    div.stFormSubmitButton > button {
         background-color: #E67E22 !important;
         color: white !important;
         font-weight: bold !important;
         border-radius: 8px !important;
         border: none !important;
     }
-    div.stButton > button:hover, div.stDownloadButton > button:hover {
+    div.stButton > button:hover, 
+    div.stDownloadButton > button:hover,
+    div.stFormSubmitButton > button:hover {
         background-color: #D35400 !important;
         color: white !important;
     }
@@ -260,7 +264,6 @@ def generar_pdf(partidos, n_gallos):
     return buffer.getvalue()
 
 # --- INTERFAZ ---
-# Se cargan los datos siempre al inicio del área protegida
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
@@ -311,7 +314,6 @@ with t_reg:
                     nuevos.append(p_upd)
             st.session_state.partidos = nuevos; guardar(nuevos); st.rerun()
         
-        # RESTAURADO: Botón de Limpiar Todo el Evento
         if st.button("🚨 LIMPIAR TODO EL EVENTO", use_container_width=True):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
             st.session_state.partidos = []; st.rerun()
@@ -354,7 +356,6 @@ with t_ayu:
     st.code("# Configuración_del_Sistema\nTOLERANCIA_MAX: 0.080 kg\nMODO: Emparejamiento_Inteligente_v2\nESTADO: Operativo", language="python")
     st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - All Rights Reserved</div>", unsafe_allow_html=True)
 
-# --- BARRA LATERAL ---
 with st.sidebar:
     st.write("Sesión activa: **SISTEMA PROTEGIDO**")
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True):
