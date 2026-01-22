@@ -47,67 +47,38 @@ def registrar_usuario(usuario, password):
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA CORREGIDA ---
+# --- PANTALLA DE ENTRADA ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        /* Eliminar el espacio blanco superior */
         .stApp { margin-top: -60px !important; }
         .block-container { padding-top: 2rem !important; }
-        
         .login-card {
-            max-width: 480px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 480px; margin: 0 auto; background: #ffffff;
+            padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             border-top: 5px solid #E67E22;
         }
         .desc-box {
-            background-color: #1a1a1a;
-            color: #f2f2f2;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            text-align: center;
+            background-color: #1a1a1a; color: #f2f2f2; padding: 12px;
+            border-radius: 8px; margin-bottom: 15px; text-align: center;
         }
         .main-title {
-            font-size: 2.4rem;
-            font-weight: 800;
-            color: #E67E22;
-            text-align: center;
-            margin-bottom: 0px;
+            font-size: 2.4rem; font-weight: 800; color: #E67E22;
+            text-align: center; margin-bottom: 0px;
         }
         .main-subtitle {
-            font-size: 0.75rem;
-            color: #888;
-            text-align: center;
-            letter-spacing: 3px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
+            font-size: 0.75rem; color: #888; text-align: center;
+            letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase;
         }
         </style>
     """, unsafe_allow_html=True)
 
     col_1, col_center, col_3 = st.columns([1, 2, 1])
-    
     with col_center:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown("""
-            <div class="desc-box">
-                <div style="color:#E67E22; font-weight:bold; font-size:0.85rem; margin-bottom:3px;">¿QUÉ ES ESTE SISTEMA?</div>
-                <div style="font-size:0.75rem; line-height:1.3; color:#ccc;">
-                    Plataforma de <b>sorteo digital</b> que garantiza transparencia y combates gallisticos justos mediante emparejamiento inteligente.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown('<div class="main-title">DerbySystem</div>', unsafe_allow_html=True)
-        st.markdown('<div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
-        
+        st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.85rem; margin-bottom:3px;">¿QUÉ ES ESTE SISTEMA?</div><div style="font-size:0.75rem; line-height:1.3; color:#ccc;">Plataforma de <b>sorteo digital</b> que garantiza transparencia y combates gallisticos justos.</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="main-title">DerbySystem</div><div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
         tab_login, tab_reg = st.tabs(["🔒 ACCESO", "📝 REGISTRO"])
-        
         with tab_login:
             u = st.text_input("Usuario", key="l_u", placeholder="USUARIO").upper().strip()
             p = st.text_input("Contraseña", key="l_p", type="password", placeholder="••••••••")
@@ -116,7 +87,6 @@ if st.session_state.id_usuario == "":
                     st.session_state.id_usuario = u
                     st.rerun()
                 else: st.error("Credenciales incorrectas")
-        
         with tab_reg:
             nu = st.text_input("Nuevo Usuario", key="r_u", placeholder="NUEVO USUARIO").upper().strip()
             np = st.text_input("Nueva Pass", key="r_p", type="password", placeholder="CONTRASEÑA")
@@ -161,13 +131,11 @@ st.markdown("""
     }
     .protocol-number { font-size: 1.3rem; font-weight: 900; color: #E67E22; margin-right: 10px; }
     .protocol-title { font-size: 1rem; font-weight: bold; color: #1a1a1a; }
-    .tutorial-card {
-        background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;
-    }
+    .tutorial-card { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE LÓGICA ---
+# --- FUNCIONES ---
 def limpiar_nombre_socio(n): return re.sub(r'\s*\d+$', '', n).strip().upper()
 def cargar():
     partidos, n_gallos = [], 2
@@ -191,21 +159,19 @@ def guardar(lista):
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
-    elements = []
-    styles = getSampleStyleSheet()
+    elements, styles = [], getSampleStyleSheet()
     style_center = ParagraphStyle(name='Center', parent=styles['Normal'], alignment=TA_CENTER)
-    zona_horaria = pytz.timezone('America/Mexico_City')
-    ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
+    ahora = datetime.now(pytz.timezone('America/Mexico_City')).strftime("%d/%m/%Y %H:%M:%S")
     
     data_header = [[Paragraph("<font color='white' size=22><b>DerbySystem</b></font>", styles['Title'])],
                    [Paragraph("<font color='#E67E22' size=14><b>https://tuderby.streamlit.app</b></font>", styles['Normal'])],
                    [Paragraph(f"<font color='white' size=9>REPORTE TÉCNICO DE COTEJO | {ahora}</font>", styles['Normal'])]]
     header_table = Table(data_header, colWidths=[500])
-    header_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.black), ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")), ('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
+    header_table.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.black), ('BACKGROUND', (0,1), (-1,2), colors.HexColor("#1a1a1a")), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('VALIGN', (0,0), (-1,-1), 'MIDDLE')]))
     elements.append(header_table); elements.append(Spacer(1, 20))
     
     for r in range(1, n_gallos + 1):
-        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2'])); elements.append(Spacer(1, 8))
+        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
         col_g = f"G{r}"; lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
         data = [["#", "G", "PARTIDO (ROJO)", "AN.", "E", "DIF.", "AN.", "PARTIDO (VERDE)", "G"]]
         pelea_n = 1
@@ -223,15 +189,9 @@ def generar_pdf(partidos, n_gallos):
                 pelea_n += 1
             else: break
         t = Table(data, colWidths=[20, 30, 140, 30, 30, 40, 30, 140, 30])
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), 
-            ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")), 
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-            ('GRID', (0,0), (-1,-1), 0.5, colors.grey)
-        ]))
+        t.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")), ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'), ('GRID', (0,0), (-1,-1), 0.5, colors.grey)]))
         elements.append(t); elements.append(Spacer(1, 20))
-    doc.build(elements)
-    return buffer.getvalue()
+    doc.build(elements); return buffer.getvalue()
 
 # --- INTERFAZ ---
 if 'partidos' not in st.session_state: st.session_state.partidos, st.session_state.n_gallos = cargar()
@@ -240,8 +200,8 @@ t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
-    col_n, col_g = st.columns([2,1])
-    g_sel = col_g.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
+    col_n, col_g_reg = st.columns([2,1])
+    g_sel = col_g_reg.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
     with st.form("f_nuevo", clear_on_submit=True):
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
@@ -290,18 +250,18 @@ with t_cot:
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
-            col_g = f"G{r}"; lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g])
+            col_g_cot = f"G{r}"; lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g_cot])
             html = """<table class='tabla-final'><thead><tr><th class='col-num'>#</th><th class='col-g'>G</th><th>ROJO</th><th class='col-an'>AN.</th><th class='col-e'>E</th><th class='col-dif'>DIF.</th><th class='col-an'>AN.</th><th>VERDE</th><th class='col-g'>G</th></tr></thead><tbody>"""
             pelea_n = 1
             while len(lista) >= 2:
                 rojo = lista.pop(0)
                 v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
                 if v_idx is not None:
-                    verde = lista.pop(v_idx); d = abs(rojo[col_g] - verde[col_g]); c = "style='background:#e74c3c;color:white;'" if d > TOLERANCIA else ""
+                    verde = lista.pop(v_idx); d = abs(rojo[col_g_cot] - verde[col_g_cot]); c = "style='background:#e74c3c;color:white;'" if d > TOLERANCIA else ""
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><span class='peso-texto'>{rojo[col_g]:.3f}</span></td><td>{an_r:03}</td><td class='col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><span class='peso-texto'>{verde[col_g]:.3f}</span></td><td>□</td></tr>"; pelea_n += 1
+                    html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left:3px solid red'><span class='nombre-partido'>{rojo['PARTIDO']}</span><span class='peso-texto'>{rojo[col_g_cot]:.3f}</span></td><td>{an_r:03}</td><td class='col-e'>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-right:3px solid green'><span class='nombre-partido'>{verde['PARTIDO']}</span><span class='peso-texto'>{verde[col_g_cot]:.3f}</span></td><td>□</td></tr>"; pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
@@ -312,38 +272,33 @@ with t_ayu:
     with c1:
         st.markdown('<div class="protocol-step"><span class="protocol-number">01</span><span class="protocol-title">Configuración Inicial</span><div class="protocol-text">Defina la modalidad en REGISTRO. Una vez guardado el primer partido, se bloquea.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="protocol-step"><span class="protocol-number">02</span><span class="protocol-title">Captura de Pesos</span><div class="protocol-text">Ingrese el partido y peso. El sistema asigna el <b>anillo automático</b>.</div></div>', unsafe_allow_html=True)
-    with col_g: # Nota: Se mantiene el diseño solicitado
-        pass
     with c2:
         st.markdown('<div class="protocol-step"><span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span><div class="protocol-text">Revise pesos en COTEJO. El sistema evita peleas contra el mismo partido.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="protocol-step"><span class="protocol-number">04</span><span class="protocol-title">Reporte y Cierre</span><div class="protocol-text">Descargue el PDF oficial. Use "Limpiar Todo" para un nuevo evento.</div></div>', unsafe_allow_html=True)
     
     st.divider()
-    st.markdown("### 🎓 Tutorial de Uso del Sistema")
-    with st.container():
-        st.markdown("""
+    st.markdown("### 🎓 Tutorial de Uso Rápido")
+    st.markdown("""
         <div class="tutorial-card">
             <ol>
-                <li><b>Paso 1:</b> En la pestaña <b>Registro</b>, selecciona cuántos gallos pelearán por partido (esto solo se puede hacer al inicio).</li>
-                <li><b>Paso 2:</b> Escribe el nombre del partido y los pesos. Verás que debajo de cada peso aparece el <b>número de anillo</b> asignado automáticamente en orden correlativo.</li>
-                <li><b>Paso 3:</b> Haz clic en <b>Guardar Partido</b>. Repite esto con todos los participantes.</li>
-                <li><b>Paso 4:</b> Si te equivocas en un peso o nombre, usa la <b>Tabla de Edición</b> abajo para corregir y el sistema actualizará todo al instante.</li>
-                <li><b>Paso 5:</b> Ve a la pestaña <b>Cotejo</b>. Aquí el sistema ya emparejó a los gallos por peso similar, evitando que un partido pelee contra sí mismo.</li>
-                <li><b>Paso 6:</b> Revisa las diferencias de peso. Si ves un cuadro en rojo, significa que excede la tolerancia permitida (80 gramos).</li>
-                <li><b>Paso 7:</b> Haz clic en <b>Generar PDF Oficial</b> para obtener el documento impreso para el juez y la mesa.</li>
+                <li><b>Registro:</b> Elija cuántos gallos por partido (2-6). Escriba el nombre y los pesos.</li>
+                <li><b>Anillos:</b> No se preocupe por el folio, el sistema asigna el <b>ANILLO</b> automáticamente.</li>
+                <li><b>Correcciones:</b> Use la tabla de edición para cambiar pesos o borrar partidos (casilla ❌).</li>
+                <li><b>Sorteo:</b> En la pestaña <b>Cotejo</b> verá los enfrentamientos listos, ordenados por peso.</li>
+                <li><b>Impresión:</b> Presione <b>Generar PDF</b> para obtener la hoja oficial de combate.</li>
             </ol>
         </div>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 with st.sidebar:
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True): st.session_state.clear(); st.rerun()
     st.divider(); acceso = st.text_input("Acceso Admin:", type="password")
     if acceso == "28days":
-        st.subheader("👥 Usuarios Registrados")
+        st.subheader("👥 Usuarios y Claves")
         users = cargar_usuarios()
         if users: st.json(users)
         
-        st.subheader("📂 Base de Datos (Archivos)")
+        st.subheader("📂 Datos de Sistema")
         archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
         for arch in archivos:
             with st.expander(f"📄 {arch}", expanded=True):
@@ -351,8 +306,6 @@ with st.sidebar:
                     with open(arch, "r", encoding="utf-8") as f:
                         contenido = f.read()
                     st.code(contenido, language="text")
-                except: st.error("No se pudo leer el archivo")
-                
-                if st.button("Eliminar Archivo", key=f"del_{arch}"):
-                    os.remove(arch)
-                    st.rerun()
+                except: st.error("Error al leer")
+                if st.button("Eliminar", key=f"del_{arch}"):
+                    os.remove(arch); st.rerun()
