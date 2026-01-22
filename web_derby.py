@@ -97,7 +97,7 @@ if st.session_state.id_usuario == "":
             <div class="desc-box">
                 <div style="color:#E67E22; font-weight:bold; font-size:0.85rem; margin-bottom:3px;">¿QUÉ ES ESTE SISTEMA?</div>
                 <div style="font-size:0.75rem; line-height:1.3; color:#ccc;">
-                    Plataforma de <b>sorteo digital</b> que garantiza transparencia y combates justos mediante emparejamiento inteligente.
+                    Plataforma de <b>sorteo digital</b> que garantiza transparencia y combates gallisticos justos mediante emparejamiento inteligente.
                 </div>
             </div>
         """, unsafe_allow_html=True)
