@@ -213,7 +213,7 @@ def generar_pdf(partidos, n_gallos):
 # --- INTERFAZ ---
 if 'partidos' not in st.session_state: st.session_state.partidos, st.session_state.n_gallos = cargar()
 st.title("DerbySystem ")
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 MANUAL DE OPERACIÓN"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
