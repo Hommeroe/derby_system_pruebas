@@ -70,6 +70,10 @@ if st.session_state.id_usuario == "":
             font-size: 0.75rem; color: #888; text-align: center;
             letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase;
         }
+        .login-footer {
+            text-align: center; font-size: 0.7rem; color: #999;
+            margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -95,6 +99,9 @@ if st.session_state.id_usuario == "":
                 if nu and np == cp:
                     if registrar_usuario(nu, np): st.success("Registrado correctamente")
                     else: st.warning("El usuario ya existe")
+        
+        # PIE DE PÁGINA ACTUALIZADO A 2026
+        st.markdown('<div class="login-footer">© 2026 DerbySystem PRO | Plataforma Actualizada | Gestión Segura</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
