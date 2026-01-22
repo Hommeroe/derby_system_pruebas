@@ -47,14 +47,18 @@ def registrar_usuario(usuario, password):
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA ---
+# --- PANTALLA DE ENTRADA (MODIFICADA SOLO AQUÍ) ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        .stApp { margin-top: -60px !important; }
-        .block-container { padding-top: 2rem !important; }
+        /* OCULTAR HEADER Y ELIMINAR ESPACIO SUPERIOR */
+        header[data-testid="stHeader"] { display: none !important; }
+        .block-container { padding-top: 0rem !important; margin-top: 0rem !important; }
+        
         .login-card {
-            max-width: 480px; margin: 0 auto; background: #ffffff;
+            max-width: 480px; 
+            margin: 20px auto 0 auto; /* Pequeño margen superior para no pegar al borde */
+            background: #ffffff;
             padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             border-top: 5px solid #E67E22;
         }
@@ -100,7 +104,7 @@ if st.session_state.id_usuario == "":
                     if registrar_usuario(nu, np): st.success("Registrado correctamente")
                     else: st.warning("El usuario ya existe")
         
-        # PIE DE PÁGINA ACTUALIZADO A 2026
+        # PIE DE PÁGINA
         st.markdown('<div class="login-footer">© 2026 DerbySystem PRO | Plataforma Actualizada | Gestión Segura</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
@@ -359,7 +363,7 @@ with t_ayu:
     st.divider()
     with st.expander("🔍 Reglas de Lógica del Sistema", expanded=True):
         st.markdown("""
-        * **Anillos:** Se generan automáticamente de forma secuencial según el orden de entrada. [cite: 2026-01-14]
+        * **Anillos:** Se generan automáticamente de forma secuencial según el orden de entrada.
         * **Tolerancia:** El sistema marca en rojo diferencias de peso mayores a **80 gramos (0.080)**.
         * **Emparejamiento:** Se prioriza el peso más cercano, siempre saltando al siguiente rival si el actual es del mismo partido.
         """)
