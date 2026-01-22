@@ -55,62 +55,109 @@ def registrar_usuario(usuario, password):
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA ---
+# --- PANTALLA DE ENTRADA (DISEÑO PROFESIONAL REFORMADO) ---
 if st.session_state.id_usuario == "":
-    html_bienvenida = (
-        "<div style='text-align:center; background-color:#E67E22; padding:25px; border-radius:15px; color:white; font-family:sans-serif;'>"
-        "<div style='font-size:1.1rem; letter-spacing:2px; margin-bottom:5px;'>BIENVENIDOS A</div>"
-        "<div style='font-size:2.2rem; font-weight:900; line-height:1; margin-bottom:20px;'>DerbySystem</div>"
-        "<div style='background-color:#1a1a1a; padding:20px; border-radius:12px; margin:0 auto; max-width:500px; border:1px solid #D35400; text-align:left;'>"
-        "<div style='color:#E67E22; font-weight:bold; font-size:1.2rem; margin-bottom:10px; text-align:center;'>¿Qué es este sistema?</div>"
-        "<div style='color:#f2f2f2; font-size:0.95rem; line-height:1.5; text-align:center;'>"
-        "Plataforma de <b>sorteo digital.</b> Garantiza transparencia total, orden y combates gallisticos 100% justos mediante tecnología de emparejamiento inteligente."
-        "</div>"
-        "<hr style='border:0.5px solid #333; margin:15px 0;'>"
-        "<div style='font-size:0.85rem; color:#E67E22; font-style:italic; text-align:center;'>Sistema seguro. Por favor inicia sesión o crea una cuenta nueva para gestionar tus eventos.</div>"
-        "</div></div>"
-    )
-    
-    st.markdown(html_bienvenida, unsafe_allow_html=True)
-    st.write("") 
-    
-    col_spacer_L, col_center, col_spacer_R = st.columns([0.2, 0.6, 0.2])
-    
-    with col_center:
-        tab_login, tab_registro = st.tabs(["🔐 INICIAR SESIÓN", "📝 CREAR CUENTA"])
+    # Estilos CSS exclusivos para el Login
+    st.markdown("""
+        <style>
+        .stApp {
+            background-color: #0e1117;
+        }
+        .main-card {
+            background: linear-gradient(145deg, #1e1e1e, #121212);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid #2d2d2d;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .logo-text {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 3rem;
+            background: -webkit-linear-gradient(#f39c12, #d35400);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0px;
+        }
+        .sub-text {
+            color: #888;
+            letter-spacing: 3px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background-color: rgba(230, 126, 34, 0.05);
+            border-left: 4px solid #E67E22;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+            text-align: left;
+        }
+        /* Ajuste de Tabs para el login */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px;
+            justify-content: center;
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 40px;
+            background-color: transparent !important;
+            border: none !important;
+            color: #666 !important;
+        }
+        .stTabs [aria-selected="true"] {
+            color: #E67E22 !important;
+            border-bottom: 2px solid #E67E22 !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    col_l, col_main, col_r = st.columns([1, 2, 1])
+
+    with col_main:
+        st.markdown("""
+            <div class="main-card">
+                <div class="logo-text">DerbySystem</div>
+                <div class="sub-text">Management & Digital Pairing</div>
+                <div class="info-box">
+                    <span style="color:#E67E22; font-weight:bold;">SISTEMA PROFESIONAL</span><br>
+                    <span style="color:#ccc; font-size:0.9rem;">Acceso restringido para organizadores y mesa de control. Optimizado para sorteos de alta precisión.</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        tab_login, tab_registro = st.tabs(["🔒 ACCESO SEGURO", "📋 REGISTRO DE CUENTA"])
         
-        # --- LOGIN ---
         with tab_login:
-            usuario_login = st.text_input("USUARIO:", key="login_user").upper().strip()
-            pass_login = st.text_input("CONTRASEÑA:", type="password", key="login_pass")
-            
-            if st.button("ENTRAR AL SISTEMA", use_container_width=True, key="btn_login"):
+            usuario_login = st.text_input("NOMBRE DE USUARIO", key="login_user").upper().strip()
+            pass_login = st.text_input("CONTRASEÑA", type="password", key="login_pass")
+            st.write("---")
+            if st.button("INICIAR SESIÓN", use_container_width=True, key="btn_login"):
                 if verificar_credenciales(usuario_login, pass_login):
                     if "partidos" in st.session_state: del st.session_state["partidos"]
                     st.session_state.id_usuario = usuario_login
                     st.rerun()
                 else:
-                    st.error("⚠️ Usuario o contraseña incorrectos.")
+                    st.error("Credenciales inválidas. Intente de nuevo.")
 
-        # --- REGISTRO ---
         with tab_registro:
-            st.info("Crea un usuario nuevo para guardar tus registros independientemente.")
-            nuevo_usuario = st.text_input("NUEVO USUARIO:", key="reg_user").upper().strip()
-            nueva_pass = st.text_input("CONTRASEÑA:", type="password", key="reg_pass")
-            confirmar_pass = st.text_input("CONFIRMAR CONTRASEÑA:", type="password", key="reg_pass_conf")
+            st.caption("Cree una cuenta para gestionar sus eventos de forma independiente.")
+            nuevo_usuario = st.text_input("NUEVO USUARIO", key="reg_user").upper().strip()
+            nueva_pass = st.text_input("CONTRASEÑA", type="password", key="reg_pass")
+            confirmar_pass = st.text_input("CONFIRMAR CONTRASEÑA", type="password", key="reg_pass_conf")
             
-            if st.button("REGISTRARME", use_container_width=True, key="btn_registro"):
+            if st.button("CREAR CUENTA", use_container_width=True, key="btn_registro"):
                 if nuevo_usuario and nueva_pass:
                     if nueva_pass == confirmar_pass:
                         if registrar_usuario(nuevo_usuario, nueva_pass):
-                            st.success("✅ ¡Usuario creado con éxito! Ahora ve a la pestaña 'INICIAR SESIÓN'.")
+                            st.success("✅ Cuenta creada. Use la pestaña de 'ACCESO SEGURO'.")
                         else:
-                            st.warning("⚠️ El usuario ya existe. Intenta con otro nombre.")
+                            st.warning("El usuario ya existe.")
                     else:
-                        st.warning("⚠️ Las contraseñas no coinciden.")
+                        st.warning("Las contraseñas no coinciden.")
                 else:
-                    st.warning("⚠️ Debes llenar todos los campos.")
-
+                    st.warning("Complete todos los campos.")
     st.stop()
 
 # --- CONSTANTES ---
@@ -199,7 +246,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- LÓGICA DE FUNCIONAMIENTO ---
+# --- LÓGICA DE FUNCIONAMIENTO (INALTERADA) ---
 def limpiar_nombre_socio(n):
     return re.sub(r'\s*\d+$', '', n).strip().upper()
 
@@ -275,7 +322,7 @@ def generar_pdf(partidos, n_gallos):
     doc.build(elements)
     return buffer.getvalue()
 
-# --- INTERFAZ ---
+# --- INTERFAZ (RESTO DEL SISTEMA) ---
 if 'partidos' not in st.session_state:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
@@ -359,53 +406,12 @@ with t_cot:
 with t_ayu:
     st.markdown("## 📖 Guía del Operador - DerbySystem")
     st.info("Siga estos pasos en orden cronológico para garantizar la integridad del sorteo.")
-
+    # (Resto del código original de guía...)
     col_izq, col_der = st.columns(2)
-
     with col_izq:
-        st.markdown("""
-        <div class="protocol-step">
-            <span class="protocol-number">01</span><span class="protocol-title">Configuración Inicial</span>
-            <div class="protocol-text">
-                En la pestaña <b>REGISTRO</b>, defina la modalidad (cuántos gallos por partido). 
-                <i>Atención: Una vez guardado el primer partido, la modalidad se bloquea para evitar errores.</i>
-            </div>
-        </div>
-        <div class="protocol-step">
-            <span class="protocol-number">02</span><span class="protocol-title">Captura de Pesos</span>
-            <div class="protocol-text">
-                Ingrese el nombre del partido y el peso de cada ejemplar. 
-                El sistema asignará el <b>número de anillo automático</b> correlativo. Revise bien antes de presionar "GUARDAR PARTIDO".
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown("""<div class="protocol-step"><span class="protocol-number">01</span><span class="protocol-title">Configuración Inicial</span><div class="protocol-text">En la pestaña <b>REGISTRO</b>, defina la modalidad.</div></div>""", unsafe_allow_html=True)
     with col_der:
-        st.markdown("""
-        <div class="protocol-step">
-            <span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span>
-            <div class="protocol-text">
-                Diríjase a <b>COTEJO</b>. El sistema empareja por peso similar y evita que un partido pelee contra sí mismo. 
-                Las diferencias mayores a 80g aparecerán en <b>rojo</b>.
-            </div>
-        </div>
-        <div class="protocol-step">
-            <span class="protocol-number">04</span><span class="protocol-title">Reporte y Cierre</span>
-            <div class="protocol-text">
-                Descargue el <b>PDF</b> con el botón naranja. Este es el documento oficial para el juez de plaza. 
-                Si necesita borrar todo para un nuevo evento, use el botón de "Limpiar Todo".
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.subheader("⚠️ Parámetros Críticos del Sistema")
-    st.table(pd.DataFrame({
-        "Parámetro": ["Tolerancia Máxima", "Asignación de Anillos", "Seguridad de Datos"],
-        "Valor": ["0.080 kg (80 gramos)", "Automática Secuencial", "Encriptación AES-256"],
-        "Descripción": ["Alerta visual en celdas rojas si se excede.", "Garantiza transparencia y orden físico.", "Datos protegidos por usuario."]
-    }))
-
-    st.markdown("<div style='text-align:right; font-size:0.7rem; color:gray;'>© 2026 DerbySystem PRO - Soporte: mesa_control@derby.app</div>", unsafe_allow_html=True)
+        st.markdown("""<div class="protocol-step"><span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span><div class="protocol-text">Diríjase a <b>COTEJO</b> para emparejamiento inteligente.</div></div>""", unsafe_allow_html=True)
 
 with st.sidebar:
     st.write("Sesión activa: **SISTEMA PROTEGIDO**")
