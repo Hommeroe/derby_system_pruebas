@@ -46,83 +46,38 @@ def registrar_usuario(usuario, password):
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA CORREGIDA ---
+# --- PANTALLA DE ENTRADA ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        /* Eliminar el espacio blanco superior */
         .stApp { margin-top: -60px !important; }
         .block-container { padding-top: 2rem !important; }
-        
-        .login-card {
-            max-width: 480px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border-top: 5px solid #E67E22;
-        }
-        .desc-box {
-            background-color: #1a1a1a;
-            color: #f2f2f2;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-        .main-title {
-            font-size: 2.4rem;
-            font-weight: 800;
-            color: #E67E22;
-            text-align: center;
-            margin-bottom: 0px;
-        }
-        .main-subtitle {
-            font-size: 0.75rem;
-            color: #888;
-            text-align: center;
-            letter-spacing: 3px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
+        .login-card { max-width: 480px; margin: 0 auto; background: #ffffff; padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #E67E22; }
+        .desc-box { background-color: #1a1a1a; color: #f2f2f2; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
+        .main-title { font-size: 2.4rem; font-weight: 800; color: #E67E22; text-align: center; margin-bottom: 0px; }
+        .main-subtitle { font-size: 0.75rem; color: #888; text-align: center; letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase; }
         </style>
     """, unsafe_allow_html=True)
 
     col_1, col_center, col_3 = st.columns([1, 2, 1])
-    
     with col_center:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown("""
-            <div class="desc-box">
-                <div style="color:#E67E22; font-weight:bold; font-size:0.85rem; margin-bottom:3px;">¿QUÉ ES ESTE SISTEMA?</div>
-                <div style="font-size:0.75rem; line-height:1.3; color:#ccc;">
-                    Plataforma de <b>sorteo digital</b> que garantiza transparencia y combates gallisticos justos mediante emparejamiento inteligente.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown('<div class="main-title">DerbySystem</div>', unsafe_allow_html=True)
-        st.markdown('<div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
-        
+        st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.85rem;">¿QUÉ ES ESTE SISTEMA?</div><div style="font-size:0.75rem; color:#ccc;">Sorteo digital para combates gallisticos justos.</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="main-title">DerbySystem</div><div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
         tab_login, tab_reg = st.tabs(["🔒 ACCESO", "📝 REGISTRO"])
-        
         with tab_login:
-            u = st.text_input("Usuario", key="l_u", placeholder="USUARIO").upper().strip()
-            p = st.text_input("Contraseña", key="l_p", type="password", placeholder="••••••••")
+            u = st.text_input("Usuario", key="l_u").upper().strip()
+            p = st.text_input("Contraseña", key="l_p", type="password")
             if st.button("ENTRAR AL SISTEMA", use_container_width=True):
-                if verificar_credenciales(u, p):
-                    st.session_state.id_usuario = u
-                    st.rerun()
+                if verificar_credenciales(u, p): st.session_state.id_usuario = u; st.rerun()
                 else: st.error("Credenciales incorrectas")
-        
         with tab_reg:
-            nu = st.text_input("Nuevo Usuario", key="r_u", placeholder="NUEVO USUARIO").upper().strip()
-            np = st.text_input("Nueva Pass", key="r_p", type="password", placeholder="CONTRASEÑA")
-            cp = st.text_input("Confirma Pass", key="r_c", type="password", placeholder="CONFIRMAR")
+            nu = st.text_input("Nuevo Usuario", key="r_u").upper().strip()
+            np = st.text_input("Nueva Pass", key="r_p", type="password")
+            cp = st.text_input("Confirma Pass", key="r_c", type="password")
             if st.button("REGISTRAR CUENTA", use_container_width=True):
                 if nu and np == cp:
-                    if registrar_usuario(nu, np): st.success("Registrado correctamente")
+                    if registrar_usuario(nu, np): st.success("Registrado")
                     else: st.warning("El usuario ya existe")
         st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
@@ -131,7 +86,7 @@ if st.session_state.id_usuario == "":
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS INTERNOS (RESTAURADOS) ---
+# --- ESTILOS INTERNOS ---
 st.markdown("""
     <style>
     div.stButton > button, div.stDownloadButton > button, div.stFormSubmitButton > button {
@@ -163,7 +118,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE LÓGICA (SIN CAMBIOS) ---
+# --- FUNCIONES ---
 def limpiar_nombre_socio(n): return re.sub(r'\s*\d+$', '', n).strip().upper()
 def cargar():
     partidos, n_gallos = [], 2
@@ -189,16 +144,15 @@ def generar_pdf(partidos, n_gallos):
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
     elements = []
     styles = getSampleStyleSheet()
-    zona_horaria = pytz.timezone('America/Mexico_City')
-    ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
+    ahora = datetime.now(pytz.timezone('America/Mexico_City')).strftime("%d/%m/%Y %H:%M:%S")
     data_header = [[Paragraph("<font color='white' size=22><b>DerbySystem</b></font>", styles['Title'])],
                    [Paragraph("<font color='#E67E22' size=14><b>https://tuderby.streamlit.app</b></font>", styles['Normal'])],
                    [Paragraph(f"<font color='white' size=9>REPORTE TÉCNICO DE COTEJO | {ahora}</font>", styles['Normal'])]]
     header_table = Table(data_header, colWidths=[500])
-    header_table.setStyle(TableStyle([('BACKGROUND', (0, 0), (-1, 0), colors.black), ('BACKGROUND', (0, 1), (-1, 2), colors.HexColor("#1a1a1a")), ('ALIGN', (0, 0), (-1, -1), 'CENTER'), ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]))
+    header_table.setStyle(TableStyle([('BACKGROUND', (0,0), (-1,0), colors.black), ('BACKGROUND', (0,1), (-1,2), colors.HexColor("#1a1a1a")), ('ALIGN', (0,0), (-1,-1), 'CENTER')]))
     elements.append(header_table); elements.append(Spacer(1, 20))
     for r in range(1, n_gallos + 1):
-        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2'])); elements.append(Spacer(1, 8))
+        elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
         col_g = f"G{r}"; lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
         data = [["#", "G", "PARTIDO (ROJO)", "AN.", "E", "DIF.", "AN.", "PARTIDO (VERDE)", "G"]]
         pelea_n = 1
@@ -210,7 +164,7 @@ def generar_pdf(partidos, n_gallos):
                 idx_r = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                 idx_v = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==verde["PARTIDO"])
                 an_r, an_v = (idx_r * n_gallos) + r, (idx_v * n_gallos) + r
-                data.append([pelea_n, "[  ]", Paragraph(f"<b>{rojo['PARTIDO']}</b><br/><font size=8>({rojo[col_g]:.3f})</font>", styles['Normal']), f"{an_r:03}", "[  ]", f"{d:.3f}", f"{an_v:03}", Paragraph(f"<b>{verde['PARTIDO']}</b><br/><font size=8>({verde[col_g]:.3f})</font>", styles['Normal']), "[  ]"])
+                data.append([pelea_n, "[ ]", Paragraph(f"<b>{rojo['PARTIDO']}</b><br/><font size=8>({rojo[col_g]:.3f})</font>", styles['Normal']), f"{an_r:03}", "[ ]", f"{d:.3f}", f"{an_v:03}", Paragraph(f"<b>{verde['PARTIDO']}</b><br/><font size=8>({verde[col_g]:.3f})</font>", styles['Normal']), "[ ]"])
                 pelea_n += 1
             else: break
         t = Table(data, colWidths=[20, 30, 140, 30, 30, 40, 30, 140, 30])
@@ -221,7 +175,32 @@ def generar_pdf(partidos, n_gallos):
 
 # --- INTERFAZ ---
 if 'partidos' not in st.session_state: st.session_state.partidos, st.session_state.n_gallos = cargar()
-st.title("DerbySystem ")
+
+with st.sidebar:
+    if st.button("🚪 CERRAR SESIÓN", use_container_width=True): st.session_state.clear(); st.rerun()
+    st.divider()
+    acceso = st.text_input("Acceso Admin:", type="password")
+
+# LOGICA PANEL ADMINISTRADOR (RESTAURADA AL ÁREA PRINCIPAL)
+if acceso == "28days":
+    st.title("🛠️ Panel de Control Administrador")
+    archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
+    for arch in archivos:
+        with st.container():
+            col_t, col_b = st.columns([5, 1])
+            col_t.subheader(f"Archivo: {arch}")
+            if col_b.button("🗑️ Eliminar", key=f"del_{arch}"):
+                os.remove(arch); st.rerun()
+            try:
+                df_temp = pd.read_csv(arch, sep="|", header=None)
+                st.table(df_temp)
+            except: st.warning(f"No se pudo leer {arch} o está vacío.")
+            st.divider()
+    if st.button("⬅️ VOLVER AL SISTEMA"): st.rerun()
+    st.stop()
+
+# INTERFAZ NORMAL
+st.title("DerbySystem")
 t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
 
 with t_reg:
@@ -263,16 +242,11 @@ with t_reg:
                     for i in range(1, st.session_state.n_gallos + 1): p_upd[f"G{i}"] = float(r[f"G{i}"])
                     nuevos.append(p_upd)
             st.session_state.partidos = nuevos; guardar(nuevos); st.rerun()
-        if st.button("🚨 LIMPIAR TODO EL EVENTO", use_container_width=True):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.session_state.partidos = []; st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) >= 2:
-        try:
-            pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-            st.download_button(label="📥 GENERAR PDF OFICIAL", data=pdf_bytes, file_name="cotejo.pdf", mime="application/pdf", use_container_width=True, type="primary")
-        except: st.error("Error al generar PDF")
+        pdf_bytes = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
+        st.download_button(label="📥 GENERAR PDF OFICIAL", data=pdf_bytes, file_name="cotejo.pdf", mime="application/pdf", use_container_width=True, type="primary")
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
@@ -301,12 +275,3 @@ with t_ayu:
     with c2:
         st.markdown('<div class="protocol-step"><span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span><div class="protocol-text">Revise pesos en COTEJO. El sistema evita peleas contra el mismo partido.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="protocol-step"><span class="protocol-number">04</span><span class="protocol-title">Reporte y Cierre</span><div class="protocol-text">Descargue el PDF oficial. Use "Limpiar Todo" para un nuevo evento.</div></div>', unsafe_allow_html=True)
-
-with st.sidebar:
-    if st.button("🚪 CERRAR SESIÓN", use_container_width=True): st.session_state.clear(); st.rerun()
-    st.divider(); acceso = st.text_input("Acceso Admin:", type="password")
-    if acceso == "28days":
-        archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
-        for arch in archivos:
-            with st.expander(f"Ver: {arch}"):
-                if st.button("Eliminar", key=arch): os.remove(arch); st.rerun()
