@@ -58,6 +58,11 @@ if st.session_state.id_usuario == "":
             padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             border-top: 5px solid #E67E22;
         }
+        .rooster-img {
+            width: 100%; height: 200px; object-fit: cover;
+            border-radius: 8px; margin-bottom: 15px;
+            border: 1px solid #ddd;
+        }
         .desc-box {
             background-color: #1a1a1a; color: #f2f2f2; padding: 12px;
             border-radius: 8px; margin-bottom: 15px; text-align: center;
@@ -80,6 +85,9 @@ if st.session_state.id_usuario == "":
     col_1, col_center, col_3 = st.columns([1, 2, 1])
     with col_center:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        # IMAGEN DEL GALLO (Realistic Gamecock)
+        st.markdown('<img src="https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=1000&auto=format&fit=crop" class="rooster-img">', unsafe_allow_html=True)
+        
         st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.85rem; margin-bottom:3px;">¿QUÉ ES ESTE SISTEMA?</div><div style="font-size:0.75rem; line-height:1.3; color:#ccc;">Plataforma de <b>sorteo digital</b> que garantiza transparencia y combates gallisticos justos.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="main-title">DerbySystem</div><div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
         tab_login, tab_reg = st.tabs(["🔒 ACCESO", "📝 REGISTRO"])
@@ -100,7 +108,6 @@ if st.session_state.id_usuario == "":
                     if registrar_usuario(nu, np): st.success("Registrado correctamente")
                     else: st.warning("El usuario ya existe")
         
-        # PIE DE PÁGINA ACTUALIZADO A 2026
         st.markdown('<div class="login-footer">© 2026 DerbySystem PRO | Plataforma Actualizada | Gestión Segura</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
