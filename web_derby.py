@@ -285,7 +285,7 @@ with t_cot:
 with t_ayu:
     st.markdown("""
         <div class="tutorial-header">
-            <h1>Manual de Operación Maestro</h1>
+            <h1>Manual de Operación</h1>
             <p>Guía paso a paso para la gestión técnica del torneo</p>
         </div>
     """, unsafe_allow_html=True)
