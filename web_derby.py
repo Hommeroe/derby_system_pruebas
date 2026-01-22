@@ -62,7 +62,7 @@ if st.session_state.id_usuario == "":
     col_1, col_center, col_3 = st.columns([1, 2, 1])
     with col_center:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.85rem;">¿QUÉ ES ESTE SISTEMA?</div><div style="font-size:0.75rem; color:#ccc;">Sorteo digital para combates gallisticos justos.</div></div>', unsafe_allow_html=True)
+        st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.85rem;">SISTEMA PROFESIONAL</div><div style="font-size:0.75rem; color:#ccc;">Gestión de pesajes y sorteos automáticos.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="main-title">DerbySystem</div><div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
         tab_login, tab_reg = st.tabs(["🔒 ACCESO", "📝 REGISTRO"])
         with tab_login:
@@ -109,12 +109,6 @@ st.markdown("""
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
     .col-num { width: 22px; } .col-g { width: 25px; } .col-an { width: 35px; } 
     .col-e { width: 22px; background-color: #f1f2f6; } .col-dif { width: 45px; }
-    .protocol-step {
-        background-color: white; padding: 15px; border-radius: 10px;
-        border-left: 6px solid #E67E22; margin-bottom: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
-    }
-    .protocol-number { font-size: 1.3rem; font-weight: 900; color: #E67E22; margin-right: 10px; }
-    .protocol-title { font-size: 1rem; font-weight: bold; color: #1a1a1a; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -179,11 +173,17 @@ if 'partidos' not in st.session_state: st.session_state.partidos, st.session_sta
 with st.sidebar:
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True): st.session_state.clear(); st.rerun()
     st.divider()
-    acceso = st.text_input("Acceso Admin:", type="password")
+    # Clave de administrador
+    acceso = st.text_input("Acceso Admin:", type="password", key="admin_key")
 
-# LOGICA PANEL ADMINISTRADOR (RESTAURADA AL ÁREA PRINCIPAL)
+# PANEL ADMINISTRADOR
 if acceso == "28days":
     st.title("🛠️ Panel de Control Administrador")
+    if st.button("⬅️ VOLVER AL SISTEMA", type="primary"): 
+        st.session_state["admin_key"] = "" # Limpiamos la clave para salir
+        st.rerun()
+    
+    st.divider()
     archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
     for arch in archivos:
         with st.container():
@@ -196,12 +196,11 @@ if acceso == "28days":
                 st.table(df_temp)
             except: st.warning(f"No se pudo leer {arch} o está vacío.")
             st.divider()
-    if st.button("⬅️ VOLVER AL SISTEMA"): st.rerun()
     st.stop()
 
 # INTERFAZ NORMAL
 st.title("DerbySystem")
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 PROTOCOLO DE OPERACIÓN"])
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 MANUAL DE OPERACIÓN"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
@@ -266,12 +265,24 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
-    st.markdown("## 📖 Guía del Operador")
-    st.info("Siga estos pasos para garantizar la integridad del sorteo.")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown('<div class="protocol-step"><span class="protocol-number">01</span><span class="protocol-title">Configuración Inicial</span><div class="protocol-text">Defina la modalidad en REGISTRO. Una vez guardado el primer partido, se bloquea.</div></div>', unsafe_allow_html=True)
-        st.markdown('<div class="protocol-step"><span class="protocol-number">02</span><span class="protocol-title">Captura de Pesos</span><div class="protocol-text">Ingrese el partido y peso. El sistema asigna el <b>anillo automático</b>.</div></div>', unsafe_allow_html=True)
-    with c2:
-        st.markdown('<div class="protocol-step"><span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span><div class="protocol-text">Revise pesos en COTEJO. El sistema evita peleas contra el mismo partido.</div></div>', unsafe_allow_html=True)
-        st.markdown('<div class="protocol-step"><span class="protocol-number">04</span><span class="protocol-title">Reporte y Cierre</span><div class="protocol-text">Descargue el PDF oficial. Use "Limpiar Todo" para un nuevo evento.</div></div>', unsafe_allow_html=True)
+    st.header("📖 Manual de Uso del Sistema")
+    st.markdown("""
+    ### 1. Configuración de Gallos
+    Al iniciar un nuevo evento, seleccione la cantidad de gallos por partido (2 a 6). **Importante:** Esta opción se bloquea una vez que ingrese el primer partido para mantener la consistencia.
+    
+    ### 2. Registro de Pesos y Anillos
+    - Ingrese el nombre del partido.
+    - El sistema asignará **Automáticamente** los números de anillo de forma consecutiva según el orden de entrada. No es necesario escribirlos manualmente.
+    - Presione 'Guardar Partido' para registrar los datos.
+    
+    ### 3. Edición y Eliminación
+    En la tabla de edición puede corregir nombres o pesos. Si desea eliminar un partido, marque la casilla de la izquierda (**X**) y los cambios se guardarán automáticamente.
+    
+    ### 4. Generación de Cotejo
+    En la pestaña **Cotejo**, el sistema ordena los gallos por peso y busca la mejor pelea evitando que un partido pelee contra sí mismo. 
+    - Las celdas rojas indican que la diferencia de peso excede la tolerancia permitida (0.080).
+    - Puede descargar el reporte oficial en formato PDF.
+    
+    ### 5. Seguridad
+    Para borrar todos los datos del evento actual, use el botón de 'Limpiar Todo' o cierre sesión.
+    """)
