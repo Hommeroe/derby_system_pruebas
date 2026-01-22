@@ -47,36 +47,28 @@ def registrar_usuario(usuario, password):
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA (REDiseño para quitar el rectángulo blanco) ---
+# --- PANTALLA DE ENTRADA ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        /* Ocultar elementos de Streamlit */
-        header[data-testid="stHeader"] { display: none !important; }
-        footer { visibility: hidden; }
+        .stApp { margin-top: -60px !important; }
         .block-container { padding-top: 2rem !important; }
-        
         .login-card {
             max-width: 480px; margin: 0 auto; background: #ffffff;
-            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            overflow: hidden; /* Importante para que el banner negro pegue arriba */
+            padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-top: 5px solid #E67E22;
         }
         .desc-box {
-            background-color: #1a1a1a; color: #f2f2f2; padding: 25px 15px;
-            text-align: center; border-top: 6px solid #E67E22;
+            background-color: #1a1a1a; color: #f2f2f2; padding: 12px;
+            border-radius: 8px; margin-bottom: 15px; text-align: center;
         }
-        .login-content { padding: 25px; }
         .main-title {
             font-size: 2.4rem; font-weight: 800; color: #E67E22;
             text-align: center; margin-bottom: 0px;
         }
         .main-subtitle {
             font-size: 0.75rem; color: #888; text-align: center;
-            letter-spacing: 3px; margin-bottom: 20px; text-transform: uppercase;
-        }
-        .login-footer {
-            text-align: center; font-size: 0.7rem; color: #999;
-            margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px;
+            letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase;
         }
         </style>
     """, unsafe_allow_html=True)
@@ -84,12 +76,8 @@ if st.session_state.id_usuario == "":
     col_1, col_center, col_3 = st.columns([1, 2, 1])
     with col_center:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        # El bloque negro ahora es lo primero que aparece (sin espacio blanco arriba)
-        st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.9rem; margin-bottom:5px;">¿QUÉ ES ESTE SISTEMA?</div><div style="font-size:0.8rem; line-height:1.4; color:#ccc;">Plataforma de <b>sorteo digital</b> que garantiza transparencia y combates gallisticos justos.</div></div>', unsafe_allow_html=True)
-        
-        st.markdown('<div class="login-content">', unsafe_allow_html=True)
+        st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.85rem; margin-bottom:3px;">¿QUÉ ES ESTE SISTEMA?</div><div style="font-size:0.75rem; line-height:1.3; color:#ccc;">Plataforma de <b>sorteo digital</b> que garantiza transparencia y combates gallisticos justos.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="main-title">DerbySystem</div><div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
-        
         tab_login, tab_reg = st.tabs(["🔒 ACCESO", "📝 REGISTRO"])
         with tab_login:
             u = st.text_input("Usuario", key="l_u", placeholder="USUARIO").upper().strip()
@@ -107,16 +95,14 @@ if st.session_state.id_usuario == "":
                 if nu and np == cp:
                     if registrar_usuario(nu, np): st.success("Registrado correctamente")
                     else: st.warning("El usuario ya existe")
-        
-        st.markdown('<div class="login-footer">© 2026 DerbySystem PRO | Plataforma Actualizada | Gestión Segura</div>', unsafe_allow_html=True)
-        st.markdown('</div></div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
 # --- CONSTANTES ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS INTERNOS (SISTEMA) ---
+# --- ESTILOS INTERNOS ---
 st.markdown("""
     <style>
     div.stButton > button, div.stDownloadButton > button, div.stFormSubmitButton > button {
@@ -140,6 +126,7 @@ st.markdown("""
     .col-num { width: 22px; } .col-g { width: 25px; } .col-an { width: 35px; } 
     .col-e { width: 22px; background-color: #f1f2f6; } .col-dif { width: 45px; }
     
+    /* ESTILOS TUTORIAL */
     .tutorial-header {
         background: #1a1a1a; color: #E67E22; padding: 20px;
         border-radius: 10px; text-align: center; border-left: 10px solid #E67E22;
@@ -195,8 +182,7 @@ def generar_pdf(partidos, n_gallos):
     
     for r in range(1, n_gallos + 1):
         elements.append(Paragraph(f"<b>RONDA {r}</b>", styles['Heading2']))
-        col_g = f"G{r}"
-        lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
+        col_g = f"G{r}"; lista = sorted([dict(p) for p in partidos], key=lambda x: x[col_g])
         data = [["#", "G", "PARTIDO (ROJO)", "AN.", "E", "DIF.", "AN.", "PARTIDO (VERDE)", "G"]]
         pelea_n = 1
         while len(lista) >= 2:
@@ -274,8 +260,7 @@ with t_cot:
         st.divider()
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
-            col_g_cot = f"G{r}"
-            lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g_cot])
+            col_g_cot = f"G{r}"; lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g_cot])
             html = """<table class='tabla-final'><thead><tr><th class='col-num'>#</th><th class='col-g'>G</th><th>ROJO</th><th class='col-an'>AN.</th><th class='col-e'>E</th><th class='col-dif'>DIF.</th><th class='col-an'>AN.</th><th>VERDE</th><th class='col-g'>G</th></tr></thead><tbody>"""
             pelea_n = 1
             while len(lista) >= 2:
@@ -297,28 +282,97 @@ with t_ayu:
             <p>Guía paso a paso para la gestión técnica del torneo</p>
         </div>
     """, unsafe_allow_html=True)
-    r1c1, r1c2, r1c3 = st.columns(3)
-    with r1c1: st.markdown('<div class="card-tutorial"><div class="step-icon">⚙️</div><div class="step-title">1. Configuración</div><div class="step-text">Defina la cantidad de gallos en Registro. Se bloquea al guardar el primer partido.</div></div>', unsafe_allow_html=True)
-    with r1c2: st.markdown('<div class="card-tutorial"><div class="step-icon">⚖️</div><div class="step-title">2. Captura</div><div class="step-text">Ingrese pesos. El sistema asigna el anillo automático correlativo.</div></div>', unsafe_allow_html=True)
-    with r1c3: st.markdown('<div class="card-tutorial"><div class="step-icon">✏️</div><div class="step-title">3. Edición</div><div class="step-text">Use la tabla para corregir errores. Todo se recalcula al instante.</div></div>', unsafe_allow_html=True)
+
+    row1_col1, row1_col2, row1_col3 = st.columns(3)
+    with row1_col1:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">⚙️</div>
+                <div class="step-title">1. Configuración Inicial</div>
+                <div class="step-text">
+                    Vaya a <b>Registro</b> y elija la cantidad de gallos por partido. 
+                    <br><br>⚠️ <i>Este valor se bloquea al guardar el primer participante.</i>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    with row1_col2:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">⚖️</div>
+                <div class="step-title">2. Captura de Pesos</div>
+                <div class="step-text">
+                    Ingrese el nombre del partido y el peso de cada gallo. El sistema asignará el <span class="highlight-anillo">anillo automático</span> correlativo para mantener el orden.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    with row1_col3:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">✏️</div>
+                <div class="step-title">3. Edición de Datos</div>
+                <div class="step-text">
+                    Si cometió un error, use la <b>Tabla de Edición</b>. Puede corregir nombres o pesos y el sistema recalculará los cotejos al instante.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
     st.write("")
-    r2c1, r2c2, r2c3 = st.columns(3)
-    with r2c1: st.markdown('<div class="card-tutorial"><div class="step-icon">📊</div><div class="step-title">4. Cotejo</div><div class="step-text">Emparejamiento inteligente que evita peleas entre el mismo partido.</div></div>', unsafe_allow_html=True)
-    with r2c2: st.markdown('<div class="card-tutorial"><div class="step-icon">📄</div><div class="step-title">5. PDF</div><div class="step-text">Genere el reporte oficial con todos los datos validados para los jueces.</div></div>', unsafe_allow_html=True)
-    with r2c3: st.markdown('<div class="card-tutorial"><div class="step-icon">🧹</div><div class="step-title">6. Cierre</div><div class="step-text">Limpie los datos al terminar para preparar el siguiente evento.</div></div>', unsafe_allow_html=True)
+    row2_col1, row2_col2, row2_col3 = st.columns(3)
+    with row2_col1:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">📊</div>
+                <div class="step-title">4. Validación de Cotejo</div>
+                <div class="step-text">
+                    En <b>Cotejo</b>, el sistema empareja por peso y garantiza que un partido <b>no pelee contra sí mismo</b>.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    with row2_col2:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">📄</div>
+                <div class="step-title">5. PDF Oficial</div>
+                <div class="step-text">
+                    Genere el PDF oficial. Este documento contiene los anillos asignados y los pesos validados para la mesa de jueces.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    with row2_col3:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">🧹</div>
+                <div class="step-title">6. Cierre de Evento</div>
+                <div class="step-text">
+                    Al terminar, use <b>Limpiar Todo el Evento</b> para borrar los datos y preparar el sistema para el siguiente derby.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
     st.divider()
-    with st.expander("🔍 Reglas de Lógica", expanded=True):
-        st.markdown("* **Anillos:** Secuenciales automáticos.\n* **Tolerancia:** Alerta roja en diferencias > 0.080.\n* **Filtro:** Nunca empareja socios iguales.")
+    with st.expander("🔍 Reglas de Lógica del Sistema", expanded=True):
+        st.markdown("""
+        * **Anillos:** Se generan automáticamente de forma secuencial según el orden de entrada. [cite: 2026-01-14]
+        * **Tolerancia:** El sistema marca en rojo diferencias de peso mayores a **80 gramos (0.080)**.
+        * **Emparejamiento:** Se prioriza el peso más cercano, siempre saltando al siguiente rival si el actual es del mismo partido.
+        """)
 
 with st.sidebar:
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True): st.session_state.clear(); st.rerun()
     st.divider(); acceso = st.text_input("Acceso Admin:", type="password")
     if acceso == "28days":
-        u_db = cargar_usuarios(); st.json(u_db) if u_db else None
+        st.subheader("👥 Usuarios y Claves")
+        users = cargar_usuarios()
+        if users: st.json(users)
+        
+        st.subheader("📂 Datos de Sistema")
         archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
         for arch in archivos:
-            with st.expander(f"📄 {arch}"):
+            with st.expander(f"📄 {arch}", expanded=True):
                 try:
-                    with open(arch, "r", encoding="utf-8") as f: st.code(f.read())
-                    if st.button("Eliminar", key=f"del_{arch}"): os.remove(arch); st.rerun()
-                except: st.error("Error")
+                    with open(arch, "r", encoding="utf-8") as f:
+                        contenido = f.read()
+                    st.code(contenido, language="text")
+                except: st.error("Error al leer")
+                if st.button("Eliminar", key=f"del_{arch}"):
+                    os.remove(arch); st.rerun()
