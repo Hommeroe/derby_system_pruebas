@@ -55,68 +55,70 @@ def registrar_usuario(usuario, password):
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 
-# --- PANTALLA DE ENTRADA (COMPACTA Y PROFESIONAL) ---
+# --- PANTALLA DE ENTRADA (DISEÑO AJUSTADO Y PROFESIONAL) ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        /* Eliminar márgenes superiores de Streamlit */
-        .block-container { padding-top: 2rem !important; }
+        /* Ajuste de márgenes superiores para evitar espacio muerto */
+        .block-container { padding-top: 5rem !important; }
         
-        .login-container {
-            max-width: 450px;
+        .login-card {
+            max-width: 500px;
             margin: 0 auto;
-            background: #1e1e1e;
-            padding: 30px;
-            border-radius: 15px;
-            border: 1px solid #333;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-top: 5px solid #E67E22;
         }
-        .title-brand {
-            font-size: 2.5rem;
+        .main-title {
+            font-family: 'Helvetica Neue', sans-serif;
+            font-size: 2.8rem;
             font-weight: 800;
             color: #E67E22;
             text-align: center;
             margin-bottom: 0px;
-            line-height: 1;
+            letter-spacing: -1px;
         }
-        .subtitle-brand {
-            font-size: 0.75rem;
-            color: #777;
+        .main-subtitle {
+            font-size: 0.85rem;
+            color: #888;
             text-align: center;
-            letter-spacing: 4px;
-            margin-bottom: 25px;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
             text-transform: uppercase;
+            font-weight: 500;
         }
-        /* Compactar Tabs */
-        .stTabs [data-baseweb="tab-list"] { gap: 8px; }
+        /* Estilo para los Tabs de login */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
         .stTabs [data-baseweb="tab"] {
-            font-size: 0.8rem !important;
-            height: 35px !important;
-            padding: 0 20px !important;
+            font-weight: 600 !important;
+            color: #555 !important;
         }
-        /* Ajustar inputs */
-        div[data-baseweb="input"] { margin-bottom: -10px; }
+        .stTabs [aria-selected="true"] {
+            color: #E67E22 !important;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-    # Contenedor principal centrado
-    st.write("") # Espaciador
-    st.write("")
-    
-    col_l, col_center, col_r = st.columns([1, 1.5, 1])
+    col_1, col_center, col_3 = st.columns([1, 1.8, 1])
     
     with col_center:
-        st.markdown('<div class="login-container">', unsafe_allow_html=True)
-        st.markdown('<div class="title-brand">DerbySystem</div>', unsafe_allow_html=True)
-        st.markdown('<div class="subtitle-brand">PRO MANAGEMENT</div>', unsafe_allow_html=True)
+        st.markdown('<div class="login-card">', unsafe_allow_html=True)
+        st.markdown('<div class="main-title">DerbySystem</div>', unsafe_allow_html=True)
+        st.markdown('<div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
         
-        tab_login, tab_reg = st.tabs(["🔐 ACCESO", "📝 REGISTRO"])
+        tab_login, tab_reg = st.tabs(["🔒 ACCESO", "📝 REGISTRO"])
         
         with tab_login:
-            u = st.text_input("Usuario", key="l_u", label_visibility="collapsed", placeholder="USUARIO").upper().strip()
-            p = st.text_input("Pass", key="l_p", type="password", label_visibility="collapsed", placeholder="CONTRASEÑA")
+            u = st.text_input("Usuario", key="l_u", placeholder="INGRESE SU USUARIO").upper().strip()
+            p = st.text_input("Contraseña", key="l_p", type="password", placeholder="••••••••")
             st.write("")
-            if st.button("ENTRAR AL PORTAL", use_container_width=True):
+            if st.button("ENTRAR AL SISTEMA", use_container_width=True):
                 if verificar_credenciales(u, p):
                     st.session_state.id_usuario = u
                     st.rerun()
@@ -124,20 +126,20 @@ if st.session_state.id_usuario == "":
                     st.error("Credenciales incorrectas")
         
         with tab_reg:
-            nu = st.text_input("Nuevo Usuario", key="r_u", label_visibility="collapsed", placeholder="NUEVO USUARIO").upper().strip()
-            np = st.text_input("Nueva Pass", key="r_p", type="password", label_visibility="collapsed", placeholder="CONTRASEÑA")
-            cp = st.text_input("Confirma Pass", key="r_c", type="password", label_visibility="collapsed", placeholder="CONFIRMAR")
-            if st.button("CREAR CUENTA", use_container_width=True):
+            nu = st.text_input("Nuevo Usuario", key="r_u", placeholder="NOMBRE DE USUARIO").upper().strip()
+            np = st.text_input("Nueva Pass", key="r_p", type="password", placeholder="CREAR CONTRASEÑA")
+            cp = st.text_input("Confirma Pass", key="r_c", type="password", placeholder="REPETIR CONTRASEÑA")
+            if st.button("REGISTRAR CUENTA", use_container_width=True):
                 if nu and np == cp:
-                    if registrar_usuario(nu, np): st.success("¡Listo! Inicia sesión")
+                    if registrar_usuario(nu, np): st.success("Cuenta creada exitosamente")
                     else: st.warning("El usuario ya existe")
         
         st.markdown('</div>', unsafe_allow_html=True)
-        st.caption("<center style='color:#555; margin-top:10px;'>v2.0 Premium | Mesa de Control</center>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align:center; color:#999; font-size:0.75rem; margin-top:15px;'>v2.0 Premium | Mesa de Control Digital</p>", unsafe_allow_html=True)
 
     st.stop()
 
-# --- TODO EL CÓDIGO RESTANTE (Lógica, Anillos, Admin) SE MANTIENE EXACTAMENTE IGUAL ---
+# --- TODO EL CÓDIGO SIGUIENTE PERMANECE INALTERADO ---
 # --- CONSTANTES ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
@@ -355,12 +357,11 @@ with t_cot:
 
 with t_ayu:
     st.markdown("## 📖 Guía del Operador - DerbySystem")
-    st.info("Siga estos pasos en orden cronológico para garantizar la integridad del sorteo.")
     col_izq, col_der = st.columns(2)
     with col_izq:
-        st.markdown("""<div class="protocol-step"><span class="protocol-number">01</span><span class="protocol-title">Configuración Inicial</span><div class="protocol-text">Defina la modalidad en REGISTRO.</div></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="protocol-step"><span class="protocol-number">01</span><span class="protocol-title">Configuración</span><div class="protocol-text">Defina la modalidad en REGISTRO.</div></div>""", unsafe_allow_html=True)
     with col_der:
-        st.markdown("""<div class="protocol-step"><span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span><div class="protocol-text">Revise pesos en COTEJO.</div></div>""", unsafe_allow_html=True)
+        st.markdown("""<div class="protocol-step"><span class="protocol-number">03</span><span class="protocol-title">Validación</span><div class="protocol-text">Revise pesos en COTEJO.</div></div>""", unsafe_allow_html=True)
 
 with st.sidebar:
     st.write("Sesión activa: **SISTEMA PROTEGIDO**")
