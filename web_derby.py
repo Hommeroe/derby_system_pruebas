@@ -132,7 +132,7 @@ if st.session_state.id_usuario == "":
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS INTERNOS (RESTAURADOS) ---
+# --- ESTILOS INTERNOS ---
 st.markdown("""
     <style>
     div.stButton > button, div.stDownloadButton > button, div.stFormSubmitButton > button {
@@ -161,10 +161,13 @@ st.markdown("""
     }
     .protocol-number { font-size: 1.3rem; font-weight: 900; color: #E67E22; margin-right: 10px; }
     .protocol-title { font-size: 1rem; font-weight: bold; color: #1a1a1a; }
+    .tutorial-card {
+        background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIONES DE LÓGICA (SIN CAMBIOS) ---
+# --- FUNCIONES DE LÓGICA ---
 def limpiar_nombre_socio(n): return re.sub(r'\s*\d+$', '', n).strip().upper()
 def cargar():
     partidos, n_gallos = [], 2
@@ -190,10 +193,7 @@ def generar_pdf(partidos, n_gallos):
     doc = SimpleDocTemplate(buffer, pagesize=letter, leftMargin=30, rightMargin=30, topMargin=30, bottomMargin=30)
     elements = []
     styles = getSampleStyleSheet()
-    
-    # Estilo personalizado para centrar nombres en PDF
     style_center = ParagraphStyle(name='Center', parent=styles['Normal'], alignment=TA_CENTER)
-    
     zona_horaria = pytz.timezone('America/Mexico_City')
     ahora = datetime.now(zona_horaria).strftime("%d/%m/%Y %H:%M:%S")
     
@@ -217,11 +217,8 @@ def generar_pdf(partidos, n_gallos):
                 idx_r = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                 idx_v = next(i for i, p in enumerate(partidos) if p["PARTIDO"]==verde["PARTIDO"])
                 an_r, an_v = (idx_r * n_gallos) + r, (idx_v * n_gallos) + r
-                
-                # Nombres centrados con ParagraphStyle
                 rojo_p = Paragraph(f"<b>{rojo['PARTIDO']}</b><br/><font size=8>({rojo[col_g]:.3f})</font>", style_center)
                 verde_p = Paragraph(f"<b>{verde['PARTIDO']}</b><br/><font size=8>({verde[col_g]:.3f})</font>", style_center)
-                
                 data.append([pelea_n, "[  ]", rojo_p, f"{an_r:03}", "[  ]", f"{d:.3f}", f"{an_v:03}", verde_p, "[  ]"])
                 pelea_n += 1
             else: break
@@ -229,8 +226,7 @@ def generar_pdf(partidos, n_gallos):
         t.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#1a1a1a")), 
             ('TEXTCOLOR', (0,0), (-1,0), colors.HexColor("#E67E22")), 
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'), 
-            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'), ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
             ('GRID', (0,0), (-1,-1), 0.5, colors.grey)
         ]))
         elements.append(t); elements.append(Spacer(1, 20))
@@ -316,15 +312,47 @@ with t_ayu:
     with c1:
         st.markdown('<div class="protocol-step"><span class="protocol-number">01</span><span class="protocol-title">Configuración Inicial</span><div class="protocol-text">Defina la modalidad en REGISTRO. Una vez guardado el primer partido, se bloquea.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="protocol-step"><span class="protocol-number">02</span><span class="protocol-title">Captura de Pesos</span><div class="protocol-text">Ingrese el partido y peso. El sistema asigna el <b>anillo automático</b>.</div></div>', unsafe_allow_html=True)
+    with col_g: # Nota: Se mantiene el diseño solicitado
+        pass
     with c2:
         st.markdown('<div class="protocol-step"><span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span><div class="protocol-text">Revise pesos en COTEJO. El sistema evita peleas contra el mismo partido.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="protocol-step"><span class="protocol-number">04</span><span class="protocol-title">Reporte y Cierre</span><div class="protocol-text">Descargue el PDF oficial. Use "Limpiar Todo" para un nuevo evento.</div></div>', unsafe_allow_html=True)
+    
+    st.divider()
+    st.markdown("### 🎓 Tutorial de Uso del Sistema")
+    with st.container():
+        st.markdown("""
+        <div class="tutorial-card">
+            <ol>
+                <li><b>Paso 1:</b> En la pestaña <b>Registro</b>, selecciona cuántos gallos pelearán por partido (esto solo se puede hacer al inicio).</li>
+                <li><b>Paso 2:</b> Escribe el nombre del partido y los pesos. Verás que debajo de cada peso aparece el <b>número de anillo</b> asignado automáticamente en orden correlativo.</li>
+                <li><b>Paso 3:</b> Haz clic en <b>Guardar Partido</b>. Repite esto con todos los participantes.</li>
+                <li><b>Paso 4:</b> Si te equivocas en un peso o nombre, usa la <b>Tabla de Edición</b> abajo para corregir y el sistema actualizará todo al instante.</li>
+                <li><b>Paso 5:</b> Ve a la pestaña <b>Cotejo</b>. Aquí el sistema ya emparejó a los gallos por peso similar, evitando que un partido pelee contra sí mismo.</li>
+                <li><b>Paso 6:</b> Revisa las diferencias de peso. Si ves un cuadro en rojo, significa que excede la tolerancia permitida (80 gramos).</li>
+                <li><b>Paso 7:</b> Haz clic en <b>Generar PDF Oficial</b> para obtener el documento impreso para el juez y la mesa.</li>
+            </ol>
+        </div>
+        """, unsafe_allow_html=True)
 
 with st.sidebar:
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True): st.session_state.clear(); st.rerun()
     st.divider(); acceso = st.text_input("Acceso Admin:", type="password")
     if acceso == "28days":
+        st.subheader("👥 Usuarios Registrados")
+        users = cargar_usuarios()
+        if users: st.json(users)
+        
+        st.subheader("📂 Base de Datos (Archivos)")
         archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
         for arch in archivos:
-            with st.expander(f"Ver: {arch}"):
-                if st.button("Eliminar", key=arch): os.remove(arch); st.rerun()
+            with st.expander(f"📄 {arch}", expanded=True):
+                try:
+                    with open(arch, "r", encoding="utf-8") as f:
+                        contenido = f.read()
+                    st.code(contenido, language="text")
+                except: st.error("No se pudo leer el archivo")
+                
+                if st.button("Eliminar Archivo", key=f"del_{arch}"):
+                    os.remove(arch)
+                    st.rerun()
