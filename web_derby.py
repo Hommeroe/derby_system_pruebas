@@ -125,13 +125,23 @@ st.markdown("""
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
     .col-num { width: 22px; } .col-g { width: 25px; } .col-an { width: 35px; } 
     .col-e { width: 22px; background-color: #f1f2f6; } .col-dif { width: 45px; }
-    .protocol-step {
-        background-color: white; padding: 15px; border-radius: 10px;
-        border-left: 6px solid #E67E22; margin-bottom: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+    
+    /* ESTILOS TUTORIAL */
+    .tutorial-header {
+        background: #1a1a1a; color: #E67E22; padding: 20px;
+        border-radius: 10px; text-align: center; border-left: 10px solid #E67E22;
+        margin-bottom: 25px;
     }
-    .protocol-number { font-size: 1.3rem; font-weight: 900; color: #E67E22; margin-right: 10px; }
-    .protocol-title { font-size: 1rem; font-weight: bold; color: #1a1a1a; }
-    .tutorial-card { background: #f9f9f9; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
+    .card-tutorial {
+        background: white; padding: 20px; border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 4px solid #E67E22;
+        height: 100%; transition: 0.3s;
+    }
+    .card-tutorial:hover { transform: translateY(-5px); }
+    .step-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .step-title { font-weight: 900; color: #1a1a1a; font-size: 1.1rem; margin-bottom: 10px; }
+    .step-text { font-size: 0.9rem; color: #555; line-height: 1.4; }
+    .highlight-anillo { color: #E67E22; font-weight: bold; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -266,29 +276,86 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
-    st.markdown("## 📖 Guía del Operador")
-    st.info("Siga estos pasos para garantizar la integridad del sorteo.")
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown('<div class="protocol-step"><span class="protocol-number">01</span><span class="protocol-title">Configuración Inicial</span><div class="protocol-text">Defina la modalidad en REGISTRO. Una vez guardado el primer partido, se bloquea.</div></div>', unsafe_allow_html=True)
-        st.markdown('<div class="protocol-step"><span class="protocol-number">02</span><span class="protocol-title">Captura de Pesos</span><div class="protocol-text">Ingrese el partido y peso. El sistema asigna el <b>anillo automático</b>.</div></div>', unsafe_allow_html=True)
-    with c2:
-        st.markdown('<div class="protocol-step"><span class="protocol-number">03</span><span class="protocol-title">Validación de Cotejo</span><div class="protocol-text">Revise pesos en COTEJO. El sistema evita peleas contra el mismo partido.</div></div>', unsafe_allow_html=True)
-        st.markdown('<div class="protocol-step"><span class="protocol-number">04</span><span class="protocol-title">Reporte y Cierre</span><div class="protocol-text">Descargue el PDF oficial. Use "Limpiar Todo" para un nuevo evento.</div></div>', unsafe_allow_html=True)
-    
-    st.divider()
-    st.markdown("### 🎓 Tutorial de Uso Rápido")
     st.markdown("""
-        <div class="tutorial-card">
-            <ol>
-                <li><b>Registro:</b> Elija cuántos gallos por partido (2-6). Escriba el nombre y los pesos.</li>
-                <li><b>Anillos:</b> No se preocupe por el folio, el sistema asigna el <b>ANILLO</b> automáticamente.</li>
-                <li><b>Correcciones:</b> Use la tabla de edición para cambiar pesos o borrar partidos (casilla ❌).</li>
-                <li><b>Sorteo:</b> En la pestaña <b>Cotejo</b> verá los enfrentamientos listos, ordenados por peso.</li>
-                <li><b>Impresión:</b> Presione <b>Generar PDF</b> para obtener la hoja oficial de combate.</li>
-            </ol>
+        <div class="tutorial-header">
+            <h1>Manual de Operación Maestro</h1>
+            <p>Guía paso a paso para la gestión técnica del torneo</p>
         </div>
     """, unsafe_allow_html=True)
+
+    row1_col1, row1_col2, row1_col3 = st.columns(3)
+    with row1_col1:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">⚙️</div>
+                <div class="step-title">1. Configuración Inicial</div>
+                <div class="step-text">
+                    Vaya a <b>Registro</b> y elija la cantidad de gallos por partido. 
+                    <br><br>⚠️ <i>Este valor se bloquea al guardar el primer participante.</i>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    with row1_col2:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">⚖️</div>
+                <div class="step-title">2. Captura de Pesos</div>
+                <div class="step-text">
+                    Ingrese el nombre del partido y el peso de cada gallo. El sistema asignará el <span class="highlight-anillo">anillo automático</span> correlativo para mantener el orden.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    with row1_col3:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">✏️</div>
+                <div class="step-title">3. Edición de Datos</div>
+                <div class="step-text">
+                    Si cometió un error, use la <b>Tabla de Edición</b>. Puede corregir nombres o pesos y el sistema recalculará los cotejos al instante.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.write("")
+    row2_col1, row2_col2, row2_col3 = st.columns(3)
+    with row2_col1:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">📊</div>
+                <div class="step-title">4. Validación de Cotejo</div>
+                <div class="step-text">
+                    En <b>Cotejo</b>, el sistema empareja por peso y garantiza que un partido <b>no pelee contra sí mismo</b>.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    with row2_col2:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">📄</div>
+                <div class="step-title">5. PDF Oficial</div>
+                <div class="step-text">
+                    Genere el PDF oficial. Este documento contiene los anillos asignados y los pesos validados para la mesa de jueces.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+    with row2_col3:
+        st.markdown("""
+            <div class="card-tutorial">
+                <div class="step-icon">🧹</div>
+                <div class="step-title">6. Cierre de Evento</div>
+                <div class="step-text">
+                    Al terminar, use <b>Limpiar Todo el Evento</b> para borrar los datos y preparar el sistema para el siguiente derby.
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    st.divider()
+    with st.expander("🔍 Reglas de Lógica del Sistema", expanded=True):
+        st.markdown("""
+        * **Anillos:** Se generan automáticamente de forma secuencial según el orden de entrada. [cite: 2026-01-14]
+        * **Tolerancia:** El sistema marca en rojo diferencias de peso mayores a **80 gramos (0.080)**.
+        * **Emparejamiento:** Se prioriza el peso más cercano, siempre saltando al siguiente rival si el actual es del mismo partido.
+        """)
 
 with st.sidebar:
     if st.button("🚪 CERRAR SESIÓN", use_container_width=True): st.session_state.clear(); st.rerun()
