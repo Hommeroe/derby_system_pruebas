@@ -8,6 +8,8 @@ import hashlib
 from datetime import datetime
 import pytz  
 from io import BytesIO
+# NUEVA IMPORTACIÓN PARA GOOGLE SHEETS
+from streamlit_gsheets import GSheetsConnection
 
 # Importamos reportlab
 from reportlab.lib.pagesizes import letter
@@ -19,7 +21,11 @@ from reportlab.lib.enums import TA_CENTER
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- GESTIÓN DE USUARIOS ---
+# --- CONEXIÓN A GOOGLE SHEETS ---
+# Esto usa los "Secrets" que pegamos anteriormente
+conn = st.connection("gsheets", type=GSheetsConnection)
+
+# --- GESTIÓN DE USUARIOS (Local por ahora) ---
 USER_DB_FILE = "usuarios_db.json"
 
 def cargar_usuarios():
@@ -100,13 +106,11 @@ if st.session_state.id_usuario == "":
                     if registrar_usuario(nu, np): st.success("Registrado correctamente")
                     else: st.warning("El usuario ya existe")
         
-        # PIE DE PÁGINA ACTUALIZADO A 2026
         st.markdown('<div class="login-footer">© 2026 DerbySystem PRO | Plataforma Actualizada | Gestión Segura</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
 # --- CONSTANTES ---
-DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
 # --- ESTILOS INTERNOS ---
@@ -130,48 +134,29 @@ st.markdown("""
     .tabla-final td, .tabla-final th { border: 1px solid #bdc3c7; text-align: center; padding: 5px 2px; color: black !important; font-size: 11px; }
     .nombre-partido { font-weight: bold; font-size: 10px; line-height: 1.1; display: block; color: black !important; }
     .peso-texto { font-size: 10px; color: #2c3e50 !important; display: block; }
-    .col-num { width: 22px; } .col-g { width: 25px; } .col-an { width: 35px; } 
-    .col-e { width: 22px; background-color: #f1f2f6; } .col-dif { width: 45px; }
-    
-    /* ESTILOS TUTORIAL */
-    .tutorial-header {
-        background: #1a1a1a; color: #E67E22; padding: 20px;
-        border-radius: 10px; text-align: center; border-left: 10px solid #E67E22;
-        margin-bottom: 25px;
-    }
-    .card-tutorial {
-        background: white; padding: 20px; border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 4px solid #E67E22;
-        height: 100%; transition: 0.3s;
-    }
-    .card-tutorial:hover { transform: translateY(-5px); }
-    .step-icon { font-size: 2.5rem; margin-bottom: 10px; }
-    .step-title { font-weight: 900; color: #1a1a1a; font-size: 1.1rem; margin-bottom: 10px; }
-    .step-text { font-size: 0.9rem; color: #555; line-height: 1.4; }
-    .highlight-anillo { color: #E67E22; font-weight: bold; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIONES ---
-def limpiar_nombre_socio(n): return re.sub(r'\s*\d+$', '', n).strip().upper()
+# --- NUEVAS FUNCIONES DE CARGA Y GUARDADO (GOOGLE SHEETS) ---
 def cargar():
-    partidos, n_gallos = [], 2
-    if os.path.exists(DB_FILE):
-        with open(DB_FILE, "r", encoding="utf-8") as f:
-            for line in f:
-                p = line.strip().split("|")
-                if len(p) >= 2:
-                    n_gallos = len(p) - 1
-                    d = {"PARTIDO": p[0]}
-                    for i in range(1, n_gallos + 1): d[f"G{i}"] = float(p[i])
-                    partidos.append(d)
-    return partidos, n_gallos
+    try:
+        # Intenta leer la hoja de cálculo con el nombre del usuario
+        df = conn.read(worksheet=st.session_state.id_usuario, ttl=0)
+        if df.empty: return [], 2
+        partidos = df.to_dict('records')
+        # Calcula n_gallos basado en las columnas que empiezan con 'G'
+        n_gallos = len([c for c in df.columns if re.match(r'^G\d+$', c)])
+        return partidos, n_gallos
+    except Exception as e:
+        return [], 2
 
 def guardar(lista):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        for p in lista:
-            pesos = [f"{v:.3f}" for k, v in p.items() if k != "PARTIDO"]
-            f.write(f"{p['PARTIDO']}|{'|'.join(pesos)}\n")
+    if lista:
+        df = pd.DataFrame(lista)
+        # Actualiza o crea la hoja en Google Sheets
+        conn.update(worksheet=st.session_state.id_usuario, data=df)
+
+def limpiar_nombre_socio(n): return re.sub(r'\s*\d+$', '', n).strip().upper()
 
 def generar_pdf(partidos, n_gallos):
     buffer = BytesIO()
@@ -211,15 +196,18 @@ def generar_pdf(partidos, n_gallos):
     doc.build(elements); return buffer.getvalue()
 
 # --- INTERFAZ ---
-if 'partidos' not in st.session_state: st.session_state.partidos, st.session_state.n_gallos = cargar()
-st.title("DerbySystem ")
-t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 MANUAL DE OPERACIÓN"])
+if 'partidos' not in st.session_state: 
+    st.session_state.partidos, st.session_state.n_gallos = cargar()
+
+st.title("DerbySystem PRO")
+t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 MANUAL"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g_reg = st.columns([2,1])
     g_sel = col_g_reg.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
+    
     with st.form("f_nuevo", clear_on_submit=True):
         st.subheader(f"Añadir Partido # {len(st.session_state.partidos) + 1}")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
@@ -230,7 +218,10 @@ with t_reg:
             if nombre:
                 nuevo = {"PARTIDO": nombre}
                 for i in range(g_sel): nuevo[f"G{i+1}"] = st.session_state[f"p_{i}"]
-                st.session_state.partidos.append(nuevo); guardar(st.session_state.partidos); st.rerun()
+                st.session_state.partidos.append(nuevo)
+                guardar(st.session_state.partidos)
+                st.success("Guardado en Google Sheets")
+                st.rerun()
 
     if st.session_state.partidos:
         st.markdown("### ✏️ Tabla de Edición")
@@ -241,22 +232,28 @@ with t_reg:
             for i in range(1, st.session_state.n_gallos + 1):
                 item[f"G{i}"] = p[f"G{i}"]; item[f"Anillo {i}"] = f"{cont_anillo:03}"; cont_anillo += 1
             display_data.append(item)
-        df = pd.DataFrame(display_data)
+        df_edit = pd.DataFrame(display_data)
         config = {"❌": st.column_config.CheckboxColumn("B", default=False), "PARTIDO": st.column_config.TextColumn("Partido")}
         for i in range(1, st.session_state.n_gallos + 1):
             config[f"G{i}"] = st.column_config.NumberColumn(f"G{i}", format="%.3f"); config[f"Anillo {i}"] = st.column_config.TextColumn(f"A{i}", disabled=True)
-        res = st.data_editor(df, column_config=config, use_container_width=True, num_rows="fixed", hide_index=True)
-        if not res.equals(df):
+        res = st.data_editor(df_edit, column_config=config, use_container_width=True, num_rows="fixed", hide_index=True)
+        
+        if not res.equals(df_edit):
             nuevos = []
             for _, r in res.iterrows():
                 if not r["❌"]:
                     p_upd = {"PARTIDO": str(r["PARTIDO"]).upper()}
                     for i in range(1, st.session_state.n_gallos + 1): p_upd[f"G{i}"] = float(r[f"G{i}"])
                     nuevos.append(p_upd)
-            st.session_state.partidos = nuevos; guardar(nuevos); st.rerun()
+            st.session_state.partidos = nuevos
+            guardar(nuevos)
+            st.rerun()
+            
         if st.button("🚨 LIMPIAR TODO EL EVENTO", use_container_width=True):
-            if os.path.exists(DB_FILE): os.remove(DB_FILE)
-            st.session_state.partidos = []; st.rerun()
+            # Para limpiar, enviamos un DataFrame vacío a la hoja
+            conn.update(worksheet=st.session_state.id_usuario, data=pd.DataFrame())
+            st.session_state.partidos = []
+            st.rerun()
 
 with t_cot:
     if len(st.session_state.partidos) >= 2:
@@ -283,103 +280,9 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_ayu:
-    st.markdown("""
-        <div class="tutorial-header">
-            <h1>Manual de Operación</h1>
-            <p>Guía paso a paso para la gestión técnica del torneo</p>
-        </div>
-    """, unsafe_allow_html=True)
-
-    row1_col1, row1_col2, row1_col3 = st.columns(3)
-    with row1_col1:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">⚙️</div>
-                <div class="step-title">1. Configuración Inicial</div>
-                <div class="step-text">
-                    Vaya a <b>Registro</b> y elija la cantidad de gallos por partido. 
-                    <br><br>⚠️ <i>Este valor se bloquea al guardar el primer participante.</i>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-    with row1_col2:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">⚖️</div>
-                <div class="step-title">2. Captura de Pesos</div>
-                <div class="step-text">
-                    Ingrese el nombre del partido y el peso de cada gallo. El sistema asignará el <span class="highlight-anillo">anillo automático</span> correlativo para mantener el orden.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-    with row1_col3:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">✏️</div>
-                <div class="step-title">3. Edición de Datos</div>
-                <div class="step-text">
-                    Si cometió un error, use la <b>Tabla de Edición</b>. Puede corregir nombres o pesos y el sistema recalculará los cotejos al instante.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.write("")
-    row2_col1, row2_col2, row2_col3 = st.columns(3)
-    with row2_col1:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">📊</div>
-                <div class="step-title">4. Validación de Cotejo</div>
-                <div class="step-text">
-                    En <b>Cotejo</b>, el sistema empareja por peso y garantiza que un partido <b>no pelee contra sí mismo</b>.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-    with row2_col2:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">📄</div>
-                <div class="step-title">5. PDF Oficial</div>
-                <div class="step-text">
-                    Genere el PDF oficial. Este documento contiene los anillos asignados y los pesos validados para la mesa de jueces.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-    with row2_col3:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">🧹</div>
-                <div class="step-title">6. Cierre de Evento</div>
-                <div class="step-text">
-                    Al terminar, use <b>Limpiar Todo el Evento</b> para borrar los datos y preparar el sistema para el siguiente derby.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-    st.divider()
-    with st.expander("🔍 Reglas de Lógica del Sistema", expanded=True):
-        st.markdown("""
-        * **Anillos:** Se generan automáticamente de forma secuencial según el orden de entrada. [cite: 2026-01-14]
-        * **Tolerancia:** El sistema marca en rojo diferencias de peso mayores a **80 gramos (0.080)**.
-        * **Emparejamiento:** Se prioriza el peso más cercano, siempre saltando al siguiente rival si el actual es del mismo partido.
-        """)
+    st.info("Sistema conectado a Google Sheets. Los datos se guardan automáticamente en la nube.")
 
 with st.sidebar:
-    if st.button("🚪 CERRAR SESIÓN", use_container_width=True): st.session_state.clear(); st.rerun()
-    st.divider(); acceso = st.text_input("Acceso Admin:", type="password")
-    if acceso == "28days":
-        st.subheader("👥 Usuarios y Claves")
-        users = cargar_usuarios()
-        if users: st.json(users)
-        
-        st.subheader("📂 Datos de Sistema")
-        archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
-        for arch in archivos:
-            with st.expander(f"📄 {arch}", expanded=True):
-                try:
-                    with open(arch, "r", encoding="utf-8") as f:
-                        contenido = f.read()
-                    st.code(contenido, language="text")
-                except: st.error("Error al leer")
-                if st.button("Eliminar", key=f"del_{arch}"):
-                    os.remove(arch); st.rerun()
+    if st.button("🚪 CERRAR SESIÓN", use_container_width=True): 
+        st.session_state.clear()
+        st.rerun()
