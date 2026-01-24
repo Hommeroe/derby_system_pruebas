@@ -24,7 +24,7 @@ if "id_usuario" not in st.session_state:
 if "temp_llave" not in st.session_state:
     st.session_state.temp_llave = None
 
-# --- SIDEBAR: ACCESO DE ADMINISTRADOR (INTACTO) ---
+# --- SIDEBAR: ACCESO DE ADMINISTRADOR (LÓGICA INTACTA) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=40)
     st.write("---")
@@ -52,95 +52,78 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA COMPACTA ---
+# --- PANTALLA DE ENTRADA REDISEÑADA (COMPACTA Y PROFESIONAL) ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        /* Fondo y Contenedor Principal */
         .stApp {
-            background-color: #0e1117;
-            background-image: radial-gradient(#1a1d23 1px, transparent 1px);
-            background-size: 20px 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            justify-content: center;
         }
-        .main-container {
-            max-width: 450px;
-            margin: 5vh auto;
-            background: #1a1c23;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .main-login {
+            max-width: 420px;
+            margin: 10vh auto;
             text-align: center;
         }
-        .app-logo {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #ffffff;
-            margin-bottom: 5px;
-            letter-spacing: -1px;
+        .title-container {
+            margin-bottom: 20px;
         }
-        .app-logo span { color: #E67E22; }
-        .app-tagline {
-            color: #8b949e;
-            font-size: 0.85rem;
-            text-transform: uppercase;
+        .main-title {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #2c3e50;
+            margin: 0;
+            letter-spacing: -1.5px;
+        }
+        .main-title span { color: #E67E22; }
+        .sub-text {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            font-weight: 600;
             letter-spacing: 2px;
-            margin-bottom: 25px;
-            border-bottom: 1px solid #30363d;
-            padding-bottom: 15px;
+            text-transform: uppercase;
         }
-        .feature-row {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 25px;
-            background: #0d1117;
-            padding: 10px;
-            border-radius: 8px;
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-top: 4px solid #E67E22;
         }
-        .feature-item { color: #c9d1d9; font-size: 0.7rem; font-weight: bold; }
-        .feature-item span { display: block; font-size: 1.2rem; margin-bottom: 2px; }
-        
-        /* Ajustes de Tabs y botones para que no ocupen espacio de más */
-        .stTabs [data-baseweb="tab-list"] { gap: 10px; }
-        .stTabs [data-baseweb="tab"] {
-            height: 40px;
-            background-color: #0d1117 !important;
-            border-radius: 5px 5px 0 0 !important;
-            color: #8b949e !important;
-        }
-        .stTabs [aria-selected="true"] { color: #E67E22 !important; border-bottom: 2px solid #E67E22 !important; }
+        /* Eliminar bordes de pestañas */
+        .stTabs [data-baseweb="tab-list"] { background-color: transparent; }
+        .stTabs [data-baseweb="tab"] { color: #2c3e50; font-weight: bold; }
+        .stTabs [aria-selected="true"] { color: #E67E22 !important; }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="main-container">', unsafe_allow_html=True)
-    st.markdown('<div class="app-logo">Derby<span>System</span></div>', unsafe_allow_html=True)
-    st.markdown('<div class="app-tagline">Management Pro v4.0</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-login">', unsafe_allow_html=True)
     
-    st.markdown("""
-        <div class="feature-row">
-            <div class="feature-item"><span>⚖️</span>COTEJO</div>
-            <div class="feature-item"><span>🛡️</span>ANILLOS</div>
-            <div class="feature-item"><span>📄</span>PDF</div>
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="title-container">', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Derby<span>System</span></h1>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-text">Management Pro</p>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
 
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    
     if not st.session_state.temp_llave:
-        tab_in, tab_new = st.tabs(["ACCEDER", "CREAR EVENTO"])
+        tab_acc, tab_cre = st.tabs(["ACCEDER", "NUEVO"])
         
-        with tab_in:
+        with tab_acc:
             st.write("")
-            llave_input = st.text_input("Llave del Torneo:", placeholder="EJ: DERBY-1234").upper().strip()
-            if st.button("INICIAR SESIÓN", use_container_width=True, type="primary"):
-                if os.path.exists(f"datos_{llave_input}.txt"):
-                    st.session_state.id_usuario = llave_input
+            llave_in = st.text_input("Llave del Evento:", placeholder="DERBY-XXXX").upper().strip()
+            if st.button("INGRESAR AL SISTEMA", use_container_width=True, type="primary"):
+                if os.path.exists(f"datos_{llave_in}.txt"):
+                    st.session_state.id_usuario = llave_in
                     if 'partidos' in st.session_state: del st.session_state['partidos']
                     st.rerun()
-                else: st.error("Llave no encontrada.")
+                else: st.error("Llave no válida")
         
-        with tab_new:
+        with tab_cre:
             st.write("")
-            st.caption("Crea una nueva base de datos para tu evento.")
-            if st.button("GENERAR NUEVA LLAVE", use_container_width=True):
+            st.caption("Genere una nueva base de datos para su torneo.")
+            if st.button("GENERAR LLAVE", use_container_width=True):
                 chars = string.ascii_uppercase + string.digits
                 nueva = "DERBY-" + "".join(random.choices(chars, k=4))
                 while os.path.exists(f"datos_{nueva}.txt"):
@@ -148,9 +131,8 @@ if st.session_state.id_usuario == "":
                 st.session_state.temp_llave = nueva
                 st.rerun()
     else:
-        st.success("¡Evento Generado!")
-        st.code(st.session_state.temp_llave, language="")
-        st.warning("Guarda esta llave para entrar después.")
+        st.info("Nueva Llave Generada")
+        st.markdown(f"### `{st.session_state.temp_llave}`")
         c1, c2 = st.columns(2)
         with c1:
             if st.button("ATRÁS", use_container_width=True):
@@ -163,11 +145,12 @@ if st.session_state.id_usuario == "":
                 st.session_state.temp_llave = None
                 if 'partidos' in st.session_state: del st.session_state['partidos']
                 st.rerun()
-
+                
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- TODO EL RESTO DEL CÓDIGO (INTACTO SEGÚN TU PETICIÓN) ---
+# --- LÓGICA DE NEGOCIO Y DISEÑO INTERNO (TODO INTACTO) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
