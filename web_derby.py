@@ -1,12 +1,9 @@
 import streamlit as st
 import pandas as pd
 import os
-import uuid
+import random
+import string
 import re
-import json
-import random # Nuevo para generar llaves
-import string # Nuevo para generar llaves
-import hashlib
 from datetime import datetime
 import pytz  
 from io import BytesIO
@@ -26,6 +23,50 @@ if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 if "temp_llave" not in st.session_state:
     st.session_state.temp_llave = None
+
+# --- SIDEBAR: ACCESO DE ADMINISTRADOR (MOVIDO AL PRINCIPIO) ---
+# Al ponerlo aquí, siempre tendrás control, estés en el login o adentro.
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=50)
+    st.write("---")
+    
+    # Botón de Salir (Solo visible si hay usuario)
+    if st.session_state.id_usuario != "":
+        if st.button("🚪 SALIR DEL EVENTO", use_container_width=True): 
+            st.session_state.clear()
+            st.rerun()
+        st.divider()
+    
+    # Tu puerta trasera de administrador
+    acceso = st.text_input("Llave Maestra (Admin):", type="password")
+    if acceso == "28days":
+        st.subheader("📁 Visor de Eventos")
+        
+        # Escaneamos archivos
+        archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
+        
+        if not archivos:
+            st.write("No hay eventos activos.")
+            
+        for arch in archivos:
+            nombre_llave = arch.replace("datos_", "").replace(".txt", "")
+            
+            with st.expander(f"🔑 {nombre_llave}"):
+                col_a, col_b = st.columns(2)
+                with col_a:
+                    # --- LA CORRECCIÓN ESTÁ AQUÍ ---
+                    if st.button("👁️ CARGAR", key=f"load_{arch}"):
+                        st.session_state.id_usuario = nombre_llave
+                        # Borramos la memoria para obligar a recargar los datos
+                        if 'partidos' in st.session_state: del st.session_state['partidos']
+                        if 'n_gallos' in st.session_state: del st.session_state['n_gallos']
+                        st.rerun()
+                with col_b:
+                    if st.button("🗑️ BORRAR", key=f"del_{arch}"):
+                        os.remove(arch)
+                        if st.session_state.id_usuario == nombre_llave:
+                             st.session_state.id_usuario = "" # Sacar al usuario si borras su evento
+                        st.rerun()
 
 # --- PANTALLA DE ENTRADA (SISTEMA DE LLAVES) ---
 if st.session_state.id_usuario == "":
@@ -68,7 +109,6 @@ if st.session_state.id_usuario == "":
         st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.85rem; margin-bottom:3px;">ACCESO RÁPIDO</div><div style="font-size:0.75rem; line-height:1.3; color:#ccc;">Sistema sin registros. Usa una <b>Llave de Evento</b> única.</div></div>', unsafe_allow_html=True)
         st.markdown('<div class="main-title">DerbySystem</div><div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
         
-        # Lógica de pestañas para Entrar o Crear
         if not st.session_state.temp_llave:
             tab_entrar, tab_nuevo = st.tabs(["🔑 YA TENGO LLAVE", "✨ CREAR NUEVO"])
             
@@ -77,6 +117,8 @@ if st.session_state.id_usuario == "":
                 if st.button("ACCEDER AL SISTEMA", use_container_width=True):
                     if os.path.exists(f"datos_{llave_input}.txt"):
                         st.session_state.id_usuario = llave_input
+                        # Limpiamos memoria por si acaso
+                        if 'partidos' in st.session_state: del st.session_state['partidos']
                         st.rerun()
                     else:
                         st.error("Esa llave no existe. Verifica o crea un evento nuevo.")
@@ -84,20 +126,17 @@ if st.session_state.id_usuario == "":
             with tab_nuevo:
                 st.write("Genera un identificador único para tu torneo.")
                 if st.button("GENERAR LLAVE NUEVA", use_container_width=True):
-                    # Generamos código aleatorio
                     chars = string.ascii_uppercase + string.digits
                     nueva = "DERBY-" + "".join(random.choices(chars, k=4))
-                    # Aseguramos que no exista
                     while os.path.exists(f"datos_{nueva}.txt"):
                          nueva = "DERBY-" + "".join(random.choices(chars, k=4))
                     st.session_state.temp_llave = nueva
                     st.rerun()
         
         else:
-            # Pantalla de confirmación de llave nueva
             st.success("¡Evento Creado!")
             st.markdown(f'<div class="llave-grande">{st.session_state.temp_llave}</div>', unsafe_allow_html=True)
-            st.info("⚠️ ANOTA ESTA LLAVE. Es la única forma de volver a entrar a tus datos si cierras la página.")
+            st.info("⚠️ ANOTA ESTA LLAVE. Es la única forma de volver a entrar.")
             
             col_b1, col_b2 = st.columns(2)
             with col_b1:
@@ -106,10 +145,11 @@ if st.session_state.id_usuario == "":
                     st.rerun()
             with col_b2:
                 if st.button("✅ ENTRAR", use_container_width=True, type="primary"):
-                    # Creamos el archivo vacío para reservar el nombre
                     with open(f"datos_{st.session_state.temp_llave}.txt", "w", encoding="utf-8") as f: pass
                     st.session_state.id_usuario = st.session_state.temp_llave
                     st.session_state.temp_llave = None
+                    # Limpiamos memoria
+                    if 'partidos' in st.session_state: del st.session_state['partidos']
                     st.rerun()
         
         st.markdown('<div class="login-footer">© 2026 DerbySystem PRO | Gestión Segura por Llaves</div>', unsafe_allow_html=True)
@@ -117,11 +157,10 @@ if st.session_state.id_usuario == "":
     st.stop()
 
 # --- CONSTANTES ---
-# El archivo se define por la llave ingresada
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS INTERNOS (NO TOCADOS) ---
+# --- ESTILOS INTERNOS ---
 st.markdown("""
     <style>
     div.stButton > button, div.stDownloadButton > button, div.stFormSubmitButton > button {
@@ -145,7 +184,6 @@ st.markdown("""
     .col-num { width: 22px; } .col-g { width: 25px; } .col-an { width: 35px; } 
     .col-e { width: 22px; background-color: #f1f2f6; } .col-dif { width: 45px; }
     
-    /* ESTILOS TUTORIAL */
     .tutorial-header {
         background: #1a1a1a; color: #E67E22; padding: 20px;
         border-radius: 10px; text-align: center; border-left: 10px solid #E67E22;
@@ -239,7 +277,6 @@ with t_reg:
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
             st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
-            # Anillo automático [cite: 2026-01-14]
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True); st.write("") 
         if st.form_submit_button("💾 GUARDAR PARTIDO", use_container_width=True):
             if nombre:
@@ -313,7 +350,6 @@ with t_ayu:
                 <div class="step-title">1. Configuración Inicial</div>
                 <div class="step-text">
                     Vaya a <b>Registro</b> y elija la cantidad de gallos por partido. 
-                    <br><br>⚠️ <i>Este valor se bloquea al guardar el primer participante.</i>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -323,7 +359,7 @@ with t_ayu:
                 <div class="step-icon">⚖️</div>
                 <div class="step-title">2. Captura de Pesos</div>
                 <div class="step-text">
-                    Ingrese el nombre del partido y el peso de cada gallo. El sistema asignará el <span class="highlight-anillo">anillo automático</span> correlativo para mantener el orden.
+                    Ingrese el nombre del partido y el peso de cada gallo. El sistema asignará el <span class="highlight-anillo">anillo automático</span> correlativo.
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -333,83 +369,14 @@ with t_ayu:
                 <div class="step-icon">✏️</div>
                 <div class="step-title">3. Edición de Datos</div>
                 <div class="step-text">
-                    Si cometió un error, use la <b>Tabla de Edición</b>. Puede corregir nombres o pesos y el sistema recalculará los cotejos al instante.
+                    Puede corregir nombres o pesos y el sistema recalculará los cotejos al instante.
                 </div>
             </div>
         """, unsafe_allow_html=True)
-
-    st.write("")
-    row2_col1, row2_col2, row2_col3 = st.columns(3)
-    with row2_col1:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">📊</div>
-                <div class="step-title">4. Validación de Cotejo</div>
-                <div class="step-text">
-                    En <b>Cotejo</b>, el sistema empareja por peso y garantiza que un partido <b>no pelee contra sí mismo</b>.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-    with row2_col2:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">📄</div>
-                <div class="step-title">5. PDF Oficial</div>
-                <div class="step-text">
-                    Genere el PDF oficial. Este documento contiene los anillos asignados y los pesos validados para la mesa de jueces.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-    with row2_col3:
-        st.markdown("""
-            <div class="card-tutorial">
-                <div class="step-icon">🧹</div>
-                <div class="step-title">6. Cierre de Evento</div>
-                <div class="step-text">
-                    Al terminar, use <b>Limpiar Todo el Evento</b> para borrar los datos y preparar el sistema para el siguiente derby.
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
+    
     st.divider()
     with st.expander("🔍 Reglas de Lógica del Sistema", expanded=True):
         st.markdown("""
-        * **Anillos:** Se generan automáticamente de forma secuencial según el orden de entrada. [cite: 2026-01-14]
-        * **Tolerancia:** El sistema marca en rojo diferencias de peso mayores a **80 gramos (0.080)**.
-        * **Emparejamiento:** Se prioriza el peso más cercano, siempre saltando al siguiente rival si el actual es del mismo partido.
+        * **Anillos:** Se generan automáticamente de forma secuencial.
+        * **Tolerancia:** El sistema marca en rojo diferencias de peso mayores a **80 gramos**.
         """)
-
-# --- SIDEBAR: ACCESO DE ADMINISTRADOR ---
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=50)
-    st.write("---")
-    if st.button("🚪 SALIR DEL EVENTO", use_container_width=True): 
-        st.session_state.clear(); st.rerun()
-    
-    st.divider()
-    # Tu puerta trasera de administrador
-    acceso = st.text_input("Llave Maestra (Admin):", type="password")
-    if acceso == "28days":
-        st.subheader("📁 Visor de Eventos")
-        st.info("Aquí puedes ver todas las llaves activas y cargar sus datos para revisarlos.")
-        
-        # Escaneamos todos los archivos de datos
-        archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
-        
-        if not archivos:
-            st.write("No hay eventos activos.")
-            
-        for arch in archivos:
-            # Extraemos solo el nombre de la llave (quitamos "datos_" y ".txt")
-            nombre_llave = arch.replace("datos_", "").replace(".txt", "")
-            
-            with st.expander(f"🔑 {nombre_llave}"):
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    if st.button("👁️ CARGAR", key=f"load_{arch}"):
-                        st.session_state.id_usuario = nombre_llave
-                        st.rerun()
-                with col_b:
-                    if st.button("🗑️ BORRAR", key=f"del_{arch}"):
-                        os.remove(arch)
-                        st.rerun()
