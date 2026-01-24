@@ -24,18 +24,18 @@ if "id_usuario" not in st.session_state:
 if "temp_llave" not in st.session_state:
     st.session_state.temp_llave = None
 
-# --- SIDEBAR: ADMINISTRADOR ---
+# --- SIDEBAR: ADMINISTRADOR (LÓGICA INTACTA) ---
 with st.sidebar:
-    st.markdown("### 🛠️ PANEL ADMIN")
+    st.markdown("### ⚙️ ADMINISTRACIÓN")
     if st.session_state.id_usuario != "":
-        if st.button("🚪 FINALIZAR SESIÓN", use_container_width=True): 
+        if st.button("🚪 CERRAR SESIÓN ACTUAL", use_container_width=True): 
             st.session_state.clear()
             st.rerun()
         st.divider()
     
-    acceso = st.text_input("Llave Maestra:", type="password")
+    acceso = st.text_input("Acceso Maestro:", type="password")
     if acceso == "28days":
-        st.subheader("📁 Eventos en Servidor")
+        st.subheader("📁 Eventos Registrados")
         archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
         for arch in archivos:
             nombre_llave = arch.replace("datos_", "").replace(".txt", "")
@@ -52,79 +52,104 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE BIENVENIDA (DISEÑO PROFESIONAL SIN FONDO NEGRO) ---
+# --- PANTALLA DE BIENVENIDA ADAPTATIVA ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        .stApp {
-            background-color: #f0f2f6;
-            background-image: linear-gradient(180deg, #ffffff 0%, #d7dde8 100%);
+        /* Diseño Adaptativo Día/Noche */
+        @media (prefers-color-scheme: light) {
+            .stApp { background-color: #ffffff; }
+            .login-card { background: #f8f9fa; border: 1px solid #e9ecef; }
+            .brand-derby { color: #000000; }
+            .text-desc { color: #495057; }
         }
-        .login-box {
-            max-width: 450px;
-            margin: 80px auto;
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        @media (prefers-color-scheme: dark) {
+            .stApp { background-color: #0e1117; }
+            .login-card { background: #161b22; border: 1px solid #30363d; }
+            .brand-derby { color: #ffffff; }
+            .text-desc { color: #8b949e; }
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 5vh auto;
             text-align: center;
-            border-bottom: 5px solid #E67E22;
+            font-family: 'Inter', sans-serif;
         }
-        .main-title {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 0px;
+        .brand-logo { font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; }
+        .brand-system { color: #E67E22; }
+        .tagline { 
+            font-size: 0.9rem; font-weight: 600; letter-spacing: 3px; 
+            text-transform: uppercase; color: #E67E22; margin-top: -10px;
         }
-        .main-title span { color: #E67E22; }
-        .subtitle {
-            color: #7f8c8d;
-            letter-spacing: 2px;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            margin-bottom: 30px;
+        .login-card {
+            margin-top: 30px;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+        .info-section {
+            margin-top: 25px;
+            font-size: 0.85rem;
+            line-height: 1.4;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="login-box">', unsafe_allow_html=True)
-    st.markdown('<h1 class="main-title">Derby<span>System</span></h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Gestión de Combates Profesional</p>', unsafe_allow_html=True)
+    st.markdown('<div class="container">', unsafe_allow_html=True)
+    st.markdown('<div class="brand-logo"><span class="brand-derby">Derby</span><span class="brand-system">System</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="tagline">Professional Combat Management</div>', unsafe_allow_html=True)
 
+    st.markdown('<div class="login-card">', unsafe_allow_html=True)
+    
     if not st.session_state.temp_llave:
-        t1, t2 = st.tabs(["INGRESAR", "CREAR EVENTO"])
-        with t1:
-            llave_input = st.text_input("Código de Acceso:", placeholder="DERBY-XXXX").upper().strip()
-            if st.button("ABRIR PANEL", use_container_width=True, type="primary"):
+        t_acc, t_gen = st.tabs(["ACCEDER", "CREAR EVENTO"])
+        with t_acc:
+            st.write("")
+            llave_input = st.text_input("Código de Evento:", placeholder="DERBY-XXXX").upper().strip()
+            if st.button("INICIAR PANEL DE CONTROL", use_container_width=True, type="primary"):
                 if os.path.exists(f"datos_{llave_input}.txt"):
                     st.session_state.id_usuario = llave_input
                     if 'partidos' in st.session_state: del st.session_state['partidos']
                     st.rerun()
-                else: st.error("Llave no encontrada.")
-        with t2:
-            if st.button("GENERAR NUEVA LLAVE", use_container_width=True):
+                else: st.error("Código no encontrado.")
+        with t_gen:
+            st.write("")
+            st.markdown('<p class="text-desc">Inicie un nuevo certamen con base de datos aislada.</p>', unsafe_allow_html=True)
+            if st.button("GENERAR NUEVA CREDENCIAL", use_container_width=True):
                 nueva = "DERBY-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
                 st.session_state.temp_llave = nueva
                 st.rerun()
     else:
-        st.success("Llave Generada con Éxito")
+        st.success("Evento Configurado")
         st.code(st.session_state.temp_llave)
-        if st.button("COMENZAR AHORA", use_container_width=True, type="primary"):
+        if st.button("ACCEDER AHORA", use_container_width=True, type="primary"):
             with open(f"datos_{st.session_state.temp_llave}.txt", "w", encoding="utf-8") as f: pass
             st.session_state.id_usuario = st.session_state.temp_llave
             st.session_state.temp_llave = None
             st.rerun()
-    
+
+    st.markdown("""
+        <div class="info-section">
+            <p class="text-desc">
+                <b>Ecosistema Digital Especializado:</b><br>
+                Optimización de cotejo gallístico mediante algoritmos de peso exacto, 
+                trazabilidad de anillos automatizada y generación de reportes técnicos PDF 
+                para torneos de alta competencia.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- LÓGICA Y ESTILOS INTERNOS (INTACTOS) ---
+# --- ESTILOS INTERNOS Y LÓGICA (TODO INTACTO) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
 st.markdown("""
     <style>
-    div.stButton > button { background-color: #E67E22 !important; color: white !important; border-radius: 8px !important; }
+    div.stButton > button { background-color: #E67E22 !important; color: white !important; border-radius: 8px !important; border:none !important; }
     .caja-anillo {
         background-color: #1a1a1a; color: #E67E22; padding: 2px;
         border-radius: 0px 0px 5px 5px; font-weight: bold; 
@@ -136,17 +161,14 @@ st.markdown("""
     }
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; color: black !important; }
     .tabla-final td, .tabla-final th { border: 1px solid #bdc3c7; text-align: center; padding: 5px; font-size: 11px; }
-    
-    /* ESTILO MANUAL MEJORADO */
-    .manual-card {
-        background: white; border-left: 5px solid #E67E22; padding: 15px;
-        border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 10px;
+    .manual-box {
+        background: rgba(230, 126, 34, 0.1); border-left: 5px solid #E67E22;
+        padding: 15px; border-radius: 5px; margin-bottom: 10px;
     }
-    .manual-title { color: #E67E22; font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
     </style>
 """, unsafe_allow_html=True)
 
-# Funciones de carga/guardado/PDF permanecen iguales...
+# Lógica de carga, guardado y PDF (Sin cambios)
 def limpiar_nombre_socio(n): return re.sub(r'\s*\d+$', '', n).strip().upper()
 def cargar():
     partidos, n_gallos = [], 2
@@ -206,23 +228,22 @@ if 'partidos' not in st.session_state: st.session_state.partidos, st.session_sta
 
 # Títulos del Sistema
 st.title("DerbySystem PRO 🏆")
-st.info(f"Evento Activo: {st.session_state.id_usuario}")
+st.caption(f"Panel de Control - Evento: {st.session_state.id_usuario}")
 
-t_reg, t_cot, t_man = st.tabs(["📝 REGISTRO", "🏆 COTEJO", "📑 MANUAL"])
+t_reg, t_cot, t_man = st.tabs(["📝 REGISTRO DE PESOS", "🏆 TABLA DE COTEJO", "📑 MANUAL TÉCNICO"])
 
 with t_reg:
-    # Lógica de registro intacta...
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g_reg = st.columns([2,1])
-    g_sel = col_g_reg.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
+    g_sel = col_g_reg.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
     with st.form("f_nuevo", clear_on_submit=True):
-        st.subheader("Nuevo Partido")
-        nombre = st.text_input("NOMBRE PARTIDO:").upper().strip()
+        st.subheader("Captura de Datos")
+        nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
-            st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            st.number_input(f"Peso Gallo {i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True); st.write("") 
-        if st.form_submit_button("💾 GUARDAR", use_container_width=True):
+        if st.form_submit_button("💾 REGISTRAR PARTIDO", use_container_width=True):
             if nombre:
                 nuevo = {"PARTIDO": nombre}
                 for i in range(g_sel): nuevo[f"G{i+1}"] = st.session_state[f"p_{i}"]
@@ -230,6 +251,7 @@ with t_reg:
 
     if st.session_state.partidos:
         st.write("---")
+        st.subheader("Edición de Registros")
         display_data = []
         cont_anillo = 1
         for p in st.session_state.partidos:
@@ -238,7 +260,7 @@ with t_reg:
                 item[f"G{i}"] = p[f"G{i}"]; item[f"Anillo {i}"] = f"{cont_anillo:03}"; cont_anillo += 1
             display_data.append(item)
         df = pd.DataFrame(display_data)
-        config = {"❌": st.column_config.CheckboxColumn("B"), "PARTIDO": st.column_config.TextColumn("Partido")}
+        config = {"❌": st.column_config.CheckboxColumn("Borrar"), "PARTIDO": st.column_config.TextColumn("Nombre")}
         for i in range(1, st.session_state.n_gallos + 1):
             config[f"G{i}"] = st.column_config.NumberColumn(f"G{i}", format="%.3f"); config[f"Anillo {i}"] = st.column_config.TextColumn(f"A{i}", disabled=True)
         res = st.data_editor(df, column_config=config, use_container_width=True, hide_index=True)
@@ -254,7 +276,7 @@ with t_reg:
 with t_cot:
     if len(st.session_state.partidos) >= 2:
         pdf_b = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-        st.download_button("📥 DESCARGAR COTEJO PDF", data=pdf_b, file_name="cotejo.pdf", use_container_width=True)
+        st.download_button("📥 DESCARGAR REPORTE COTEJO PDF", data=pdf_b, file_name="cotejo_oficial.pdf", use_container_width=True)
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g_cot = f"G{r}"; lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g_cot])
@@ -273,29 +295,18 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_man:
-    st.markdown("### 📘 Guía de Uso Rápido")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        <div class="manual-card">
-            <div class="manual-title">1. Configuración de Gallos</div>
-            <p>Antes de registrar, selecciona cuántos gallos pelea cada partido (2 a 6). Una vez registrado el primer partido, esta opción se bloquea para mantener la consistencia.</p>
-        </div>
-        <div class="manual-card">
-            <div class="manual-title">2. Registro de Pesos</div>
-            <p>Ingresa el nombre del partido y los pesos. El sistema asigna el <b>Anillo Automático</b> correlativo basado en el orden de llegada.</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("""
-        <div class="manual-card">
-            <div class="manual-title">3. Sistema de Cotejo</div>
-            <p>El algoritmo empareja por peso similar (menor a mayor) evitando peleas contra el mismo socio. Las diferencias > 0.080kg se marcan en color de advertencia.</p>
-        </div>
-        <div class="manual-card">
-            <div class="manual-title">4. Edición y Borrado</div>
-            <p>En la tabla inferior de Registro, marca la casilla ❌ para eliminar un partido o edita directamente los pesos si hubo un error de captura.</p>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("### 📘 Manual de Operación Técnica")
+    st.markdown("""
+    <div class="manual-box">
+        <b>1. Gestión de Rondas:</b> Seleccione la cantidad de gallos antes de iniciar el registro. El sistema adaptará automáticamente los campos de entrada y la tabla de cotejo.
+    </div>
+    <div class="manual-box">
+        <b>2. Anillos Automatizados:</b> Los anillos se asignan de forma secuencial e irreversible por cada gallo registrado, garantizando la transparencia del torneo.
+    </div>
+    <div class="manual-box">
+        <b>3. Algoritmo de Cotejo:</b> El sistema busca el emparejamiento óptimo por peso ascendente, bloqueando automáticamente peleas entre el mismo partido (socio).
+    </div>
+    <div class="manual-box">
+        <b>4. Alertas de Peso:</b> Cualquier diferencia superior a 80 gramos (0.080) será resaltada en rojo en la tabla de cotejo para revisión de los jueces.
+    </div>
+    """, unsafe_allow_html=True)
