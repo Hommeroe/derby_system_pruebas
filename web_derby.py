@@ -24,15 +24,14 @@ if "id_usuario" not in st.session_state:
 if "temp_llave" not in st.session_state:
     st.session_state.temp_llave = None
 
-# --- SIDEBAR: ACCESO DE ADMINISTRADOR (MOVIDO AL PRINCIPIO) ---
-# Al ponerlo aquí, siempre tendrás control, estés en el login o adentro.
+# --- SIDEBAR: ACCESO DE ADMINISTRADOR (Funcionalidad garantizada) ---
 with st.sidebar:
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=50)
     st.write("---")
     
     # Botón de Salir (Solo visible si hay usuario)
     if st.session_state.id_usuario != "":
-        if st.button("🚪 SALIR DEL EVENTO", use_container_width=True): 
+        if st.button("🚪 CERRAR EVENTO", use_container_width=True): 
             st.session_state.clear()
             st.rerun()
         st.divider()
@@ -40,92 +39,109 @@ with st.sidebar:
     # Tu puerta trasera de administrador
     acceso = st.text_input("Llave Maestra (Admin):", type="password")
     if acceso == "28days":
-        st.subheader("📁 Visor de Eventos")
-        
-        # Escaneamos archivos
+        st.subheader("📁 Visor de Eventos Global")
         archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
-        
-        if not archivos:
-            st.write("No hay eventos activos.")
-            
+        if not archivos: st.write("No hay eventos activos.")
         for arch in archivos:
             nombre_llave = arch.replace("datos_", "").replace(".txt", "")
-            
             with st.expander(f"🔑 {nombre_llave}"):
                 col_a, col_b = st.columns(2)
                 with col_a:
-                    # --- LA CORRECCIÓN ESTÁ AQUÍ ---
                     if st.button("👁️ CARGAR", key=f"load_{arch}"):
                         st.session_state.id_usuario = nombre_llave
-                        # Borramos la memoria para obligar a recargar los datos
                         if 'partidos' in st.session_state: del st.session_state['partidos']
                         if 'n_gallos' in st.session_state: del st.session_state['n_gallos']
                         st.rerun()
                 with col_b:
                     if st.button("🗑️ BORRAR", key=f"del_{arch}"):
                         os.remove(arch)
-                        if st.session_state.id_usuario == nombre_llave:
-                             st.session_state.id_usuario = "" # Sacar al usuario si borras su evento
+                        if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA (SISTEMA DE LLAVES) ---
+# --- PANTALLA DE ENTRADA PROFESIONAL ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        .stApp { margin-top: -60px !important; }
-        .block-container { padding-top: 2rem !important; }
-        .login-card {
-            max-width: 480px; margin: 0 auto; background: #ffffff;
-            padding: 25px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            border-top: 5px solid #E67E22;
+        .stApp { margin-top: -80px !important; }
+        
+        /* HEADER HERO */
+        .hero-section {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            padding: 4rem 1rem;
+            text-align: center;
+            border-bottom: 6px solid #E67E22;
+            margin-bottom: -40px;
+            color: white;
         }
-        .desc-box {
-            background-color: #1a1a1a; color: #f2f2f2; padding: 12px;
-            border-radius: 8px; margin-bottom: 15px; text-align: center;
+        .hero-title { font-size: 3.5rem; font-weight: 900; letter-spacing: -1px; margin: 0; }
+        .hero-subtitle { font-size: 1.2rem; font-weight: 300; color: #E67E22; letter-spacing: 4px; text-transform: uppercase; margin-top: 10px; }
+        .hero-desc { font-size: 1rem; color: #ccc; max-width: 700px; margin: 20px auto 0 auto; line-height: 1.5; }
+
+        /* CARDS DE CARACTERÍSTICAS */
+        .features-container { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; margin-top: 30px; }
+        .feature-box { text-align: center; color: #333; font-size: 0.8rem; }
+        .feature-icon { font-size: 2rem; margin-bottom: 5px; }
+        
+        /* LOGIN CARD MEJORADO */
+        .login-container {
+            max-width: 500px; margin: 0 auto; background: white;
+            padding: 30px; border-radius: 15px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            position: relative; top: -30px;
         }
-        .main-title {
-            font-size: 2.4rem; font-weight: 800; color: #E67E22;
-            text-align: center; margin-bottom: 0px;
-        }
-        .main-subtitle {
-            font-size: 0.75rem; color: #888; text-align: center;
-            letter-spacing: 3px; margin-bottom: 15px; text-transform: uppercase;
-        }
-        .login-footer {
-            text-align: center; font-size: 0.7rem; color: #999;
-            margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px;
-        }
-        .llave-grande { 
-            font-size: 2rem; color: #1a1a1a; background: #f0f2f6; 
-            padding: 10px; border-radius: 8px; text-align: center; 
-            border: 2px dashed #E67E22; margin: 15px 0; font-weight: bold;
+        .llave-display {
+            background: #f8f9fa; border: 2px dashed #E67E22; color: #333;
+            font-size: 1.8rem; font-weight: bold; text-align: center;
+            padding: 15px; border-radius: 8px; margin: 20px 0;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    col_1, col_center, col_3 = st.columns([1, 2, 1])
-    with col_center:
-        st.markdown('<div class="login-card">', unsafe_allow_html=True)
-        st.markdown('<div class="desc-box"><div style="color:#E67E22; font-weight:bold; font-size:0.85rem; margin-bottom:3px;">ACCESO RÁPIDO</div><div style="font-size:0.75rem; line-height:1.3; color:#ccc;">Sistema sin registros. Usa una <b>Llave de Evento</b> única.</div></div>', unsafe_allow_html=True)
-        st.markdown('<div class="main-title">DerbySystem</div><div class="main-subtitle">PRO MANAGEMENT</div>', unsafe_allow_html=True)
+    # 1. SECCIÓN HERO (Encabezado Profesional)
+    st.markdown("""
+        <div class="hero-section">
+            <div class="hero-title">DerbySystem <span style="color:#E67E22">PRO</span></div>
+            <div class="hero-subtitle">Plataforma de Gestión Gallística de Alto Nivel</div>
+            <div class="hero-desc">
+                La solución tecnológica estándar para la administración transparente de torneos.
+                <b>Cotejo matemático preciso, anillos automatizados y seguridad blindada.</b>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # 2. CONTENEDOR CENTRAL (Tarjeta de Acceso)
+    col_Spacer1, col_Main, col_Spacer2 = st.columns([1, 2, 1])
+    
+    with col_Main:
+        st.markdown('<div class="login-container">', unsafe_allow_html=True)
         
+        # Iconos de características dentro de la tarjeta
+        st.markdown("""
+            <div class="features-container">
+                <div class="feature-box"><div class="feature-icon">⚖️</div><div>COTEJO<br>EXACTO</div></div>
+                <div class="feature-box"><div class="feature-icon">🛡️</div><div>ANILLOS<br>SEGUROS</div></div>
+                <div class="feature-box"><div class="feature-icon">⚡</div><div>RESULTADOS<br>EN VIVO</div></div>
+            </div>
+        """, unsafe_allow_html=True)
+
         if not st.session_state.temp_llave:
-            tab_entrar, tab_nuevo = st.tabs(["🔑 YA TENGO LLAVE", "✨ CREAR NUEVO"])
+            st.markdown("### 🔐 Acceso al Sistema")
+            tab_entrar, tab_nuevo = st.tabs(["INGRESAR CON LLAVE", "CREAR NUEVO EVENTO"])
             
             with tab_entrar:
-                llave_input = st.text_input("Introduce tu Llave:", placeholder="EJ: DERBY-XJ92").upper().strip()
-                if st.button("ACCEDER AL SISTEMA", use_container_width=True):
+                st.write("")
+                llave_input = st.text_input("Ingrese su Llave de Evento:", placeholder="EJ: DERBY-X92A").upper().strip()
+                if st.button("ACCEDER AL PANEL", use_container_width=True, type="primary"):
                     if os.path.exists(f"datos_{llave_input}.txt"):
                         st.session_state.id_usuario = llave_input
-                        # Limpiamos memoria por si acaso
                         if 'partidos' in st.session_state: del st.session_state['partidos']
                         st.rerun()
                     else:
-                        st.error("Esa llave no existe. Verifica o crea un evento nuevo.")
+                        st.error("❌ Llave no encontrada. Verifique o cree un evento nuevo.")
             
             with tab_nuevo:
-                st.write("Genera un identificador único para tu torneo.")
-                if st.button("GENERAR LLAVE NUEVA", use_container_width=True):
+                st.info("Genere un entorno aislado y seguro para su nuevo torneo.")
+                if st.button("GENERAR LLAVE MAESTRA", use_container_width=True):
                     chars = string.ascii_uppercase + string.digits
                     nueva = "DERBY-" + "".join(random.choices(chars, k=4))
                     while os.path.exists(f"datos_{nueva}.txt"):
@@ -134,33 +150,35 @@ if st.session_state.id_usuario == "":
                     st.rerun()
         
         else:
-            st.success("¡Evento Creado!")
-            st.markdown(f'<div class="llave-grande">{st.session_state.temp_llave}</div>', unsafe_allow_html=True)
-            st.info("⚠️ ANOTA ESTA LLAVE. Es la única forma de volver a entrar.")
+            # PANTALLA DE ÉXITO AL CREAR
+            st.markdown("<h3 style='text-align:center; color:#27ae60;'>✅ Evento Configurado</h3>", unsafe_allow_html=True)
+            st.write("Su llave única de administración es:")
+            st.markdown(f'<div class="llave-display">{st.session_state.temp_llave}</div>', unsafe_allow_html=True)
+            st.warning("⚠️ IMPORTANTE: Guarde esta llave. Es su único acceso a los datos del evento.")
             
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                if st.button("⬅️ CANCELAR", use_container_width=True):
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("CANCELAR", use_container_width=True):
                     st.session_state.temp_llave = None
                     st.rerun()
-            with col_b2:
-                if st.button("✅ ENTRAR", use_container_width=True, type="primary"):
+            with c2:
+                if st.button("ENTRAR AHORA", use_container_width=True, type="primary"):
                     with open(f"datos_{st.session_state.temp_llave}.txt", "w", encoding="utf-8") as f: pass
                     st.session_state.id_usuario = st.session_state.temp_llave
                     st.session_state.temp_llave = None
-                    # Limpiamos memoria
                     if 'partidos' in st.session_state: del st.session_state['partidos']
                     st.rerun()
-        
-        st.markdown('<div class="login-footer">© 2026 DerbySystem PRO | Gestión Segura por Llaves</div>', unsafe_allow_html=True)
+
         st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center; margin-top:20px; color:#666; font-size:0.8rem;'>© 2026 DerbySystem International | V.4.0 PRO</div>", unsafe_allow_html=True)
+
     st.stop()
 
 # --- CONSTANTES ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
-# --- ESTILOS INTERNOS ---
+# --- ESTILOS INTERNOS (INTACTOS) ---
 st.markdown("""
     <style>
     div.stButton > button, div.stDownloadButton > button, div.stFormSubmitButton > button {
@@ -202,7 +220,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- FUNCIONES ---
+# --- FUNCIONES (INTACTAS) ---
 def limpiar_nombre_socio(n): return re.sub(r'\s*\d+$', '', n).strip().upper()
 def cargar():
     partidos, n_gallos = [], 2
@@ -260,10 +278,10 @@ def generar_pdf(partidos, n_gallos):
         elements.append(t); elements.append(Spacer(1, 20))
     doc.build(elements); return buffer.getvalue()
 
-# --- INTERFAZ PRINCIPAL ---
+# --- INTERFAZ PRINCIPAL (INTACTA) ---
 if 'partidos' not in st.session_state: st.session_state.partidos, st.session_state.n_gallos = cargar()
 st.title(f"DerbySystem 🏆")
-st.caption(f"LLAVE DE EVENTO: **{st.session_state.id_usuario}**")
+st.caption(f"LLAVE DE EVENTO ACTIVA: **{st.session_state.id_usuario}**")
 
 t_reg, t_cot, t_ayu = st.tabs(["📝 REGISTRO Y EDICIÓN", "🏆 COTEJO", "📑 MANUAL DE OPERACIÓN"])
 
