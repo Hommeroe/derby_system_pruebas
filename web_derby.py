@@ -15,27 +15,31 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 
-# --- CONFIGURACIÓN ---
-st.set_page_config(page_title="DerbySystem PRO", layout="wide")
-
-# --- INICIALIZACIÓN DE ESTADO ---
+# --- 1. INICIALIZACIÓN DE ESTADO (Al principio para evitar errores) ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 if "temp_llave" not in st.session_state:
     st.session_state.temp_llave = None
+if "partidos" not in st.session_state:
+    st.session_state.partidos = []
+if "n_gallos" not in st.session_state:
+    st.session_state.n_gallos = 2
+
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
 # --- SIDEBAR: ADMINISTRADOR (LÓGICA INTACTA) ---
 with st.sidebar:
     st.markdown("### ⚙️ ADMINISTRACIÓN")
     if st.session_state.id_usuario != "":
-        if st.button("🚪 CERRAR SESIÓN ACTUAL", use_container_width=True): 
+        if st.button("🚪 CERRAR SESIÓN", use_container_width=True): 
             st.session_state.clear()
             st.rerun()
         st.divider()
     
     acceso = st.text_input("Acceso Maestro:", type="password")
     if acceso == "28days":
-        st.subheader("📁 Eventos Registrados")
+        st.subheader("📁 Eventos")
         archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
         for arch in archivos:
             nombre_llave = arch.replace("datos_", "").replace(".txt", "")
@@ -52,56 +56,45 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE BIENVENIDA ADAPTATIVA ---
+# --- PANTALLA DE ENTRADA (SIN RECTÁNGULOS, FONDO ADAPTATIVO) ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
-        /* Diseño Adaptativo Día/Noche */
+        /* Fondo Adaptativo */
         @media (prefers-color-scheme: light) {
             .stApp { background-color: #ffffff; }
-            .login-card { background: #f8f9fa; border: 1px solid #e9ecef; }
             .brand-derby { color: #000000; }
-            .text-desc { color: #495057; }
+            .text-muted { color: #666666; }
         }
         @media (prefers-color-scheme: dark) {
             .stApp { background-color: #0e1117; }
-            .login-card { background: #161b22; border: 1px solid #30363d; }
             .brand-derby { color: #ffffff; }
-            .text-desc { color: #8b949e; }
+            .text-muted { color: #999999; }
         }
 
-        .container {
+        .main-container {
             max-width: 500px;
-            margin: 5vh auto;
+            margin: 10vh auto;
             text-align: center;
-            font-family: 'Inter', sans-serif;
         }
         .brand-logo { font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; }
         .brand-system { color: #E67E22; }
         .tagline { 
-            font-size: 0.9rem; font-weight: 600; letter-spacing: 3px; 
-            text-transform: uppercase; color: #E67E22; margin-top: -10px;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; 
+            text-transform: uppercase; color: #E67E22; margin-top: -5px; margin-bottom: 30px;
         }
-        .login-card {
-            margin-top: 30px;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        }
-        .info-section {
-            margin-top: 25px;
-            font-size: 0.85rem;
-            line-height: 1.4;
-        }
+        
+        /* Eliminar bordes y fondos de pestañas y contenedores */
+        .stTabs [data-baseweb="tab-list"] { background-color: transparent !important; }
+        .stTabs [data-baseweb="tab"] { font-weight: 700 !important; }
+        div[data-testid="stVerticalBlock"] > div { background-color: transparent !important; border: none !important; }
         </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="container">', unsafe_allow_html=True)
+    st.markdown('<div class="main-container">', unsafe_allow_html=True)
     st.markdown('<div class="brand-logo"><span class="brand-derby">Derby</span><span class="brand-system">System</span></div>', unsafe_allow_html=True)
     st.markdown('<div class="tagline">Professional Combat Management</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="login-card">', unsafe_allow_html=True)
-    
     if not st.session_state.temp_llave:
         t_acc, t_gen = st.tabs(["ACCEDER", "CREAR EVENTO"])
         with t_acc:
@@ -115,7 +108,7 @@ if st.session_state.id_usuario == "":
                 else: st.error("Código no encontrado.")
         with t_gen:
             st.write("")
-            st.markdown('<p class="text-desc">Inicie un nuevo certamen con base de datos aislada.</p>', unsafe_allow_html=True)
+            st.markdown('<p class="text-muted">Inicie una nueva base de datos para su torneo.</p>', unsafe_allow_html=True)
             if st.button("GENERAR NUEVA CREDENCIAL", use_container_width=True):
                 nueva = "DERBY-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
                 st.session_state.temp_llave = nueva
@@ -129,21 +122,11 @@ if st.session_state.id_usuario == "":
             st.session_state.temp_llave = None
             st.rerun()
 
-    st.markdown("""
-        <div class="info-section">
-            <p class="text-desc">
-                <b>Ecosistema Digital Especializado:</b><br>
-                Optimización de cotejo gallístico mediante algoritmos de peso exacto, 
-                trazabilidad de anillos automatizada y generación de reportes técnicos PDF 
-                para torneos de alta competencia.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<p class="text-muted" style="margin-top:40px; font-size:0.8rem;">Sistema especializado en optimización de cotejo, trazabilidad de anillos y reportes técnicos.</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- ESTILOS INTERNOS Y LÓGICA (TODO INTACTO) ---
+# --- 2. LÓGICA DE NEGOCIO (SIN CAMBIOS) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -168,8 +151,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Lógica de carga, guardado y PDF (Sin cambios)
 def limpiar_nombre_socio(n): return re.sub(r'\s*\d+$', '', n).strip().upper()
+
 def cargar():
     partidos, n_gallos = [], 2
     if os.path.exists(DB_FILE):
@@ -224,9 +207,9 @@ def generar_pdf(partidos, n_gallos):
         elements.append(t); elements.append(Spacer(1, 20))
     doc.build(elements); return buffer.getvalue()
 
-if 'partidos' not in st.session_state: st.session_state.partidos, st.session_state.n_gallos = cargar()
+if not st.session_state.partidos:
+    st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-# Títulos del Sistema
 st.title("DerbySystem PRO 🏆")
 st.caption(f"Panel de Control - Evento: {st.session_state.id_usuario}")
 
@@ -298,15 +281,15 @@ with t_man:
     st.markdown("### 📘 Manual de Operación Técnica")
     st.markdown("""
     <div class="manual-box">
-        <b>1. Gestión de Rondas:</b> Seleccione la cantidad de gallos antes de iniciar el registro. El sistema adaptará automáticamente los campos de entrada y la tabla de cotejo.
+        <b>1. Gestión de Rondas:</b> Seleccione la cantidad de gallos antes de iniciar el registro.
     </div>
     <div class="manual-box">
-        <b>2. Anillos Automatizados:</b> Los anillos se asignan de forma secuencial e irreversible por cada gallo registrado, garantizando la transparencia del torneo.
+        <b>2. Anillos Automatizados:</b> Los anillos se asignan de forma secuencial por cada gallo registrado.
     </div>
     <div class="manual-box">
-        <b>3. Algoritmo de Cotejo:</b> El sistema busca el emparejamiento óptimo por peso ascendente, bloqueando automáticamente peleas entre el mismo partido (socio).
+        <b>3. Algoritmo de Cotejo:</b> El sistema busca el emparejamiento por peso ascendente bloqueando peleas entre el mismo socio.
     </div>
     <div class="manual-box">
-        <b>4. Alertas de Peso:</b> Cualquier diferencia superior a 80 gramos (0.080) será resaltada en rojo en la tabla de cotejo para revisión de los jueces.
+        <b>4. Alertas de Peso:</b> Diferencias superiores a 0.080kg se resaltan en rojo para revisión.
     </div>
     """, unsafe_allow_html=True)
