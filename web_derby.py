@@ -15,7 +15,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 
-# --- 1. INICIALIZACIÓN DE ESTADO (Al principio para evitar errores) ---
+# --- 1. INICIALIZACIÓN DE ESTADO ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 if "temp_llave" not in st.session_state:
@@ -28,7 +28,7 @@ if "n_gallos" not in st.session_state:
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- SIDEBAR: ADMINISTRADOR (LÓGICA INTACTA) ---
+# --- SIDEBAR: ADMINISTRADOR ---
 with st.sidebar:
     st.markdown("### ⚙️ ADMINISTRACIÓN")
     if st.session_state.id_usuario != "":
@@ -56,7 +56,7 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA (ESTÉTICA MEJORADA CON EL RELLENO SOLICITADO) ---
+# --- PANTALLA DE ENTRADA (DISEÑO ORIGINAL RESTAURADO) ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
@@ -86,16 +86,6 @@ if st.session_state.id_usuario == "":
         .stTabs [data-baseweb="tab-list"] { background-color: transparent !important; }
         .stTabs [data-baseweb="tab"] { font-weight: 700 !important; }
         div[data-testid="stVerticalBlock"] > div { background-color: transparent !important; border: none !important; }
-
-        /* Estilo del cuadro de relleno solicitado */
-        .info-relleno {
-            margin-top: 40px;
-            padding: 20px;
-            border-radius: 10px;
-            background-color: rgba(230, 126, 34, 0.05);
-            border: 1px solid rgba(230, 126, 34, 0.2);
-            text-align: center;
-        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -130,24 +120,12 @@ if st.session_state.id_usuario == "":
             st.session_state.temp_llave = None
             st.rerun()
 
-    # --- SECCIÓN DE RELLENO SOLICITADA ---
-    st.markdown("""
-        <div class="info-relleno">
-            <p style="color: #E67E22; font-weight: 800; font-size: 0.9rem; margin-bottom: 5px; text-transform: uppercase;">
-                🏆 Especialistas en Combate de Gallos y Palenques
-            </p>
-            <p class="text-muted" style="font-size:0.85rem; line-height: 1.4; margin: 0;">
-                Sistema profesional de alto rendimiento para la <b>optimización de cotejo automático</b>, 
-                control estricto de pesajes y <b>trazabilidad de anillos</b>. 
-                Garantizamos transparencia y rapidez técnica en cada derby y torneo.
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
-    
+    # Texto actualizado con "combates de gallos y palenques" en el formato original
+    st.markdown('<p class="text-muted" style="margin-top:40px; font-size:0.8rem;">Sistema profesional especializado en combates de gallos y palenques: optimización de cotejo, trazabilidad de anillos y reportes técnicos oficiales.</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 2. LÓGICA DE NEGOCIO (TODO ESTO SE MANTIENE INTACTO) ---
+# --- 2. LÓGICA DE NEGOCIO ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
