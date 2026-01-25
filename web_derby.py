@@ -212,7 +212,7 @@ def generar_pdf(partidos, n_gallos):
 if not st.session_state.partidos:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-st.title("DerbySystem PRO 🏆")
+st.title("DerbySystem")
 st.caption(f"Evento: {st.session_state.id_usuario} | Panel Técnico")
 
 t_reg, t_cot, t_man = st.tabs(["📝 REGISTRO", "🏆 COTEJO", "📘 MANUAL COMPLETO"])
