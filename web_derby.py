@@ -56,7 +56,7 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA ---
+# --- PANTALLA DE ENTRADA (AJUSTADA PARA NO HACER SCROLL) ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
@@ -74,24 +74,26 @@ if st.session_state.id_usuario == "":
 
         .main-container {
             max-width: 500px;
-            margin: 10vh auto;
+            /* AQUÍ CAMBIÉ EL MARGEN SUPERIOR DE 10vh a 2vh PARA SUBIR TODO */
+            margin: 2vh auto; 
             text-align: center;
         }
-        .brand-logo { font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; }
+        .brand-logo { font-size: 3.2rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; }
         .brand-system { color: #E67E22; }
         .tagline { 
             font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; 
-            text-transform: uppercase; color: #E67E22; margin-top: -5px; margin-bottom: 30px;
+            text-transform: uppercase; color: #E67E22; margin-top: -5px; 
+            margin-bottom: 15px; /* Reduje este margen para juntar más los elementos */
         }
         
         .stTabs [data-baseweb="tab-list"] { background-color: transparent !important; }
         .stTabs [data-baseweb="tab"] { font-weight: 700 !important; }
         div[data-testid="stVerticalBlock"] > div { background-color: transparent !important; border: none !important; }
         
-        /* ESTILO PARA EL RECUADRO LLAMATIVO */
+        /* ESTILO COMPACTO PARA EL RECUADRO */
         .promo-box {
-            margin-top: 40px;
-            padding: 20px;
+            margin-top: 15px; /* Reduje de 40px a 15px */
+            padding: 15px;
             background-color: rgba(230, 126, 34, 0.08);
             border-left: 6px solid #E67E22;
             border-radius: 8px;
@@ -101,12 +103,12 @@ if st.session_state.id_usuario == "":
             color: #E67E22;
             font-weight: 800;
             text-transform: uppercase;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
         }
         .promo-text {
-            font-size: 0.85rem;
-            line-height: 1.5;
+            font-size: 0.8rem;
+            line-height: 1.4;
             opacity: 0.8;
             margin: 0;
         }
@@ -305,7 +307,7 @@ with t_cot:
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
                     
-                    # CORRECCIÓN AQUÍ: Todo en una línea para evitar error de renderizado
+                    # CORREGIDO: Todo en una sola línea para evitar que aparezca el código en pantalla
                     html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left: 5px solid #ff4b4b; padding-left: 8px;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-left: 5px solid #2ecc71; padding-left: 8px;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"
                     pelea_n += 1
                 else: break
