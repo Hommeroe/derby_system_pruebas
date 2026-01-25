@@ -96,9 +96,31 @@ if st.session_state.id_usuario == "":
         .brand-logo {{ font-size: 2.8rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; line-height: 1; }}
         .brand-system {{ color: #E67E22; }}
         .tagline {{ font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #E67E22; margin-top: 2px; margin-bottom: 10px; }}
-        .promo-box {{ margin-top: 10px; padding: 12px; background-color: rgba(230, 126, 34, 0.05); border: 1px solid rgba(230, 126, 34, 0.2); border-radius: 8px; }}
-        .promo-title {{ color: #E67E22; font-weight: 800; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 4px; }}
-        .promo-text {{ font-size: 0.75rem; line-height: 1.3; opacity: 0.9; margin: 0; }}
+        
+        /* Ajuste para texto centrado y ordenado */
+        .promo-box {{ 
+            margin-top: 15px; 
+            padding: 18px; 
+            background-color: rgba(230, 126, 34, 0.05); 
+            border: 1px solid rgba(230, 126, 34, 0.2); 
+            border-radius: 10px; 
+        }}
+        .promo-title {{ 
+            color: #E67E22; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            font-size: 0.75rem; 
+            margin-bottom: 8px; 
+            text-align: center;
+        }}
+        .promo-text {{ 
+            font-size: 0.82rem; 
+            line-height: 1.5; 
+            opacity: 0.9; 
+            margin: 0; 
+            text-align: justify; 
+            text-align-last: center; 
+        }}
         .footer {{ margin-top: 15px; font-size: 0.65rem; color: gray; text-transform: uppercase; letter-spacing: 1px; }}
         </style>
     """, unsafe_allow_html=True)
@@ -129,17 +151,23 @@ if st.session_state.id_usuario == "":
             st.session_state.temp_llave = None
             st.rerun()
 
+    # BLOQUE DE DESCRIPCIÓN OPTIMIZADO: 4 LÍNEAS, CENTRADO Y PAREJO
     st.markdown("""
         <div class="promo-box">
-            <div class="promo-title">🛡️ EXCELENCIA TÉCNICA</div>
-            <p class="promo-text">Seguridad y transparencia en cada gramo. Optimizamos la lógica del palenque con asignación automática de anillos y alertas estrictas de tolerancia de peso. Una plataforma robusta que garantiza la equidad en el combate, ofreciendo a los participantes la confianza de un evento regido por la precisión y la legalidad técnica.</p>
+            <div class="promo-title">🛡️ EXCELENCIA TÉCNICA Y TRANSPARENCIA</div>
+            <p class="promo-text">
+                Seguridad y transparencia en cada gramo. Nuestro sistema optimiza la logística del palenque con un 
+                <b>cotejo automatizado</b>, asignación de anillos inalterable y alertas estrictas de peso. 
+                Una plataforma robusta que garantiza la equidad en el combate y brinda a los participantes 
+                la confianza de un evento regido por la precisión técnica y la integridad total.
+            </p>
         </div>
     """, unsafe_allow_html=True)
     st.markdown(f'<div class="footer">© {año_actual} DerbySystem PRO • VIGENTE</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 2. LÓGICA DE NEGOCIO ---
+# --- 2. LÓGICA DE NEGOCIO (EL RESTO DEL CÓDIGO PERMANECE IGUAL) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
