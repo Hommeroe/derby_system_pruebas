@@ -15,7 +15,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 
-# --- 1. INICIALIZACIÓN DE ESTADO (Al principio para evitar errores) ---
+# --- 1. INICIALIZACIÓN DE ESTADO ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 if "temp_llave" not in st.session_state:
@@ -28,7 +28,7 @@ if "n_gallos" not in st.session_state:
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- SIDEBAR: ADMINISTRADOR (LÓGICA INTACTA) ---
+# --- SIDEBAR: ADMINISTRADOR ---
 with st.sidebar:
     st.markdown("### ⚙️ ADMINISTRACIÓN")
     if st.session_state.id_usuario != "":
@@ -56,7 +56,7 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA (SIN RECTÁNGULOS, FONDO ADAPTATIVO) ---
+# --- PANTALLA DE ENTRADA ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
@@ -84,10 +84,32 @@ if st.session_state.id_usuario == "":
             text-transform: uppercase; color: #E67E22; margin-top: -5px; margin-bottom: 30px;
         }
         
-        /* Eliminar bordes y fondos de pestañas y contenedores */
         .stTabs [data-baseweb="tab-list"] { background-color: transparent !important; }
         .stTabs [data-baseweb="tab"] { font-weight: 700 !important; }
         div[data-testid="stVerticalBlock"] > div { background-color: transparent !important; border: none !important; }
+        
+        /* ESTILO PARA EL RECUADRO LLAMATIVO SOLICITADO */
+        .promo-box {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: rgba(230, 126, 34, 0.08); /* Fondo naranja muy suave */
+            border-left: 6px solid #E67E22; /* Franja naranja marca */
+            border-radius: 8px;
+            text-align: center;
+        }
+        .promo-title {
+            color: #E67E22;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .promo-text {
+            font-size: 0.85rem;
+            line-height: 1.5;
+            opacity: 0.8;
+            margin: 0;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -122,11 +144,21 @@ if st.session_state.id_usuario == "":
             st.session_state.temp_llave = None
             st.rerun()
 
-    st.markdown('<p class="text-muted" style="margin-top:40px; font-size:0.8rem;">Sistema especializado en optimización de cotejo, trazabilidad de anillos y reportes técnicos.</p>', unsafe_allow_html=True)
+    # --- AQUÍ ESTÁ EL RELLENO LLAMATIVO CON EL TEXTO DE GALLOS Y PALENQUES ---
+    st.markdown("""
+        <div class="promo-box">
+            <div class="promo-title">🏆 Especialistas en Palenques y Combates de Gallos</div>
+            <p class="promo-text">
+                Sistema profesional de alto rendimiento diseñado para la <b>optimización de cotejo</b>, 
+                control de pesajes y trazabilidad de anillos. Garantizamos precisión técnica en cada combate.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 2. LÓGICA DE NEGOCIO (SIN CAMBIOS) ---
+# --- 2. LÓGICA DE NEGOCIO (INTACTA) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -273,7 +305,22 @@ with t_cot:
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    html += f"<tr><td>{pelea_n}</td><td>□</td><td><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"; pelea_n += 1
+                    
+                    # --- AQUÍ AÑADÍ LAS FRANJAS VERTIICALES ROJAS Y VERDES ---
+                    html += f"""
+                    <tr>
+                        <td>{pelea_n}</td>
+                        <td>□</td>
+                        <td style='border-left: 5px solid #ff4b4b;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td>
+                        <td>{an_r:03}</td>
+                        <td>□</td>
+                        <td {c}>{d:.3f}</td>
+                        <td>{an_v:03}</td>
+                        <td style='border-left: 5px solid #2ecc71;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td>
+                        <td>□</td>
+                    </tr>
+                    """ 
+                    pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
