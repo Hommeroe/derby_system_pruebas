@@ -15,7 +15,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 
-# --- 1. INICIALIZACIÓN DE ESTADO ---
+# --- 1. INICIALIZACIÓN DE ESTADO (SIN CAMBIOS) ---
 if "id_usuario" not in st.session_state:
     st.session_state.id_usuario = ""
 if "temp_llave" not in st.session_state:
@@ -28,7 +28,7 @@ if "n_gallos" not in st.session_state:
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- SIDEBAR: ADMINISTRADOR ---
+# --- SIDEBAR: ADMINISTRADOR (SIN CAMBIOS) ---
 with st.sidebar:
     st.markdown("### ⚙️ ADMINISTRACIÓN")
     if st.session_state.id_usuario != "":
@@ -56,7 +56,7 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA (MÁXIMA COMPRESIÓN) ---
+# --- PANTALLA DE ENTRADA (CENTRADA Y PROFESIONAL) ---
 if st.session_state.id_usuario == "":
     año_actual = datetime.now().year
     st.markdown(f"""
@@ -71,46 +71,50 @@ if st.session_state.id_usuario == "":
         }}
 
         .main-container {{
-            max-width: 500px;
-            margin: 1vh auto; 
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 5vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
         }}
-        .brand-logo {{ font-size: 2.8rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; line-height: 1; }}
+        .brand-logo {{ font-size: 3.5rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; line-height: 1; }}
         .brand-system {{ color: #E67E22; }}
         .tagline {{ 
-            font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; 
-            text-transform: uppercase; color: #E67E22; margin-top: 2px; 
-            margin-bottom: 10px;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 3px; 
+            text-transform: uppercase; color: #E67E22; margin-top: 5px; 
+            margin-bottom: 20px;
         }}
         
-        /* Ajustes de Tabs y Inputs */
-        .stTabs [data-baseweb="tab-list"] {{ gap: 10px; }}
-        .stTabs [data-baseweb="tab"] {{ height: 35px; font-size: 0.9rem !important; }}
-        div[data-testid="stForm"] {{ padding: 10px; border: none; }}
-        
         .promo-box {{
-            margin-top: 10px;
-            padding: 10px;
-            background-color: rgba(230, 126, 34, 0.08);
-            border-left: 5px solid #E67E22;
-            border-radius: 8px;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: rgba(230, 126, 34, 0.05);
+            border: 1px solid rgba(230, 126, 34, 0.2);
+            border-radius: 12px;
+            width: 100%;
         }}
         .promo-title {{
             color: #E67E22; font-weight: 800; text-transform: uppercase;
-            font-size: 0.75rem; margin-bottom: 3px;
+            font-size: 0.9rem; margin-bottom: 10px; letter-spacing: 1px;
         }}
-        .promo-text {{ font-size: 0.75rem; line-height: 1.3; opacity: 0.8; margin: 0; }}
+        .promo-text {{ font-size: 0.9rem; line-height: 1.5; opacity: 0.9; margin: 0; text-align: center; }}
 
-        /* FOOTER DE VIGENCIA */
         .footer {{
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid rgba(128,128,128,0.2);
-            font-size: 0.7rem;
+            margin-top: 30px;
+            font-size: 0.75rem;
             color: gray;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            width: 100%;
+            text-align: center;
         }}
+        
+        /* Centrar inputs y tabs */
+        .stTabs {{ width: 100%; }}
+        div[data-testid="stTextInput"] {{ width: 100%; }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -118,44 +122,46 @@ if st.session_state.id_usuario == "":
     st.markdown('<div class="brand-logo"><span class="brand-derby">Derby</span><span class="brand-system">System</span></div>', unsafe_allow_html=True)
     st.markdown('<div class="tagline">Professional Combat Management</div>', unsafe_allow_html=True)
 
+    st.markdown("""
+        <div class="promo-box">
+            <div class="promo-title">🛡️ ESTÁNDAR DE EXCELENCIA TÉCNICA</div>
+            <p class="promo-text">
+                Plataforma de alta precisión diseñada para la gestión integral de torneos. 
+                Nuestra tecnología garantiza transparencia absoluta en el <b>cotejo automatizado</b>, 
+                blindaje contra duplicidad de socios y <b>trazabilidad certificada de anillos</b>.
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
     if not st.session_state.temp_llave:
-        t_acc, t_gen = st.tabs(["ACCEDER", "NUEVO EVENTO"])
+        t_acc, t_gen = st.tabs(["ACCEDER AL SISTEMA", "CREAR NUEVO EVENTO"])
         with t_acc:
-            llave_input = st.text_input("Código:", placeholder="DERBY-XXXX", label_visibility="collapsed").upper().strip()
-            if st.button("ENTRAR AL PANEL", use_container_width=True, type="primary"):
+            llave_input = st.text_input("Ingrese Código de Evento:", placeholder="DERBY-XXXX", label_visibility="visible").upper().strip()
+            if st.button("INICIAR SESIÓN", use_container_width=True, type="primary"):
                 if os.path.exists(f"datos_{llave_input}.txt"):
                     st.session_state.id_usuario = llave_input
                     st.rerun()
                 else: st.error("Código no encontrado.")
         with t_gen:
-            if st.button("GENERAR CREDENCIAL", use_container_width=True):
+            st.write("Presione para generar una nueva base de datos segura.")
+            if st.button("GENERAR CREDENCIAL DE EVENTO", use_container_width=True):
                 nueva = "DERBY-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
                 st.session_state.temp_llave = nueva
                 st.rerun()
     else:
+        st.success("CREDENTIAL GENERADA EXITOSAMENTE")
         st.code(st.session_state.temp_llave)
-        if st.button("CONFIRMAR Y ENTRAR", use_container_width=True, type="primary"):
+        if st.button("CONFIGURAR Y ENTRAR", use_container_width=True, type="primary"):
             with open(f"datos_{st.session_state.temp_llave}.txt", "w", encoding="utf-8") as f: pass
             st.session_state.id_usuario = st.session_state.temp_llave
             st.session_state.temp_llave = None
             st.rerun()
 
-    st.markdown("""
-        <div class="promo-box">
-            <div class="promo-title">🏆 Especialistas en Palenques</div>
-            <p class="promo-text">
-                Optimización de cotejo y trazabilidad técnica de anillos.
-            </p>
-        </div>
-        <div class="footer">
-            © """ + str(año_actual) + """ DerbySystem PRO • Sistema Original • Vigente
-        </div>
-    """, unsafe_allow_html=True)
-    
+    st.markdown(f'<div class="footer">© {año_actual} DerbySystem PRO • VIGENTE • SISTEMA ORIGINAL</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 2. LÓGICA DE NEGOCIO (RESTO DEL CÓDIGO SIN CAMBIOS) ---
+# --- 2. LÓGICA DE NEGOCIO (SIN CAMBIOS) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -173,6 +179,7 @@ st.markdown("""
     }
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; color: black !important; }
     .tabla-final td, .tabla-final th { border: 1px solid #bdc3c7; text-align: center; padding: 5px; font-size: 11px; }
+    .man-card { background: rgba(230,126,34,0.05); padding: 15px; border-radius: 10px; border-left: 5px solid #E67E22; margin-bottom: 10px; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -236,21 +243,21 @@ if not st.session_state.partidos:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
 st.title("DerbySystem PRO 🏆")
-st.caption(f"Panel de Control - Evento: {st.session_state.id_usuario}")
+st.caption(f"Evento: {st.session_state.id_usuario} | Panel Técnico de Control")
 
-t_reg, t_cot, t_man = st.tabs(["📝 PESOS", "🏆 COTEJO", "📑 MANUAL"])
+t_reg, t_cot, t_man = st.tabs(["📝 REGISTRO DE PESOS", "🏆 TABLA DE COTEJO", "📘 MANUAL DE OPERACIÓN"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g_reg = st.columns([2,1])
-    g_sel = col_g_reg.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
+    g_sel = col_g_reg.selectbox("CONFIGURAR GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
     with st.form("f_nuevo", clear_on_submit=True):
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
             st.number_input(f"Peso Gallo {i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True); st.write("") 
-        if st.form_submit_button("💾 REGISTRAR", use_container_width=True):
+        if st.form_submit_button("💾 REGISTRAR PARTIDO", use_container_width=True):
             if nombre:
                 nuevo = {"PARTIDO": nombre}
                 for i in range(g_sel): nuevo[f"G{i+1}"] = st.session_state[f"p_{i}"]
@@ -279,7 +286,7 @@ with t_reg:
 with t_cot:
     if len(st.session_state.partidos) >= 2:
         pdf_b = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-        st.download_button("📥 DESCARGAR PDF", data=pdf_b, file_name="cotejo.pdf", use_container_width=True)
+        st.download_button("📥 DESCARGAR REPORTE PDF", data=pdf_b, file_name="cotejo.pdf", use_container_width=True)
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g_cot = f"G{r}"; lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g_cot])
@@ -299,4 +306,36 @@ with t_cot:
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_man:
-    st.info("Manual Técnico: Gestión de pesajes, trazabilidad de anillos y optimización de cotejo.")
+    st.header("📘 Manual de Operación DerbySystem PRO")
+    
+    st.markdown("""
+    <div class="man-card">
+        <h3>1. Configuración del Torneo</h3>
+        <p>Antes de ingresar pesos, defina en la pestaña de <b>Registro</b> cuántos gallos por partido participarán (2 a 6). Una vez que registre el primer partido, este número quedará bloqueado para mantener la integridad del torneo.</p>
+    </div>
+    
+    <div class="man-card">
+        <h3>2. Registro y Trazabilidad de Anillos</h3>
+        <p>Al capturar un peso, el sistema genera automáticamente el <b>Número de Anillo</b> correspondiente. Los anillos se asignan de forma secuencial: el primer gallo del primer partido es el 001, y así sucesivamente.</p>
+    </div>
+    
+    <div class="man-card">
+        <h3>3. Lógica del Cotejo Automático</h3>
+        <p>El sistema utiliza un algoritmo de ordenamiento por peso ascendente que aplica las siguientes reglas:</p>
+        <ul>
+            <li><b>Bloqueo de Socios:</b> Nunca se emparejarán dos gallos del mismo partido.</li>
+            <li><b>Diferencia de Peso:</b> Si la diferencia excede los 0.080kg, la celda se marcará en <b>rojo</b> como alerta técnica.</li>
+            <li><b>Equidad:</b> El sistema busca siempre la pelea más justa basada en la cercanía de pesos disponibles.</li>
+        </ul>
+    </div>
+    
+    <div class="man-card">
+        <h3>4. Gestión de Reportes</h3>
+        <p>En la pestaña <b>Tabla de Cotejo</b>, puede visualizar los emparejamientos en tiempo real. Utilice el botón <b>Descargar Reporte PDF</b> para obtener el documento oficial listo para imprimir y distribuir a los jueces y participantes.</p>
+    </div>
+    
+    <div class="man-card">
+        <h3>5. Seguridad y Sesiones</h3>
+        <p>Cada evento tiene un código único (DERBY-XXXX). Si desea cambiar de evento o borrar datos, utilice el <b>Acceso Maestro</b> en la barra lateral izquierda.</p>
+    </div>
+    """, unsafe_allow_html=True)
