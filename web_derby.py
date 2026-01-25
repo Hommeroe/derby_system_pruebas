@@ -144,7 +144,7 @@ if st.session_state.id_usuario == "":
         <div class="promo-box">
             <div class="promo-title">🛡️ EXCELENCIA TÉCNICA</div>
             <p class="promo-text">
-                DerbySystem: Plataforma oficial de alto rendimiento. Especialistas en la transparencia gallistica de pesajes y trazabilidad técnica de anillos. Asegurando un evento profesional equitativo y
+                Tu Plataforma oficial de alto rendimiento. Especialistas en la transparencia gallistica de cotejo, pesajes y trazabilidad técnica de anillos. Asegurando un evento profesional equitativo y
                <b>100% seguro</b>,
             </p>
         </div>
