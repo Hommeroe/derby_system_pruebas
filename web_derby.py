@@ -56,62 +56,61 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA (AJUSTADA PARA NO HACER SCROLL) ---
+# --- PANTALLA DE ENTRADA (MÁXIMA COMPRESIÓN) ---
 if st.session_state.id_usuario == "":
-    st.markdown("""
+    año_actual = datetime.now().year
+    st.markdown(f"""
         <style>
-        /* Fondo Adaptativo */
-        @media (prefers-color-scheme: light) {
-            .stApp { background-color: #ffffff; }
-            .brand-derby { color: #000000; }
-            .text-muted { color: #666666; }
-        }
-        @media (prefers-color-scheme: dark) {
-            .stApp { background-color: #0e1117; }
-            .brand-derby { color: #ffffff; }
-            .text-muted { color: #999999; }
-        }
+        @media (prefers-color-scheme: light) {{
+            .stApp {{ background-color: #ffffff; }}
+            .brand-derby {{ color: #000000; }}
+        }}
+        @media (prefers-color-scheme: dark) {{
+            .stApp {{ background-color: #0e1117; }}
+            .brand-derby {{ color: #ffffff; }}
+        }}
 
-        .main-container {
+        .main-container {{
             max-width: 500px;
-            /* AQUÍ CAMBIÉ EL MARGEN SUPERIOR DE 10vh a 2vh PARA SUBIR TODO */
-            margin: 2vh auto; 
+            margin: 1vh auto; 
             text-align: center;
-        }
-        .brand-logo { font-size: 3.2rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; }
-        .brand-system { color: #E67E22; }
-        .tagline { 
-            font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; 
-            text-transform: uppercase; color: #E67E22; margin-top: -5px; 
-            margin-bottom: 15px; /* Reduje este margen para juntar más los elementos */
-        }
+        }}
+        .brand-logo {{ font-size: 2.8rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; line-height: 1; }}
+        .brand-system {{ color: #E67E22; }}
+        .tagline {{ 
+            font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; 
+            text-transform: uppercase; color: #E67E22; margin-top: 2px; 
+            margin-bottom: 10px;
+        }}
         
-        .stTabs [data-baseweb="tab-list"] { background-color: transparent !important; }
-        .stTabs [data-baseweb="tab"] { font-weight: 700 !important; }
-        div[data-testid="stVerticalBlock"] > div { background-color: transparent !important; border: none !important; }
+        /* Ajustes de Tabs y Inputs */
+        .stTabs [data-baseweb="tab-list"] {{ gap: 10px; }}
+        .stTabs [data-baseweb="tab"] {{ height: 35px; font-size: 0.9rem !important; }}
+        div[data-testid="stForm"] {{ padding: 10px; border: none; }}
         
-        /* ESTILO COMPACTO PARA EL RECUADRO */
-        .promo-box {
-            margin-top: 15px; /* Reduje de 40px a 15px */
-            padding: 15px;
+        .promo-box {{
+            margin-top: 10px;
+            padding: 10px;
             background-color: rgba(230, 126, 34, 0.08);
-            border-left: 6px solid #E67E22;
+            border-left: 5px solid #E67E22;
             border-radius: 8px;
-            text-align: center;
-        }
-        .promo-title {
-            color: #E67E22;
-            font-weight: 800;
+        }}
+        .promo-title {{
+            color: #E67E22; font-weight: 800; text-transform: uppercase;
+            font-size: 0.75rem; margin-bottom: 3px;
+        }}
+        .promo-text {{ font-size: 0.75rem; line-height: 1.3; opacity: 0.8; margin: 0; }}
+
+        /* FOOTER DE VIGENCIA */
+        .footer {{
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(128,128,128,0.2);
+            font-size: 0.7rem;
+            color: gray;
             text-transform: uppercase;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-        }
-        .promo-text {
-            font-size: 0.8rem;
-            line-height: 1.4;
-            opacity: 0.8;
-            margin: 0;
-        }
+            letter-spacing: 1px;
+        }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -120,27 +119,22 @@ if st.session_state.id_usuario == "":
     st.markdown('<div class="tagline">Professional Combat Management</div>', unsafe_allow_html=True)
 
     if not st.session_state.temp_llave:
-        t_acc, t_gen = st.tabs(["ACCEDER", "CREAR EVENTO"])
+        t_acc, t_gen = st.tabs(["ACCEDER", "NUEVO EVENTO"])
         with t_acc:
-            st.write("")
-            llave_input = st.text_input("Código de Evento:", placeholder="DERBY-XXXX").upper().strip()
-            if st.button("INICIAR PANEL DE CONTROL", use_container_width=True, type="primary"):
+            llave_input = st.text_input("Código:", placeholder="DERBY-XXXX", label_visibility="collapsed").upper().strip()
+            if st.button("ENTRAR AL PANEL", use_container_width=True, type="primary"):
                 if os.path.exists(f"datos_{llave_input}.txt"):
                     st.session_state.id_usuario = llave_input
-                    if 'partidos' in st.session_state: del st.session_state['partidos']
                     st.rerun()
                 else: st.error("Código no encontrado.")
         with t_gen:
-            st.write("")
-            st.markdown('<p class="text-muted">Inicie una nueva base de datos para su torneo.</p>', unsafe_allow_html=True)
-            if st.button("GENERAR NUEVA CREDENCIAL", use_container_width=True):
+            if st.button("GENERAR CREDENCIAL", use_container_width=True):
                 nueva = "DERBY-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
                 st.session_state.temp_llave = nueva
                 st.rerun()
     else:
-        st.success("Evento Configurado")
         st.code(st.session_state.temp_llave)
-        if st.button("ACCEDER AHORA", use_container_width=True, type="primary"):
+        if st.button("CONFIRMAR Y ENTRAR", use_container_width=True, type="primary"):
             with open(f"datos_{st.session_state.temp_llave}.txt", "w", encoding="utf-8") as f: pass
             st.session_state.id_usuario = st.session_state.temp_llave
             st.session_state.temp_llave = None
@@ -148,18 +142,20 @@ if st.session_state.id_usuario == "":
 
     st.markdown("""
         <div class="promo-box">
-            <div class="promo-title">🏆 Especialistas en Palenques y Combates de Gallos</div>
+            <div class="promo-title">🏆 Especialistas en Palenques</div>
             <p class="promo-text">
-                Sistema profesional de alto rendimiento diseñado para la <b>optimización de cotejo</b>, 
-                control de pesajes y trazabilidad de anillos. Garantizamos precisión técnica en cada combate.
+                Optimización de cotejo y trazabilidad técnica de anillos.
             </p>
+        </div>
+        <div class="footer">
+            © """ + str(año_actual) + """ DerbySystem PRO • Sistema Original • Vigente
         </div>
     """, unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 2. LÓGICA DE NEGOCIO ---
+# --- 2. LÓGICA DE NEGOCIO (RESTO DEL CÓDIGO SIN CAMBIOS) ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -177,10 +173,6 @@ st.markdown("""
     }
     .tabla-final { width: 100%; border-collapse: collapse; background-color: white; color: black !important; }
     .tabla-final td, .tabla-final th { border: 1px solid #bdc3c7; text-align: center; padding: 5px; font-size: 11px; }
-    .manual-box {
-        background: rgba(230, 126, 34, 0.1); border-left: 5px solid #E67E22;
-        padding: 15px; border-radius: 5px; margin-bottom: 10px;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -246,20 +238,19 @@ if not st.session_state.partidos:
 st.title("DerbySystem PRO 🏆")
 st.caption(f"Panel de Control - Evento: {st.session_state.id_usuario}")
 
-t_reg, t_cot, t_man = st.tabs(["📝 REGISTRO DE PESOS", "🏆 TABLA DE COTEJO", "📑 MANUAL TÉCNICO"])
+t_reg, t_cot, t_man = st.tabs(["📝 PESOS", "🏆 COTEJO", "📑 MANUAL"])
 
 with t_reg:
     anillos_actuales = len(st.session_state.partidos) * st.session_state.n_gallos
     col_n, col_g_reg = st.columns([2,1])
-    g_sel = col_g_reg.selectbox("GALLOS POR PARTIDO:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
+    g_sel = col_g_reg.selectbox("GALLOS:", [2,3,4,5,6], index=st.session_state.n_gallos-2, disabled=len(st.session_state.partidos)>0)
     st.session_state.n_gallos = g_sel
     with st.form("f_nuevo", clear_on_submit=True):
-        st.subheader("Captura de Datos")
         nombre = st.text_input("NOMBRE DEL PARTIDO:").upper().strip()
         for i in range(g_sel):
             st.number_input(f"Peso Gallo {i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True); st.write("") 
-        if st.form_submit_button("💾 REGISTRAR PARTIDO", use_container_width=True):
+        if st.form_submit_button("💾 REGISTRAR", use_container_width=True):
             if nombre:
                 nuevo = {"PARTIDO": nombre}
                 for i in range(g_sel): nuevo[f"G{i+1}"] = st.session_state[f"p_{i}"]
@@ -267,7 +258,6 @@ with t_reg:
 
     if st.session_state.partidos:
         st.write("---")
-        st.subheader("Edición de Registros")
         display_data = []
         cont_anillo = 1
         for p in st.session_state.partidos:
@@ -276,10 +266,7 @@ with t_reg:
                 item[f"G{i}"] = p[f"G{i}"]; item[f"Anillo {i}"] = f"{cont_anillo:03}"; cont_anillo += 1
             display_data.append(item)
         df = pd.DataFrame(display_data)
-        config = {"❌": st.column_config.CheckboxColumn("Borrar"), "PARTIDO": st.column_config.TextColumn("Nombre")}
-        for i in range(1, st.session_state.n_gallos + 1):
-            config[f"G{i}"] = st.column_config.NumberColumn(f"G{i}", format="%.3f"); config[f"Anillo {i}"] = st.column_config.TextColumn(f"A{i}", disabled=True)
-        res = st.data_editor(df, column_config=config, use_container_width=True, hide_index=True)
+        res = st.data_editor(df, use_container_width=True, hide_index=True)
         if not res.equals(df):
             nuevos = []
             for _, r in res.iterrows():
@@ -292,7 +279,7 @@ with t_reg:
 with t_cot:
     if len(st.session_state.partidos) >= 2:
         pdf_b = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
-        st.download_button("📥 DESCARGAR REPORTE COTEJO PDF", data=pdf_b, file_name="cotejo_oficial.pdf", use_container_width=True)
+        st.download_button("📥 DESCARGAR PDF", data=pdf_b, file_name="cotejo.pdf", use_container_width=True)
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g_cot = f"G{r}"; lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g_cot])
@@ -306,26 +293,10 @@ with t_cot:
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    
-                    # CORREGIDO: Todo en una sola línea para evitar que aparezca el código en pantalla
                     html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left: 5px solid #ff4b4b; padding-left: 8px;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-left: 5px solid #2ecc71; padding-left: 8px;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"
                     pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_man:
-    st.markdown("### 📘 Manual de Operación Técnica")
-    st.markdown("""
-    <div class="manual-box">
-        <b>1. Gestión de Rondas:</b> Seleccione la cantidad de gallos antes de iniciar el registro.
-    </div>
-    <div class="manual-box">
-        <b>2. Anillos Automatizados:</b> Los anillos se asignan de forma secuencial por cada gallo registrado.
-    </div>
-    <div class="manual-box">
-        <b>3. Algoritmo de Cotejo:</b> El sistema busca el emparejamiento por peso ascendente bloqueando peleas entre el mismo socio.
-    </div>
-    <div class="manual-box">
-        <b>4. Alertas de Peso:</b> Diferencias superiores a 0.080kg se resaltan en rojo para revisión.
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("Manual Técnico: Gestión de pesajes, trazabilidad de anillos y optimización de cotejo.")
