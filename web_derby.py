@@ -88,12 +88,12 @@ if st.session_state.id_usuario == "":
         .stTabs [data-baseweb="tab"] { font-weight: 700 !important; }
         div[data-testid="stVerticalBlock"] > div { background-color: transparent !important; border: none !important; }
         
-        /* ESTILO PARA EL RECUADRO LLAMATIVO SOLICITADO */
+        /* ESTILO PARA EL RECUADRO LLAMATIVO */
         .promo-box {
             margin-top: 40px;
             padding: 20px;
-            background-color: rgba(230, 126, 34, 0.08); /* Fondo naranja muy suave */
-            border-left: 6px solid #E67E22; /* Franja naranja marca */
+            background-color: rgba(230, 126, 34, 0.08);
+            border-left: 6px solid #E67E22;
             border-radius: 8px;
             text-align: center;
         }
@@ -144,7 +144,6 @@ if st.session_state.id_usuario == "":
             st.session_state.temp_llave = None
             st.rerun()
 
-    # --- AQUÍ ESTÁ EL RELLENO LLAMATIVO CON EL TEXTO DE GALLOS Y PALENQUES ---
     st.markdown("""
         <div class="promo-box">
             <div class="promo-title">🏆 Especialistas en Palenques y Combates de Gallos</div>
@@ -158,7 +157,7 @@ if st.session_state.id_usuario == "":
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 2. LÓGICA DE NEGOCIO (INTACTA) ---
+# --- 2. LÓGICA DE NEGOCIO ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -306,20 +305,8 @@ with t_cot:
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
                     
-                    # --- AQUÍ AÑADÍ LAS FRANJAS VERTIICALES ROJAS Y VERDES ---
-                    html += f"""
-                    <tr>
-                        <td>{pelea_n}</td>
-                        <td>□</td>
-                        <td style='border-left: 5px solid #ff4b4b;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td>
-                        <td>{an_r:03}</td>
-                        <td>□</td>
-                        <td {c}>{d:.3f}</td>
-                        <td>{an_v:03}</td>
-                        <td style='border-left: 5px solid #2ecc71;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td>
-                        <td>□</td>
-                    </tr>
-                    """ 
+                    # CORRECCIÓN AQUÍ: Todo en una línea para evitar error de renderizado
+                    html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left: 5px solid #ff4b4b; padding-left: 8px;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-left: 5px solid #2ecc71; padding-left: 8px;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"
                     pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
