@@ -30,7 +30,6 @@ if "n_gallos" not in st.session_state:
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
 # --- BLINDAJE PARA MANTENER LA APP DESPIERTA ---
-# Este script engaña al servidor de Streamlit simulando actividad constante
 components.html(
     """
     <script>
@@ -38,7 +37,6 @@ components.html(
         fetch(window.location.href);
         console.log("Manteniendo DerbySystem despierto...");
     }
-    // Ping cada 2 minutos para evitar la suspensión del servidor
     setInterval(keepAlive, 120000);
     </script>
     """,
@@ -46,7 +44,7 @@ components.html(
     width=0,
 )
 
-# --- SIDEBAR: ADMINISTRADOR (LÓGICA DE OCULTAMIENTO) ---
+# --- SIDEBAR: ADMINISTRADOR ---
 with st.sidebar:
     st.markdown("### ⚙️ ADMINISTRACIÓN")
     
@@ -154,6 +152,7 @@ st.markdown("""
     .tabla-final td, .tabla-final th { border: 1px solid #bdc3c7; text-align: center; padding: 5px; font-size: 11px; }
     .man-card { background: rgba(230,126,34,0.05); padding: 18px; border-radius: 10px; border-left: 5px solid #E67E22; margin-bottom: 15px; }
     .man-card h3 { color: #E67E22; margin-top: 0; font-size: 1.1rem; }
+    .man-card p, .man-card li { font-size: 0.9rem; opacity: 0.9; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -271,13 +270,52 @@ with t_cot:
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left: 5px solid #ff4b4b;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-left: 5px solid #2ecc71;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"
+                    html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left: 5px solid #ff4b4b; padding-left: 8px;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-left: 5px solid #2ecc71; padding-left: 8px;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"
                     pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_man:
     st.header("📘 Guía Maestra de Operación")
-    st.markdown("""<div class="man-card"><h3>1. Configuración</h3><p>Se bloquea tras el primer registro.</p></div>
-    <div class="man-card"><h3>2. Anillos</h3><p>Generación automática secuencial garantizada.</p></div>
-    <div class="man-card"><h3>3. Cotejo</h3><p>Bloqueo de socios y alerta de 80g activada.</p></div>""", unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="man-card">
+        <h3>1. Configuración del Derby</h3>
+        <p>Al iniciar un evento nuevo, lo primero es seleccionar el número de gallos por partido (2, 3, 4, 5 o 6). 
+        <b>Nota:</b> Esta opción se bloqueará automáticamente tras registrar el primer partido para asegurar la integridad de la competencia.</p>
+    </div>
+
+    <div class="man-card">
+        <h3>2. Registro de Pesos y Anillos</h3>
+        <ul>
+            <li>Ingrese el nombre del partido en mayúsculas.</li>
+            <li>Capture el peso exacto de cada gallo (el sistema soporta hasta 3 decimales).</li>
+            <li><b>Sistema de Anillos:</b> El software asigna los números de anillo de forma automática y secuencial. Usted podrá ver el número asignado justo debajo de cada campo de peso antes de guardar.</li>
+        </ul>
+    </div>
+
+    <div class="man-card">
+        <h3>3. Inteligencia de Cotejo</h3>
+        <p>El algoritmo de emparejamiento procesa los datos bajo tres reglas estrictas:</p>
+        <ol>
+            <li><b>Ordenamiento:</b> Organiza los ejemplares de menor a mayor peso por cada ronda.</li>
+            <li><b>Filtro de Socios:</b> Bloquea automáticamente cualquier pelea entre gallos del mismo partido o "socios" (nombres similares).</li>
+            <li><b>Alerta de Tolerancia:</b> Si la diferencia entre dos oponentes supera los <b>80 gramos (0.080)</b>, el sistema sombreará la celda en rojo como advertencia técnica.</li>
+        </ol>
+    </div>
+
+    <div class="man-card">
+        <h3>4. Exportación y Reportes</h3>
+        <p>En la pestaña de <b>Cotejo</b>, encontrará el botón para descargar el reporte en PDF. Este documento incluye:</p>
+        <ul>
+            <li>Cabezal oficial con fecha y hora de generación.</li>
+            <li>Tablas desglosadas por ronda con espacios para anotaciones del juez (G/E).</li>
+            <li>Números de anillo de ambos competidores para validación en ring.</li>
+        </ul>
+    </div>
+
+    <div class="man-card">
+        <h3>5. Gestión Administrativa</h3>
+        <p>A través del panel lateral (Sidebar), el administrador puede monitorear todos los eventos activos, cargar bases de datos anteriores o eliminar registros de pruebas utilizando la contraseña maestra.</p>
+    </div>
+    """, unsafe_allow_html=True)
