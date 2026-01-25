@@ -140,8 +140,7 @@ if st.session_state.id_usuario == "":
         <div class="promo-box">
             <div class="promo-title">🛡️ EXCELENCIA TÉCNICA</div>
             <p class="promo-text">
-                Gestión integral con <b>cotejo automatizado</b>, blindaje de socios 
-                y trazabilidad certificada de anillos.
+                  Solución avanzada para palenques. Automatiza el cotejo oficial por peso, garantiza la trazabilidad técnica de anillos y asegura un torneo sin choques de socios, cumpliendo con los estándares más altos de la gallística moderna.
             </p>
         </div>
     """, unsafe_allow_html=True)
