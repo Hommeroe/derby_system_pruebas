@@ -56,7 +56,7 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA (DISEÑO ORIGINAL RESTAURADO) ---
+# --- PANTALLA DE ENTRADA ---
 if st.session_state.id_usuario == "":
     st.markdown("""
         <style>
@@ -120,8 +120,8 @@ if st.session_state.id_usuario == "":
             st.session_state.temp_llave = None
             st.rerun()
 
-    # Texto actualizado con "combates de gallos y palenques" en el formato original
-    st.markdown('<p class="text-muted" style="margin-top:40px; font-size:0.8rem;">Sistema profesional especializado en combates de gallos y palenques: optimización de cotejo, trazabilidad de anillos y reportes técnicos oficiales.</p>', unsafe_allow_html=True)
+    # Texto actualizado SIN desacomodar la pantalla
+    st.markdown('<p class="text-muted" style="margin-top:40px; font-size:0.8rem;">Sistema profesional especializado en combates de gallos y palenques: optimización de cotejo automático, trazabilidad de anillos y reportes técnicos oficiales.</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
@@ -268,11 +268,16 @@ with t_cot:
                 rojo = lista.pop(0)
                 v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
                 if v_idx is not None:
-                    verde = lista.pop(v_idx); d = abs(rojo[col_g_cot] - verde[col_g_cot]); c = "style='background:#ffcccc;'" if d > TOLERANCIA else ""
+                    verde = lista.pop(v_idx); d = abs(rojo[col_g_cot] - verde[col_g_cot])
+                    # FRANJA DE ALERTA: Si supera la tolerancia, toda la fila se pinta de rojo suave
+                    alerta_estilo = "style='background-color: #ffcccc;'" if d > TOLERANCIA else ""
+                    
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    html += f"<tr><td>{pelea_n}</td><td>□</td><td><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"; pelea_n += 1
+                    
+                    html += f"<tr {alerta_estilo}><td>{pelea_n}</td><td>□</td><td><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td><b>{d:.3f}</b></td><td>{an_v:03}</td><td><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"
+                    pelea_n += 1
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
@@ -289,6 +294,6 @@ with t_man:
         <b>3. Algoritmo de Cotejo:</b> El sistema busca el emparejamiento por peso ascendente bloqueando peleas entre el mismo socio.
     </div>
     <div class="manual-box">
-        <b>4. Alertas de Peso:</b> Diferencias superiores a 0.080kg se resaltan en rojo para revisión.
+        <b>4. Alertas de Peso:</b> Diferencias superiores a 0.080kg se resaltan con franjas rojas para revisión.
     </div>
     """, unsafe_allow_html=True)
