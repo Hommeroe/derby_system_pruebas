@@ -132,7 +132,7 @@ if st.session_state.id_usuario == "":
     st.markdown("""
         <div class="promo-box">
             <div class="promo-title">🛡️ EXCELENCIA TÉCNICA</div>
-            <p class="promo-text">.Seguridad y transparencia en cada gramo. Optimizamos la lógica del palenque con asignación automática de anillos y alertas estrictas de tolerancia de peso. Una plataforma robusta que garantiza la equidad en el combate, ofreciendo a los participantes la confianza de un evento regido por la precisión y la legalidad técnica.</p>
+            <p class="promo-text">Seguridad y transparencia en cada gramo. Optimizamos la lógica del palenque con asignación automática de anillos y alertas estrictas de tolerancia de peso. Una plataforma robusta que garantiza la equidad en el combate, ofreciendo a los participantes la confianza de un evento regido por la precisión y la legalidad técnica.</p>
         </div>
     """, unsafe_allow_html=True)
     st.markdown(f'<div class="footer">© {año_actual} DerbySystem PRO • VIGENTE</div>', unsafe_allow_html=True)
