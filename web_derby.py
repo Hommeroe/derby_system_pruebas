@@ -144,8 +144,8 @@ if st.session_state.id_usuario == "":
         <div class="promo-box">
             <div class="promo-title">🛡️ EXCELENCIA TÉCNICA</div>
             <p class="promo-text">
-                Gestión integral con <b>cotejo automatizado</b>, blindaje de socios 
-                y trazabilidad certificada de anillos.
+                DerbySystem: Plataforma oficial de alto rendimiento. Especialistas en la transparencia gallistica  de pesajes y trazabilidad técnica de anillos, asegurando un evento profesional, equitativo y 100% automatizado.
+               <b>cotejo automatizado</b>,
             </p>
         </div>
     """, unsafe_allow_html=True)
