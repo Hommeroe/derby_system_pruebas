@@ -28,19 +28,29 @@ if "n_gallos" not in st.session_state:
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="DerbySystem PRO", layout="wide")
 
-# --- SIDEBAR: ADMINISTRADOR ---
+# --- SIDEBAR: ADMINISTRADOR (LÓGICA DE OCULTAMIENTO) ---
 with st.sidebar:
     st.markdown("### ⚙️ ADMINISTRACIÓN")
+    
+    # Botón de cerrar sesión visible para quien tenga un evento abierto
     if st.session_state.id_usuario != "":
         if st.button("🚪 CERRAR SESIÓN", use_container_width=True): 
             st.session_state.clear()
             st.rerun()
         st.divider()
     
+    # Campo de contraseña. Si no es correcta, el código de abajo NO se ejecuta.
     acceso = st.text_input("Acceso Maestro:", type="password")
+    
+    # BLOQUE PROTEGIDO: Solo se renderiza si la clave es exacta
     if acceso == "28days":
+        st.success("Modo Admin: Activo") # Pequeña confirmación visual
         st.subheader("📁 Eventos")
         archivos = [f for f in os.listdir(".") if f.startswith("datos_") and f.endswith(".txt")]
+        
+        if not archivos:
+            st.info("No hay eventos registrados.")
+            
         for arch in archivos:
             nombre_llave = arch.replace("datos_", "").replace(".txt", "")
             with st.expander(f"🔑 {nombre_llave}"):
@@ -56,7 +66,7 @@ with st.sidebar:
                         if st.session_state.id_usuario == nombre_llave: st.session_state.id_usuario = ""
                         st.rerun()
 
-# --- PANTALLA DE ENTRADA (MANTIENE DISEÑO COMPACTO) ---
+# --- PANTALLA DE ENTRADA (DISEÑO ORIGINAL) ---
 if st.session_state.id_usuario == "":
     año_actual = datetime.now().year
     st.markdown(f"""
@@ -149,7 +159,7 @@ if st.session_state.id_usuario == "":
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 2. LÓGICA DE NEGOCIO (SIN CAMBIOS) ---
+# --- 2. LÓGICA DE NEGOCIO ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
@@ -246,6 +256,7 @@ with t_reg:
         nombre = st.text_input("PARTIDO:").upper().strip()
         for i in range(g_sel):
             st.number_input(f"Peso G{i+1}", 1.800, 2.600, 2.200, 0.001, format="%.3f", key=f"p_{i}")
+            # MANTIENE GENERACIÓN AUTOMÁTICA DE ANILLO
             st.markdown(f"<div class='caja-anillo'>ANILLO: {(anillos_actuales + i + 1):03}</div>", unsafe_allow_html=True); st.write("") 
         if st.form_submit_button("💾 REGISTRAR", use_container_width=True):
             if nombre:
