@@ -309,34 +309,6 @@ with t_cot:
                 else: break
             st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
-        # --- NUEVA FUNCIÓN: CALCULADORA DE LOGÍSTICA (MESA) ---
-        st.divider()
-        with st.expander("📊 CALCULADORA DE LOGÍSTICA DE MESA (PRIVADO)"):
-            st.caption("Uso exclusivo para el organizador - Control de comisiones y premios")
-            cl1, cl2 = st.columns(2)
-            with cl1:
-                monto_total = st.number_input("Monto Total de Jugada ($):", min_value=0, step=100, format="%d")
-            with cl2:
-                pct_casa = st.slider("Comisión Casa (%):", 0, 20, 10)
-            
-            ganancia_casa = monto_total * (pct_casa / 100)
-            a_repartir = monto_total - ganancia_casa
-                
-            st.markdown(f"""
-                <div style="background-color: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid #E67E22;">
-                    <table style="width:100%; color: white; border: none;">
-                        <tr style="border: none;">
-                            <td style="font-size: 0.9rem; opacity: 0.8; border: none; text-align: left;">GANANCIA ORGANIZADOR:</td>
-                            <td style="text-align: right; font-size: 1.2rem; color: #2ecc71; font-weight: bold; border: none;">${ganancia_casa:,.2f}</td>
-                        </tr>
-                        <tr style="border: none;">
-                            <td style="font-size: 0.9rem; opacity: 0.8; border: none; text-align: left;">FONDO A REPARTIR:</td>
-                            <td style="text-align: right; font-size: 1.2rem; color: #E67E22; font-weight: bold; border: none;">${a_repartir:,.2f}</td>
-                        </tr>
-                    </table>
-                </div>
-            """, unsafe_allow_html=True)
-
 with t_man:
     st.header("📘 Guía Maestra de Operación")
     
