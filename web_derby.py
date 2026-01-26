@@ -97,7 +97,6 @@ if st.session_state.id_usuario == "":
         .brand-system {{ color: #E67E22; }}
         .tagline {{ font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #E67E22; margin-top: 2px; margin-bottom: 10px; }}
         
-        /* Ajuste para texto centrado y ordenado */
         .promo-box {{ 
             margin-top: 15px; 
             padding: 18px; 
@@ -121,7 +120,6 @@ if st.session_state.id_usuario == "":
             text-align: justify; 
             text-align-last: center; 
         }}
-        /* Footer centrado */
         .footer {{ 
             margin-top: 15px; 
             font-size: 0.65rem; 
@@ -160,7 +158,6 @@ if st.session_state.id_usuario == "":
             st.session_state.temp_llave = None
             st.rerun()
 
-    # BLOQUE DE DESCRIPCIÓN OPTIMIZADO: 4 LÍNEAS, CENTRADO Y PAREJO
     st.markdown("""
         <div class="promo-box">
             <div class="promo-title">🛡️ EXCELENCIA TÉCNICA Y TRANSPARENCIA</div>
@@ -176,7 +173,7 @@ if st.session_state.id_usuario == "":
     st.markdown('</div>', unsafe_allow_html=True)
     st.stop()
 
-# --- 2. LÓGICA DE NEGOCIO (EL RESTO DEL CÓDIGO PERMANECE IGUAL) ---
+# --- 2. LÓGICA DE NEGOCIO ---
 DB_FILE = f"datos_{st.session_state.id_usuario}.txt"
 TOLERANCIA = 0.080
 
