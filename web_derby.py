@@ -121,7 +121,16 @@ if st.session_state.id_usuario == "":
             text-align: justify; 
             text-align-last: center; 
         }}
-        .footer {{ margin-top: 15px; font-size: 0.65rem; color: gray; text-transform: uppercase; letter-spacing: 1px; }}
+        /* Footer centrado */
+        .footer {{ 
+            margin-top: 15px; 
+            font-size: 0.65rem; 
+            color: gray; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            text-align: center; 
+            width: 100%;
+        }}
         </style>
     """, unsafe_allow_html=True)
 
