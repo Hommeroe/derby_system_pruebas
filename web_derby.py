@@ -1,4 +1,3 @@
-Este código es el último que hice antes de meterle lo de las apuestas..
 import streamlit as st
 import pandas as pd
 import os
