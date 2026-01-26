@@ -1,5 +1,5 @@
 import streamlit as st
-import pd as pd
+import pandas as pd  # Corregido: import pandas as pd
 import os
 import random
 import string
@@ -187,7 +187,6 @@ st.markdown("""
     .man-card { background: rgba(230,126,34,0.05); padding: 18px; border-radius: 10px; border-left: 5px solid #E67E22; margin-bottom: 15px; }
     .man-card h3 { color: #E67E22; margin-top: 0; font-size: 1.1rem; }
     .man-card p, .man-card li { font-size: 0.9rem; opacity: 0.9; }
-    .apuesta-box { background: #121212; padding: 10px; border-radius: 8px; border-left: 4px solid #E67E22; margin: 5px 0; }
     </style>
 """, unsafe_allow_html=True)
 
