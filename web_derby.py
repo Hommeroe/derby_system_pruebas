@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd
+import pd as pd
 import os
 import random
 import string
@@ -187,6 +187,7 @@ st.markdown("""
     .man-card { background: rgba(230,126,34,0.05); padding: 18px; border-radius: 10px; border-left: 5px solid #E67E22; margin-bottom: 15px; }
     .man-card h3 { color: #E67E22; margin-top: 0; font-size: 1.1rem; }
     .man-card p, .man-card li { font-size: 0.9rem; opacity: 0.9; }
+    .apuesta-box { background: #121212; padding: 10px; border-radius: 8px; border-left: 4px solid #E67E22; margin: 5px 0; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -291,23 +292,57 @@ with t_cot:
     if len(st.session_state.partidos) >= 2:
         pdf_b = generar_pdf(st.session_state.partidos, st.session_state.n_gallos)
         st.download_button("📥 REPORTE PDF", data=pdf_b, file_name="cotejo.pdf", use_container_width=True)
+        
         for r in range(1, st.session_state.n_gallos + 1):
             st.markdown(f"<div class='header-azul'>RONDA {r}</div>", unsafe_allow_html=True)
             col_g_cot = f"G{r}"; lista = sorted([dict(p) for p in st.session_state.partidos], key=lambda x: x[col_g_cot])
-            html = """<table class='tabla-final'><thead><tr><th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>E</th><th>DIF.</th><th>AN.</th><th>VERDE</th><th>G</th></tr></thead><tbody>"""
+            
             pelea_n = 1
             while len(lista) >= 2:
                 rojo = lista.pop(0)
                 v_idx = next((i for i, x in enumerate(lista) if limpiar_nombre_socio(x["PARTIDO"]) != limpiar_nombre_socio(rojo["PARTIDO"])), None)
+                
                 if v_idx is not None:
                     verde = lista.pop(v_idx); d = abs(rojo[col_g_cot] - verde[col_g_cot]); c = "style='background:#ffcccc;'" if d > TOLERANCIA else ""
                     idx_r = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==rojo["PARTIDO"])
                     idx_v = next(i for i, p in enumerate(st.session_state.partidos) if p["PARTIDO"]==verde["PARTIDO"])
                     an_r, an_v = (idx_r * st.session_state.n_gallos) + r, (idx_v * st.session_state.n_gallos) + r
-                    html += f"<tr><td>{pelea_n}</td><td>□</td><td style='border-left: 5px solid #ff4b4b; padding-left: 8px;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-left: 5px solid #2ecc71; padding-left: 8px;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr>"
+                    
+                    # --- TABLA DE COTEJO ---
+                    html = f"""<table class='tabla-final'><thead><tr><th>#</th><th>G</th><th>ROJO</th><th>AN.</th><th>E</th><th>DIF.</th><th>AN.</th><th>VERDE</th><th>G</th></tr></thead><tbody>
+                    <tr><td>{pelea_n}</td><td>□</td><td style='border-left: 5px solid #ff4b4b; padding-left: 8px;'><b>{rojo['PARTIDO']}</b><br>{rojo[col_g_cot]:.3f}</td><td>{an_r:03}</td><td>□</td><td {c}>{d:.3f}</td><td>{an_v:03}</td><td style='border-left: 5px solid #2ecc71; padding-left: 8px;'><b>{verde['PARTIDO']}</b><br>{verde[col_g_cot]:.3f}</td><td>□</td></tr></tbody></table>"""
+                    st.markdown(html, unsafe_allow_html=True)
+                    
+                    # --- CONSOLA DE APUESTAS (INTEGRADA POR PELEA) ---
+                    with st.expander(f"💰 JUGADA PELEA #{pelea_n}"):
+                        ca1, ca2, ca3 = st.columns(3)
+                        with ca1:
+                            m_rojo = st.number_input(f"Apostado al ROJO:", min_value=0, key=f"r_{pelea_n}_{r}")
+                        with ca2:
+                            m_verde = st.number_input(f"Apostado al VERDE:", min_value=0, key=f"v_{pelea_n}_{r}")
+                        with ca3:
+                            com_casa = st.slider("Comisión %", 0, 20, 10, key=f"c_{pelea_n}_{r}")
+                        
+                        monto_total = m_rojo + m_verde
+                        gan_casa = monto_total * (com_casa / 100)
+                        pozo_limpio = monto_total - gan_casa
+                        
+                        st.markdown(f"**Total en Mesa:** ${monto_total:,.0f} | **Casa:** ${gan_casa:,.0f}")
+                        
+                        sel_gan = st.radio("GANADOR OFICIAL:", ["PENDIENTE", "ROJO", "VERDE", "TABLA"], horizontal=True, key=f"win_{pelea_n}_{r}")
+                        
+                        if sel_gan == "ROJO":
+                            pago = (pozo_limpio / m_rojo) if m_rojo > 0 else 0
+                            st.success(f"🏆 PAGO AL ROJO: Por cada $100 se pagan ${pago*100:,.2f}")
+                        elif sel_gan == "VERDE":
+                            pago = (pozo_limpio / m_verde) if m_verde > 0 else 0
+                            st.success(f"🏆 PAGO AL VERDE: Por cada $100 se pagan ${pago*100:,.2f}")
+                        elif sel_gan == "TABLA":
+                            st.warning("🤝 TABLA: Devolver apuestas íntegras.")
+                    
+                    st.write("")
                     pelea_n += 1
                 else: break
-            st.markdown(html + "</tbody></table><br>", unsafe_allow_html=True)
 
 with t_man:
     st.header("📘 Guía Maestra de Operación")
