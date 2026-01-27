@@ -41,16 +41,45 @@ components.html(
 # BLOQUE 2: DISEÑO VISUAL Y COLORES (TU IDENTIDAD)
 # =========================================================
 st.markdown("""
-    <style>
-    /* Estilos de la marca y entrada */
-    .brand-logo { font-size: 2.8rem; font-weight: 800; letter-spacing: -2px; margin-bottom: 0; line-height: 1; text-align: center; }
+       <style>
+    /* Mantenemos tus colores originales */
+    .brand-logo { font-size: 2.8rem; font-weight: 800; letter-spacing: -2px; text-align: center; }
     .brand-system { color: #E67E22; }
-    .tagline { font-size: 0.7rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #E67E22; text-align: center; }
     
-    /* Botones y Tablas */
-    div.stButton > button { background-color: #E67E22 !important; color: white !important; border-radius: 8px !important; }
-    .caja-anillo { background-color: #1a1a1a; color: #E67E22; padding: 2px; border-radius: 0px 0px 5px 5px; font-weight: bold; text-align: center; margin-top: -15px; border: 1px solid #D35400; font-size: 0.8em; }
-    .header-azul { background-color: #1a1a1a; color: #E67E22; padding: 10px; text-align: center; font-weight: bold; border-radius: 5px; border-bottom: 2px solid #E67E22; }
+    /* ESTILOS DE APUESTAS (LO NUEVO) */
+    .bet-card {
+        background: #1a1a1a;
+        border: 1px solid #333;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .wallet-info {
+        background: linear-gradient(90deg, #E67E22 0%, #D35400 100%);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    /* Botones gigantes para no fallar al click */
+    .btn-rojo {
+        background-color: #ff4b4b !important;
+        color: white !important;
+        height: 80px !important;
+        font-size: 20px !important;
+        font-weight: bold !important;
+        border-radius: 10px !important;
+    }
+    .btn-verde {
+        background-color: #2ecc71 !important;
+        color: white !important;
+        height: 80px !important;
+        font-size: 20px !important;
+        font-weight: bold !important;
+        border-radius: 10px !important;
+    }
     </style>
 """, unsafe_allow_html=True)
 # =========================================================
@@ -129,7 +158,12 @@ st.title("DerbySystem")
 if not st.session_state.partidos:
     st.session_state.partidos, st.session_state.n_gallos = cargar()
 
-t_reg, t_cot, t_man = st.tabs(["📝 REGISTRO", "🏆 COTEJO", "📘 MANUAL"])
+t_reg, t_cot, t_cot_ap, t_man = st.tabs(["📝 REGISTRO", "🏆 COTEJO", "💰 APUESTAS", "📘 MANUAL"])
+with t_cot_ap:
+    st.markdown('<div class="wallet-info">💰 MI SALDO: $1,500.00</div>', unsafe_allow_html=True)
+    st.subheader("Panel de Apuestas")
+    st.write("Aquí podrás elegir a tu gallo favorito y apostar tus créditos.")
+
 
 with t_reg:
     # Bloque de Registro
